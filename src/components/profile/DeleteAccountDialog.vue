@@ -62,12 +62,12 @@ function confirm() {
           </p>
 
           <form class="dialog__form" @submit.prevent="confirm">
-            <label v-if="requiresPassword" class="field">
-              <span class="field__label">Confirm your password</span>
+            <label v-if="requiresPassword" class="pw-field">
+              <span class="pw-field__label">Confirm your password</span>
               <input
                 v-model="password"
                 type="password"
-                class="field__input"
+                class="pw-field__input"
                 autocomplete="current-password"
                 :disabled="busy"
               />
@@ -80,10 +80,10 @@ function confirm() {
             <FieldMessage v-if="error">{{ error }}</FieldMessage>
 
             <div class="dialog__actions">
-              <button type="button" class="btn btn--ghost" :disabled="busy" @click="close">
+              <button type="button" class="dlg-btn dlg-btn--ghost" :disabled="busy" @click="close">
                 Cancel
               </button>
-              <button type="submit" class="btn btn--danger" :disabled="!canConfirm">
+              <button type="submit" class="dlg-btn dlg-btn--danger" :disabled="!canConfirm">
                 <span v-if="busy" class="spinner" aria-hidden="true" />
                 {{ busy ? 'Deleting…' : 'Delete account' }}
               </button>
@@ -141,13 +141,13 @@ function confirm() {
   flex-direction: column;
   gap: 12px;
 }
-.field__label {
+.pw-field__label {
   display: block;
   margin-bottom: 6px;
   font-size: 12px;
   font-weight: 600;
 }
-.field__input {
+.pw-field__input {
   box-sizing: border-box;
   width: 100%;
   height: 38px;
@@ -156,7 +156,7 @@ function confirm() {
   border-radius: var(--cr-radius-control);
   font: 400 13px var(--cr-font);
 }
-.field__input:focus {
+.pw-field__input:focus {
   outline: none;
   border-color: var(--cr-accent);
   box-shadow: var(--cr-focus-ring);
@@ -178,7 +178,7 @@ function confirm() {
   gap: 8px;
   margin-top: 6px;
 }
-.btn {
+.dlg-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -188,20 +188,20 @@ function confirm() {
   font: 600 13px var(--cr-font);
   cursor: pointer;
 }
-.btn:disabled {
+.dlg-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
-.btn:focus-visible {
+.dlg-btn:focus-visible {
   outline: none;
   box-shadow: var(--cr-focus-ring);
 }
-.btn--ghost {
+.dlg-btn--ghost {
   border: 1px solid var(--cr-border-strong);
   background: var(--cr-surface);
   color: var(--cr-text);
 }
-.btn--danger {
+.dlg-btn--danger {
   border: none;
   background: var(--cr-error);
   color: #fff;

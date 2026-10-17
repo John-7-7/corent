@@ -24,7 +24,7 @@ function change(delta) {
 </script>
 
 <template>
-  <div class="stepper" :class="{ 'is-disabled': disabled }">
+  <div class="num-stepper" :class="{ 'is-disabled': disabled }">
     <span v-if="label" class="stepper__label">{{ label }}</span>
     <div class="stepper__controls">
       <button
@@ -51,7 +51,7 @@ function change(delta) {
 </template>
 
 <style scoped>
-.stepper {
+.num-stepper {
   font-family: var(--cr-font);
 }
 .stepper__label {
@@ -92,7 +92,8 @@ function change(delta) {
   color: var(--cr-accent);
 }
 .stepper__btn--accent:hover:not(:disabled) {
-  background: #fbd3db;
+  background: var(--cr-accent-soft);
+  filter: brightness(0.96);
 }
 .stepper__btn:focus-visible {
   outline: none;

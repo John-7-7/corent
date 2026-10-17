@@ -1,34 +1,19 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { computed } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+import AppSidebar from '@/components/AppSidebar.vue'
+
+const route = useRoute()
+// Routes marked meta.bare render full screen, with no sidebar.
+const bare = computed(() => !!route.meta.bare)
 </script>
 
 <template>
-  <header>
-    <nav>
-      <RouterLink to="/">Home</RouterLink>
-      <RouterLink to="/listings">Listings</RouterLink>
-      <RouterLink to="/profile">Profile</RouterLink>
-      <RouterLink to="/login">Login</RouterLink>
-      <RouterLink to="/register">Register</RouterLink>
-    </nav>
-  </header>
-
-  <main>
-    <RouterView />
-  </main>
+  <RouterView v-if="bare" />
+  <div v-else class="shell">
+    <AppSidebar />
+    <main class="shell-main">
+      <RouterView />
+    </main>
+  </div>
 </template>
-
-<style scoped>
-nav {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid #ddd;
-}
-nav a.router-link-exact-active {
-  font-weight: bold;
-}
-main {
-  padding: 1rem;
-}
-</style>

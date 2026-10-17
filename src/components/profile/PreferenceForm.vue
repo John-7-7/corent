@@ -366,7 +366,7 @@ async function submit() {
       <p v-if="submitAttempted && hasErrors" class="submit-bar__hint" role="alert">
         Fix the highlighted fields to save.
       </p>
-      <button type="submit" class="btn-primary" :disabled="saving || locatingDestination">
+      <button type="submit" class="save-btn" :disabled="saving || locatingDestination">
         <span v-if="saving" class="btn-spinner" aria-hidden="true" />
         {{ saving ? 'Saving…' : locatingDestination ? 'Locating destination…' : submitLabel }}
       </button>
@@ -471,7 +471,7 @@ async function submit() {
   font-weight: 500;
   color: var(--cr-error);
 }
-.btn-primary {
+.save-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -484,19 +484,19 @@ async function submit() {
   color: #fff;
   font: 600 14px var(--cr-font);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgb(228 0 43 / 25%);
+  box-shadow: 0 2px 6px rgb(200 41 47 / 25%);
   transition:
     background-color 0.15s ease,
     opacity 0.15s ease;
 }
-.btn-primary:hover:not(:disabled) {
+.save-btn:hover:not(:disabled) {
   background: var(--cr-accent-hover);
 }
-.btn-primary:focus-visible {
+.save-btn:focus-visible {
   outline: none;
   box-shadow: var(--cr-focus-ring);
 }
-.btn-primary:disabled {
+.save-btn:disabled {
   opacity: 0.7;
   cursor: progress;
 }

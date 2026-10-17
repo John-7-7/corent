@@ -219,7 +219,7 @@ onBeforeUnmount(() => {
   <div class="profile-page">
     <header class="topbar">
       <div class="topbar__inner">
-        <button type="button" class="icon-btn" aria-label="Go back" @click="goBack">
+        <button type="button" class="back-btn" aria-label="Go back" @click="goBack">
           <BaseIcon name="chevron-left" :size="18" />
         </button>
         <h1 class="topbar__title">{{ isNew ? 'Create Your Preferences' : 'My Preferences' }}</h1>
@@ -339,7 +339,7 @@ onBeforeUnmount(() => {
   font-size: 15px;
   font-weight: 700;
 }
-.icon-btn {
+.back-btn {
   display: grid;
   place-items: center;
   width: 32px;
@@ -352,10 +352,10 @@ onBeforeUnmount(() => {
   color: var(--cr-text);
   cursor: pointer;
 }
-.icon-btn:hover {
+.back-btn:hover {
   background: #f2f2f2;
 }
-.icon-btn:focus-visible {
+.back-btn:focus-visible {
   outline: none;
   box-shadow: var(--cr-focus-ring);
 }
@@ -432,7 +432,7 @@ onBeforeUnmount(() => {
 .intro {
   padding: 16px 18px;
   border-radius: var(--cr-radius-card);
-  background: linear-gradient(135deg, var(--cr-accent) 0%, #b5001f 100%);
+  background: linear-gradient(135deg, var(--cr-accent) 0%, var(--cr-accent-hover) 100%);
   color: #fff;
 }
 .intro h2 {

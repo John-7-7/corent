@@ -81,7 +81,9 @@ const locationLabels = computed(() =>
     <div class="summary__group">
       <h3>Amenities</h3>
       <ul v-if="amenityLabels.length" class="summary__chips">
-        <li v-for="label in amenityLabels" :key="label" class="chip chip--accent">{{ label }}</li>
+        <li v-for="label in amenityLabels" :key="label" class="summary-chip summary-chip--accent">
+          {{ label }}
+        </li>
       </ul>
       <p v-else class="summary__empty">None selected</p>
     </div>
@@ -89,7 +91,7 @@ const locationLabels = computed(() =>
     <div class="summary__group">
       <h3>Locations</h3>
       <ul v-if="locationLabels.length" class="summary__chips">
-        <li v-for="label in locationLabels" :key="label" class="chip">{{ label }}</li>
+        <li v-for="label in locationLabels" :key="label" class="summary-chip">{{ label }}</li>
       </ul>
       <p v-else class="summary__empty">Any location</p>
     </div>
@@ -161,7 +163,7 @@ const locationLabels = computed(() =>
   padding: 0;
   list-style: none;
 }
-.chip {
+.summary-chip {
   padding: 3px 9px;
   border-radius: 999px;
   background: #ececec;
@@ -169,7 +171,7 @@ const locationLabels = computed(() =>
   font-weight: 600;
   color: var(--cr-text);
 }
-.chip--accent {
+.summary-chip--accent {
   background: var(--cr-accent-soft);
   color: var(--cr-accent);
 }
