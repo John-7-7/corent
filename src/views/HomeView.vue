@@ -36,7 +36,7 @@ const picks = [
             <p class="eyebrow">My preferences</p>
             <p class="pref-line">Budget: $1,500 to $3,200 · 30 min · 3+ rooms</p>
           </div>
-          <router-link class="link edit" to="/profile">
+          <router-link class="link edit" :to="{ path: '/preferences', query: { edit: '1' } }">
             <AppIcon name="edit" :size="13" /> Edit
           </router-link>
         </section>
