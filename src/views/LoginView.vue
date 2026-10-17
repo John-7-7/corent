@@ -1,6 +1,15 @@
+
 <script setup>
-import AppIcon from '@/components/AppIcon.vue'
 // TODO: Firebase Auth sign-in logic
+import { useRouter } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
+
+const router = useRouter()
+
+// Prototype navigation only. Logic layer replaces this with real sign-in.
+function onSubmit() {
+  router.push('/home')
+}
 </script>
 
 <template>
@@ -8,13 +17,13 @@ import AppIcon from '@/components/AppIcon.vue'
     <div class="auth-box">
       <div class="auth-logo">
         <AppIcon name="logo" :size="34" />
-        <p class="auth-brand"><span>Co</span>Rent</p>
+        <p class="auth-brand">Co<span>Rent</span></p>
       </div>
 
       <h1 class="auth-title">Welcome back</h1>
       <p class="auth-sub">Log in to continue your flat hunt.</p>
 
-      <form class="auth-form" novalidate @submit.prevent>
+      <form class="auth-form" novalidate @submit.prevent="onSubmit">
         <div class="field">
           <label for="email">Email</label>
           <input id="email" class="input" type="email" placeholder="you@example.com" autocomplete="email" />

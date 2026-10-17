@@ -2,7 +2,7 @@
 import AppIcon from '@/components/AppIcon.vue'
 
 const links = [
-  { to: '/', label: 'Home', icon: 'home' },
+  { to: '/home', label: 'Home', icon: 'home' },
   { to: '/listings', label: 'Browse', icon: 'search' },
   { to: '/group-summary', label: 'Group Summary', icon: 'users' },
   { to: '/shortlist', label: 'Shortlist', icon: 'bookmark' },
@@ -14,7 +14,7 @@ const links = [
   <aside class="sidebar">
     <div class="brand">
       <AppIcon name="logo" :size="22" />
-      <span class="brand-name"><span>Co</span>Rent</span>
+      <span class="brand-name">Co<span>Rent</span></span>
     </div>
 
     <nav aria-label="Main navigation">

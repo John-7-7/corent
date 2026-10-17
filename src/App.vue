@@ -4,8 +4,8 @@ import { RouterView, useRoute } from 'vue-router'
 import AppSidebar from '@/components/AppSidebar.vue'
 
 const route = useRoute()
-// Auth pages use the full screen with no sidebar.
-const bare = computed(() => ['/login', '/register', '/forgot-password'].includes(route.path))
+// Routes marked meta.bare render full screen, with no sidebar.
+const bare = computed(() => !!route.meta.bare)
 </script>
 
 <template>

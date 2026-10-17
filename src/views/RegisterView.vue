@@ -1,35 +1,40 @@
 <script setup>
-// TODO: Firebase Auth sign-up logic
+import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
+import FlowTopBar from '@/components/FlowTopBar.vue'
+
+const router = useRouter()
+
+// Prototype navigation only. Logic layer replaces this with real account creation.
+function onSubmit() {
+  router.push('/preferences')
+}
 </script>
 
 <template>
-  <main class="auth-page">
-    <div class="auth-box">
-      <div class="auth-logo">
-        <AppIcon name="logo" :size="34" />
-        <p class="auth-brand"><span>Co</span>Rent</p>
-      </div>
+  <div class="flow">
+    <FlowTopBar title="Create Account" back-to="/" />
 
-      <h1 class="auth-title">Create your account</h1>
-      <p class="auth-sub">Set your preferences once and find a flat your group agrees on.</p>
-
-      <form class="auth-form" novalidate @submit.prevent>
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" class="input" type="email" placeholder="you@example.com" autocomplete="email" />
-          <!-- On error: add class "invalid" to the input and show <p class="field-error">…</p> -->
+    <main class="flow-body">
+      <form class="narrow" novalidate @submit.prevent="onSubmit">
+        <div class="logo">
+          <AppIcon name="logo" :size="20" />
+          <span class="word">Co<span class="red">Rent</span></span>
         </div>
 
         <div class="field">
           <label for="username">Username</label>
-          <input id="username" class="input" type="text" placeholder="Choose a username" autocomplete="username" />
+          <input id="username" class="input" type="text" placeholder="e.g. alice_tan" autocomplete="username" />
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" class="input" type="email" placeholder="you@example.com" autocomplete="email" />
         </div>
 
         <div class="field">
           <label for="password">Password</label>
-          <input id="password" class="input" type="password" placeholder="Create a password" autocomplete="new-password" />
-          <p class="hint">At least 8 characters, one uppercase letter and one number.</p>
+          <input id="password" class="input" type="password" placeholder="Create a strong password" autocomplete="new-password" />
         </div>
 
         <div class="field">
@@ -38,12 +43,29 @@ import AppIcon from '@/components/AppIcon.vue'
         </div>
 
         <button class="btn btn-primary btn-block" type="submit">Create Account</button>
-      </form>
 
-      <p class="auth-foot">
-        Already have an account?
-        <router-link class="link" to="/login">Log in</router-link>
-      </p>
-    </div>
-  </main>
+        <p class="auth-foot">
+          Already have an account?
+          <router-link class="link" to="/login">Log in</router-link>
+        </p>
+      </form>
+    </main>
+  </div>
 </template>
+
+<style scoped>
+.flow { min-height: 100vh; }
+.flow-body { display: flex; justify-content: center; padding: 1.5rem 1.25rem 3rem; }
+.narrow { width: min(320px, 100%); }
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 700;
+}
+.word { color: var(--text); }
+</style>
