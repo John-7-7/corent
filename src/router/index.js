@@ -8,6 +8,8 @@ import HomeView from '../views/HomeView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import ListingsView from '../views/ListingsView.vue'
 import { getCurrentUser } from '../services/authService'
+import GroupSummaryView from '../views/GroupSummaryView.vue' 
+import ShortlistView from '../views/ShortlistView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +30,8 @@ const router = createRouter({
     { path: '/home', name: 'home', component: HomeView },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
     { path: '/listings', name: 'listings', component: ListingsView },
+    { path: '/group-summary', name: 'group summary', component: GroupSummaryView, meta: {requiresAuth: true},},
+    { path: ' /shortlist', name: 'shortlist', component: ShortlistView, meta: {requiresAuth: true},} 
   ],
 })
 
