@@ -31,7 +31,7 @@ const router = createRouter({
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
     { path: '/listings', name: 'listings', component: ListingsView },
     { path: '/group-summary', name: 'group summary', component: GroupSummaryView, meta: {requiresAuth: true},},
-    { path: ' /shortlist', name: 'shortlist', component: ShortlistView, meta: {requiresAuth: true},} 
+    { path: '/shortlist', name: 'shortlist', component: ShortlistView, meta: {requiresAuth: true},} 
   ],
 })
 
