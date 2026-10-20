@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import AppIcon from '@/components/AppIcon.vue'
 import ListingCard from '@/components/listings/ListingCard.vue'
+import ListingMap from '@/components/listings/ListingMap.vue'
 import { getListings } from '@/services/listings'
 
 const listings = ref([])
@@ -61,6 +62,14 @@ const filtered = computed(() => {
   }
   return [...out].sort(by[sort.value] ?? by['rent-asc'])
 })
+
+/* ---------- list / map (F-REQ-017 AC4) ---------- */
+const view = ref('list')
+
+// Placeholder until User_Preferences.CommuteDestination is available.
+const destinations = ref([
+  { MemberName: 'NUS (demo)', Address: '21 Lower Kent Ridge Rd', Lat: 1.2966, Lng: 103.7764 },
+])
 
 /* ---------- shortlist (F-REQ-016) ---------- */
 // Local only for now. Swap for services/shortlist.js against Selected_Listing
@@ -150,13 +159,30 @@ const breakdown = computed(() => {
         </section>
 
         <div class="between">
-          <p class="small muted">{{ filtered.length }} of {{ listings.length }} listings</p>
-          <button v-if="filtersActive" class="link" type="button" @click="clearFilters">Clear filters</button>
+          <p class="small muted">
+            {{ filtered.length }} of {{ listings.length }} listings
+            <button v-if="filtersActive" class="link" type="button" @click="clearFilters">Clear filters</button>
+          </p>
+          <div class="segmented" role="group" aria-label="View as">
+            <button type="button" :class="{ on: view === 'list' }" :aria-pressed="view === 'list'" @click="view = 'list'">
+              List
+            </button>
+            <button type="button" :class="{ on: view === 'map' }" :aria-pressed="view === 'map'" @click="view = 'map'">
+              Map
+            </button>
+          </div>
         </div>
 
         <p v-if="loading" class="small muted">Loading listings…</p>
         <p v-else-if="error" class="small" style="color: var(--red)">Could not load listings: {{ error }}</p>
         <p v-else-if="!filtered.length" class="small muted">No listings match your filters.</p>
+
+        <ListingMap
+          v-else-if="view === 'map'"
+          :listings="filtered"
+          :destinations="destinations"
+          @select="selected = $event"
+        />
 
         <div v-else class="listing-grid">
           <ListingCard
