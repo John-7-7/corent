@@ -1,52 +1,107 @@
 <script setup>
-defineProps({ listing: { type: Object, required: true } })
+import { ref, computed, watch } from 'vue'
+import AppIcon from '@/components/AppIcon.vue'
 
-const FALLBACK =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="260">' +
-      '<rect width="100%" height="100%" fill="#e8eef6"/>' +
-      '<text x="50%" y="50%" fill="#8a97a8" font-family="system-ui" font-size="15" ' +
-      'text-anchor="middle">Image unavailable</text></svg>',
-  )
+const props = defineProps({
+  listing:  { type: Object, required: true },
+  saved:    { type: Boolean, default: false },
+  // null until F-REQ-015 can compute a real score — we never invent one.
+  matchScore: { type: Number, default: null },
+})
+defineEmits(['toggle-save', 'view-details'])
+
+// 99.co photo URLs are signed and expire; fall back to the gradient thumb.
+const src = ref(props.listing.ImageURL)
+watch(() => props.listing.ImageURL, (v) => { src.value = v })
+
+// Deterministic thumb variant so the grid keeps the designed colour rhythm.
+const tone = computed(() => {
+  const id = String(props.listing.ListingID)
+  const n = [...id].reduce((a, c) => a + c.charCodeAt(0), 0) % 3
+  return ['', 'alt', 'cool'][n]
+})
+
+const rent = computed(() => `$${props.listing.MonthlyRent.toLocaleString()}`)
+const availableFrom = computed(() => props.listing.AvailableDate || 'Not listed')
 </script>
 
 <template>
-  <article class="card">
-    <img
-      :src="listing.ImageURL || FALLBACK"
-      :alt="listing.Title"
-      loading="lazy"
-      @error="$event.target.src = FALLBACK"
-    />
-    <div class="body">
+  <article class="listing" :class="{ gone: !listing.IsAvailable }">
+    <div class="listing-img thumb" :class="tone">
+      <img v-if="src" :src="src" :alt="listing.Title" loading="lazy" @error="src = null" />
+
+      <span v-if="!listing.IsAvailable" class="tag badge">Unavailable</span>
+      <span v-else-if="matchScore !== null" class="pill badge">{{ matchScore }}% match</span>
+
+      <button
+        class="save-btn"
+        :class="{ saved }"
+        type="button"
+        :aria-pressed="saved"
+        :aria-label="saved ? 'Remove from shortlist' : 'Add to shortlist'"
+        @click="$emit('toggle-save', listing)"
+      >
+        <AppIcon name="bookmark" :size="15" :fill="saved" />
+      </button>
+    </div>
+
+    <div class="listing-body">
       <h3>{{ listing.Title }}</h3>
-      <p class="rent">S${{ listing.MonthlyRent.toLocaleString() }}<span>/mo</span></p>
-      <p class="meta">
-        {{ listing.Bedrooms }} bed &middot; {{ listing.Bathrooms ?? '–' }} bath
-        <span v-if="listing.AreaSqm"> &middot; {{ listing.AreaSqm }} sqm</span>
+      <p class="price">{{ rent }}<span class="muted">/mo</span></p>
+      <p class="small muted row-inline">
+        <AppIcon name="pin" :size="11" /> {{ listing.Neighbourhood }}
       </p>
-      <p class="meta">{{ listing.Address }}<span v-if="listing.Neighbourhood">, {{ listing.Neighbourhood }}</span></p>
-      <p v-if="listing.NearestMrt" class="mrt">
+      <p class="small muted">
+        {{ listing.PropertyType }} · {{ listing.Bedrooms }} bedrooms · From {{ availableFrom }}
+      </p>
+      <p v-if="listing.NearestMrt" class="small muted">
         {{ listing.MrtWalkingMinutes }} min walk to {{ listing.NearestMrt }}
       </p>
-      <ul class="chips">
-        <li v-for="a in listing.Amenities.slice(0, 3)" :key="a">{{ a }}</li>
-      </ul>
-      <slot name="score" />
+
+      <slot name="extra" />
+
+      <div class="row actions">
+        <button class="btn btn-sm" type="button" style="flex: 1" @click="$emit('view-details', listing)">
+          View details
+        </button>
+        <button
+          class="btn btn-sm"
+          :class="{ 'btn-primary': !saved }"
+          type="button"
+          :disabled="!listing.IsAvailable && !saved"
+          style="flex: 1"
+          @click="$emit('toggle-save', listing)"
+        >
+          {{ saved ? 'Remove' : 'Add to shortlist' }}
+        </button>
+      </div>
     </div>
   </article>
 </template>
 
 <style scoped>
-.card { border: 1px solid #dfe5ec; border-radius: 10px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
-.card img { width: 100%; height: 170px; object-fit: cover; background: #e8eef6; display: block; }
-.body { padding: .75rem .9rem 1rem; }
-h3 { font-size: 1rem; margin: 0 0 .35rem; line-height: 1.3; }
-.rent { font-size: 1.15rem; font-weight: 700; color: #1f4e79; margin: 0 0 .3rem; }
-.rent span { font-size: .8rem; font-weight: 400; color: #5a6675; }
-.meta { font-size: .82rem; color: #5a6675; margin: 0 0 .2rem; }
-.mrt { font-size: .82rem; color: #2e7d5b; margin: .3rem 0 0; }
-.chips { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; padding: 0; margin: .55rem 0 0; }
-.chips li { font-size: .72rem; background: #eef2f7; color: #40506a; padding: .18rem .5rem; border-radius: 10px; }
+.listing {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+.listing.gone { opacity: 0.8; }
+.listing-img { position: relative; height: 140px; }
+.listing-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.badge { position: absolute; top: 10px; left: 10px; background: #fff; }
+.save-btn {
+  position: absolute; top: 8px; right: 8px; display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%; border: 0; background: #fff;
+  color: var(--muted); cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.save-btn.saved { color: var(--red); }
+.listing-body { padding: 0.8rem; display: grid; gap: 3px; flex: 1; align-content: start; }
+.price { color: var(--red); font-weight: 700; font-size: 14px; }
+.price span { font-weight: 400; font-size: 11px; }
+.row-inline { display: inline-flex; align-items: center; gap: 0.25rem; }
+.actions { margin-top: 0.6rem; }
 </style>
