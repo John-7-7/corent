@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// Rules for the User_Preferences collection (F-REQ-005/006/007).
+// NOTE: this only covers User_Preferences. Merge this block into the project's
+// existing rules instead of replacing them, or other collections will be locked.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /User_Preferences/{uid} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      // Any signed-in user can read the main doc (group aggregation needs it).
+      // When IsBudgetPrivate is true the budget fields here are null, so only
+      // users who chose to share their budget are included in group summaries.
+      allow read: if request.auth != null;
+
+      // Only the owner can write, and a private budget can never leak into
+      // the shared doc.
+      allow create, update: if isOwner()
+        && request.resource.data.UserID == uid
+        && (request.resource.data.IsBudgetPrivate == false
+          || (request.resource.data.BudgetMin == null
+            && request.resource.data.BudgetMax == null));
+
+      allow delete: if isOwner();
+
+      // User_Preferences/{uid}/Private/Budget: owner-only, always.
+      match /Private/{docId} {
+        allow read, write: if isOwner();
+      }
+    }
+  }
+}

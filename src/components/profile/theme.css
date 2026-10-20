@@ -1,0 +1,29 @@
+/* Design tokens for the profile UI. They follow the app-wide tokens in
+   src/corent.css (--red, --bg, ...) and fall back to the same palette if a
+   component is rendered without it. */
+:root {
+  --cr-accent: var(--red, #c8292f);
+  --cr-accent-hover: var(--red-dark, #a81f25);
+  --cr-accent-soft: var(--red-tint, #fbe9e8);
+  --cr-dark: var(--ink, #171717);
+  --cr-text: var(--text, #161616);
+  --cr-muted: #6b6b6b;
+  --cr-subtle: #8c8c8c;
+  --cr-border: var(--line, #ebe8e6);
+  --cr-border-strong: var(--chip-line, #dcd8d4);
+  --cr-bg: var(--bg, #f6f5f4);
+  --cr-surface: #ffffff;
+  --cr-track: #e5e5e5;
+  --cr-warning: var(--warn, #8a5a00);
+  --cr-warning-soft: var(--warn-tint, #fdf1d6);
+  --cr-error: #c4001f;
+  --cr-error-soft: #fdecee;
+  --cr-success: var(--ok, #2e7d5b);
+  --cr-success-soft: var(--ok-tint, #e2f3ea);
+  --cr-radius-card: 12px;
+  --cr-radius-control: 8px;
+  --cr-shadow-card: 0 1px 2px rgb(0 0 0 / 4%), 0 1px 3px rgb(0 0 0 / 6%);
+  --cr-focus-ring: 0 0 0 3px rgb(200 41 47 / 25%);
+  --cr-font:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
