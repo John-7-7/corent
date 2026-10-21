@@ -82,7 +82,7 @@
       </div>
 
       <div class="column">
-        // preference comparison visualisations (added for further analytics)
+        <!-- preference comparison visualisations (added for further analytics) --> 
         <section class="card">
           <h2>Preference alignment</h2>
           <p class="section-description">
