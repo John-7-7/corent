@@ -4,8 +4,6 @@ import { useRouter } from 'vue-router'
 import BaseIcon from '../components/profile/BaseIcon.vue'
 import DeleteAccountDialog from '../components/profile/DeleteAccountDialog.vue'
 import FieldMessage from '../components/profile/FieldMessage.vue'
-import PreferenceForm from '../components/profile/PreferenceForm.vue'
-import { normalizePreferences } from '../components/profile/preferenceOptions'
 import {
   changeAccountPassword,
   deleteAccount,
@@ -15,7 +13,6 @@ import {
   updateAccountName,
   usesPasswordSignIn,
 } from '../services/authService'
-import { getPreferences, savePreferences } from '../services/preferencesService'
 import '../components/profile/theme.css'
 
 const router = useRouter()
@@ -25,14 +22,6 @@ const nameDialogOpen = ref(false)
 const passwordDialogOpen = ref(false)
 const deleteDialogOpen = ref(false)
 const signOutDialogOpen = ref(false)
-const preferencesOpen = ref(false)
-const preferencesLoading = ref(false)
-const preferencesLoaded = ref(false)
-const preferencesSaving = ref(false)
-const preferencesError = ref('')
-const preferencesSaved = ref(false)
-const preferencesAreNew = ref(false)
-const preferenceValues = ref(normalizePreferences(null))
 const name = ref('')
 const currentPassword = ref('')
 const newPassword = ref('')
@@ -101,39 +90,6 @@ async function saveName() {
     nameError.value = describeError(error)
   } finally {
     savingName.value = false
-  }
-}
-
-async function openPreferences() {
-  preferencesOpen.value = true
-  preferencesLoading.value = true
-  preferencesLoaded.value = false
-  preferencesError.value = ''
-  preferencesSaved.value = false
-  try {
-    const saved = await getPreferences(user.value.uid)
-    preferencesAreNew.value = saved === null
-    preferenceValues.value = normalizePreferences(saved)
-    preferencesLoaded.value = true
-  } catch (error) {
-    preferencesError.value = describeError(error)
-  } finally {
-    preferencesLoading.value = false
-  }
-}
-
-async function savePreferencesForm(values) {
-  preferencesSaving.value = true
-  preferencesError.value = ''
-  try {
-    await savePreferences(user.value.uid, values)
-    preferenceValues.value = values
-    preferencesAreNew.value = false
-    preferencesSaved.value = true
-  } catch (error) {
-    preferencesError.value = describeError(error)
-  } finally {
-    preferencesSaving.value = false
   }
 }
 
@@ -253,7 +209,12 @@ onBeforeUnmount(() => unsubscribeAuth?.())
           <span>Account security settings are unavailable in guest view</span>
         </span>
       </div>
-      <button class="setting-row" type="button" :disabled="!user" @click="openPreferences">
+      <button
+        class="setting-row"
+        type="button"
+        :disabled="!user"
+        @click="router.push({ path: '/preferences', query: { edit: '1' } })"
+      >
         <span class="setting-icon"><BaseIcon name="edit" :size="18" /></span>
         <span class="setting-copy">
           <strong>Edit Preferences</strong>
@@ -287,28 +248,6 @@ onBeforeUnmount(() => unsubscribeAuth?.())
       </span>
       <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
     </button>
-
-    <section v-if="preferencesOpen" class="preferences-card" aria-labelledby="preferences-title">
-      <div class="preferences-heading">
-        <h2 id="preferences-title">Rental Preferences</h2>
-        <button type="button" @click="preferencesOpen = false">Close</button>
-      </div>
-      <p v-if="preferencesLoading" class="preferences-status" role="status">Loading preferences…</p>
-      <div v-else-if="!preferencesLoaded" class="preferences-status" role="alert">
-        <p>{{ preferencesError }}</p>
-        <button type="button" @click="openPreferences">Try again</button>
-      </div>
-      <template v-else>
-        <p v-if="preferencesSaved" class="preferences-success" role="status">Preferences saved.</p>
-        <FieldMessage v-if="preferencesError">{{ preferencesError }}</FieldMessage>
-        <PreferenceForm
-          :initial-values="preferenceValues"
-          :saving="preferencesSaving"
-          :submit-label="preferencesAreNew ? 'Create Profile' : 'Save Preferences'"
-          @save="savePreferencesForm"
-        />
-      </template>
-    </section>
 
     <DeleteAccountDialog
       :open="deleteDialogOpen"
@@ -628,52 +567,6 @@ onBeforeUnmount(() => unsubscribeAuth?.())
 .edit-profile:disabled {
   cursor: wait;
   opacity: 0.65;
-}
-
-.preferences-card {
-  padding: 18px;
-  border: 1px solid var(--cr-border);
-  border-radius: 18px;
-  background: var(--cr-surface);
-  box-shadow: var(--cr-shadow-card);
-}
-
-.preferences-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.preferences-heading h2 {
-  margin: 0;
-  font-size: 16px;
-}
-
-.preferences-heading button,
-.preferences-status button {
-  border: 0;
-  background: transparent;
-  color: var(--cr-accent);
-  font: 600 12px var(--cr-font);
-  cursor: pointer;
-}
-
-.preferences-status {
-  margin: 12px 0;
-  color: var(--cr-muted);
-  font-size: 13px;
-}
-
-.preferences-status p {
-  margin: 0 0 8px;
-  color: var(--cr-error);
-}
-
-.preferences-success {
-  color: var(--cr-success);
-  font-size: 13px;
 }
 
 .modal-backdrop {

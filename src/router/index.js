@@ -24,7 +24,12 @@ const router = createRouter({
       component: ForgotPasswordView,
       meta: { bare: true },
     },
-    { path: '/preferences', name: 'preferences', component: PreferencesView, meta: { bare: true } },
+    {
+      path: '/preferences',
+      name: 'preferences',
+      component: PreferencesView,
+      meta: { bare: true, requiresAuth: true },
+    },
 
     // App pages (with sidebar)
     { path: '/home', name: 'home', component: HomeView },
