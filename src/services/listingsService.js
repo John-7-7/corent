@@ -10,6 +10,9 @@ export const listings = [
     match: 94,
     tone: '',
     available: true,
+    sampleVotes: 2,
+    sampleComments: 3,
+    mapPosition: { left: '25%', top: '32%' },
     amenities: ['WiFi', 'Aircon', 'Gym', 'Pool'],
     breakdown: [
       { label: 'Budget', detail: '$933 each across 3 (limit $1,100)', status: 'met' },
@@ -31,6 +34,9 @@ export const listings = [
     match: 87,
     tone: 'alt',
     available: true,
+    sampleVotes: 1,
+    sampleComments: 2,
+    mapPosition: { left: '68%', top: '38%' },
     amenities: ['WiFi', 'Aircon'],
     breakdown: [
       { label: 'Budget', detail: '$733 each across 3 (limit $1,100)', status: 'met' },
@@ -52,6 +58,9 @@ export const listings = [
     match: 82,
     tone: 'cool',
     available: true,
+    sampleVotes: 0,
+    sampleComments: 2,
+    mapPosition: { left: '46%', top: '56%' },
     amenities: ['Aircon', 'Gym'],
     breakdown: [
       { label: 'Budget', detail: '$1,033 each across 3 (limit $1,100)', status: 'met' },
@@ -73,6 +82,9 @@ export const listings = [
     match: 68,
     tone: 'alt',
     available: true,
+    sampleVotes: 1,
+    sampleComments: 1,
+    mapPosition: { left: '80%', top: '64%' },
     amenities: ['WiFi'],
     breakdown: [
       { label: 'Budget', detail: '$817 each across 3 (limit $1,100)', status: 'met' },
@@ -94,6 +106,9 @@ export const listings = [
     match: 55,
     tone: 'cool',
     available: false,
+    sampleVotes: 0,
+    sampleComments: 0,
+    mapPosition: { left: '58%', top: '28%' },
     amenities: ['Aircon', 'Pool'],
     breakdown: [
       { label: 'Budget', detail: '$967 each across 3 (limit $1,100)', status: 'met' },
@@ -115,6 +130,9 @@ export const listings = [
     match: 49,
     tone: '',
     available: true,
+    sampleVotes: 0,
+    sampleComments: 0,
+    mapPosition: { left: '36%', top: '70%' },
     amenities: ['WiFi'],
     breakdown: [
       { label: 'Budget', detail: '$700 each across 3 (limit $1,100)', status: 'met' },
