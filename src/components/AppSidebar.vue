@@ -1,13 +1,5 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
-import { signOutUser } from '@/services/authService'
-
-const router = useRouter()
-const confirmSignOut = ref(false)
-const signingOut = ref(false)
-const signOutError = ref('')
 
 const links = [
   { to: '/home', label: 'Home', icon: 'home' },
@@ -16,20 +8,6 @@ const links = [
   { to: '/shortlist', label: 'Shortlist', icon: 'bookmark' },
   { to: '/profile', label: 'Profile', icon: 'user' },
 ]
-
-async function onSignOut() {
-  signingOut.value = true
-  signOutError.value = ''
-  try {
-    await signOutUser()
-    confirmSignOut.value = false
-    await router.replace({ name: 'login' })
-  } catch (error) {
-    signOutError.value = error?.message || 'Unable to sign out. Please try again.'
-  } finally {
-    signingOut.value = false
-  }
-}
 </script>
 
 <template>
@@ -47,53 +25,8 @@ async function onSignOut() {
             <span>{{ l.label }}</span>
           </router-link>
         </li>
-        <li>
-          <button class="nav-item sign-out" type="button" @click="confirmSignOut = true">
-            <AppIcon name="logOut" :size="16" />
-            <span>Log out</span>
-          </button>
-        </li>
       </ul>
     </nav>
-
-    <Teleport to="body">
-      <div
-        v-if="confirmSignOut"
-        class="sign-out-overlay"
-        @click.self="!signingOut && (confirmSignOut = false)"
-        @keydown.esc="!signingOut && (confirmSignOut = false)"
-      >
-        <section
-          class="sign-out-dialog"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="sign-out-title"
-          aria-describedby="sign-out-description"
-        >
-          <h2 id="sign-out-title">Log out of CoRent?</h2>
-          <p id="sign-out-description">You’ll need to log in again to access your group’s shared preferences and decisions.</p>
-          <p v-if="signOutError" class="sign-out-error" role="alert">{{ signOutError }}</p>
-          <div class="sign-out-actions">
-            <button
-              class="sign-out-button sign-out-cancel"
-              type="button"
-              :disabled="signingOut"
-              @click="confirmSignOut = false"
-            >
-              Cancel
-            </button>
-            <button
-              class="sign-out-button sign-out-confirm"
-              type="button"
-              :disabled="signingOut"
-              @click="onSignOut"
-            >
-              {{ signingOut ? 'Logging out…' : 'Log out' }}
-            </button>
-          </div>
-        </section>
-      </div>
-    </Teleport>
   </aside>
 </template>
 
@@ -133,48 +66,6 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
   font-weight: 600;
   text-decoration: none;
 }
-.sign-out {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font-family: inherit;
-}
-.sign-out-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  background: rgb(17 17 17 / 45%);
-}
-.sign-out-dialog {
-  width: 100%;
-  max-width: 400px;
-  padding: 24px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 20px 50px rgb(0 0 0 / 20%);
-  color: var(--text);
-}
-.sign-out-dialog h2 { margin: 0 0 8px; font-size: 17px; }
-.sign-out-dialog p { margin: 0; color: #6b6b6b; font-size: 13px; line-height: 1.5; }
-.sign-out-error { margin-top: 12px !important; color: #b42318 !important; }
-.sign-out-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-.sign-out-button {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.sign-out-button:disabled { cursor: wait; opacity: 0.65; }
-.sign-out-cancel { background: #fff; color: var(--text); }
-.sign-out-confirm { border-color: var(--red); background: var(--red); color: #fff; }
 .nav-item:hover { background: var(--soft); }
 .nav-item.active { background: var(--red-tint); color: var(--red); }
 

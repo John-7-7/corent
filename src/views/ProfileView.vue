@@ -24,6 +24,7 @@ const profileName = ref('')
 const nameDialogOpen = ref(false)
 const passwordDialogOpen = ref(false)
 const deleteDialogOpen = ref(false)
+const signOutDialogOpen = ref(false)
 const preferencesOpen = ref(false)
 const preferencesLoading = ref(false)
 const preferencesLoaded = ref(false)
@@ -166,6 +167,7 @@ async function onSignOut() {
   signingOut.value = true
   try {
     await signOutUser()
+    signOutDialogOpen.value = false
     await router.replace({ name: 'login' })
   } catch (error) {
     actionError.value = describeError(error)
@@ -261,7 +263,12 @@ onBeforeUnmount(() => unsubscribeAuth?.())
       </button>
     </section>
 
-    <button class="action-card" type="button" :disabled="!user || signingOut" @click="onSignOut">
+    <button
+      class="action-card"
+      type="button"
+      :disabled="!user || signingOut"
+      @click="signOutDialogOpen = true; actionError = ''"
+    >
       <span class="setting-icon"><BaseIcon name="log-out" :size="18" /></span>
       <span class="setting-copy"><strong>{{ signingOut ? 'Logging out…' : 'Log Out' }}</strong></span>
       <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
@@ -280,8 +287,6 @@ onBeforeUnmount(() => unsubscribeAuth?.())
       </span>
       <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
     </button>
-
-    <p v-if="actionError" class="action-error" role="alert">{{ actionError }}</p>
 
     <section v-if="preferencesOpen" class="preferences-card" aria-labelledby="preferences-title">
       <div class="preferences-heading">
@@ -315,6 +320,45 @@ onBeforeUnmount(() => unsubscribeAuth?.())
     />
 
     <Teleport to="body">
+      <div
+        v-if="signOutDialogOpen"
+        class="modal-backdrop"
+        @click.self="!signingOut && (signOutDialogOpen = false)"
+        @keydown.esc="!signingOut && (signOutDialogOpen = false)"
+      >
+        <section
+          class="modal-card confirm-modal"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="sign-out-title"
+          aria-describedby="sign-out-description"
+        >
+          <h2 id="sign-out-title">Log out of CoRent?</h2>
+          <p id="sign-out-description">
+            You’ll need to log in again to access your account and preferences.
+          </p>
+          <FieldMessage v-if="actionError">{{ actionError }}</FieldMessage>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="modal-cancel"
+              :disabled="signingOut"
+              @click="signOutDialogOpen = false"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="modal-danger"
+              :disabled="signingOut"
+              @click="onSignOut"
+            >
+              {{ signingOut ? 'Logging out…' : 'Log Out' }}
+            </button>
+          </div>
+        </section>
+      </div>
+
       <div v-if="nameDialogOpen" class="modal-backdrop" @click.self="nameDialogOpen = false">
         <form class="modal-card" aria-labelledby="name-title" @submit.prevent="saveName">
           <h2 id="name-title">Edit profile</h2>
@@ -586,12 +630,6 @@ onBeforeUnmount(() => unsubscribeAuth?.())
   opacity: 0.65;
 }
 
-.action-error {
-  margin: 0;
-  color: var(--cr-error);
-  font-size: 13px;
-}
-
 .preferences-card {
   padding: 18px;
   border: 1px solid var(--cr-border);
@@ -714,6 +752,19 @@ button:focus-visible {
 .modal-save {
   border: 1px solid var(--cr-accent);
   background: var(--cr-accent);
+  color: #fff;
+}
+
+.confirm-modal > p {
+  margin: 0;
+  color: var(--cr-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.modal-danger {
+  border: 1px solid var(--cr-error) !important;
+  background: var(--cr-error);
   color: #fff;
 }
 
