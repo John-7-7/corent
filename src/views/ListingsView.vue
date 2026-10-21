@@ -1,37 +1,71 @@
 <script setup>
-// TODO: fetch and display house listings
+import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
+import {
+  formatRent,
+  listings,
+  suitabilityStatusClass,
+  suitabilityStatusText,
+} from '@/services/listingsService'
+import { useShortlist } from '@/services/shortlistService'
 
-// Static sample data only. Replace with your listings and scores later.
-const listings = [
-  { id: 1, title: 'Clementi Ave 2 Condo', price: '$2,800', area: 'Clementi', type: 'Condo', beds: 3, from: '1 Dec 2026', match: 94, tone: '', saved: true, available: true },
-  { id: 2, title: 'Tampines St 86 HDB', price: '$2,200', area: 'Tampines', type: 'HDB', beds: 4, from: '15 Dec 2026', match: 87, tone: 'alt', saved: false, available: true },
-  { id: 3, title: 'Queenstown Lane Condo', price: '$3,100', area: 'Queenstown', type: 'Condo', beds: 3, from: '1 Jan 2027', match: 82, tone: 'cool', saved: false, available: true },
-  { id: 4, title: 'Bishan St 22 HDB', price: '$2,450', area: 'Bishan', type: 'HDB', beds: 3, from: 'Not listed', match: 68, tone: 'alt', saved: false, available: true },
-  { id: 5, title: 'Jurong East Ave 1 Condo', price: '$2,900', area: 'Jurong', type: 'Condo', beds: 4, from: '1 Feb 2027', match: 55, tone: 'cool', saved: false, available: false },
-  { id: 6, title: 'Punggol Field HDB', price: '$2,100', area: 'Punggol', type: 'HDB', beds: 4, from: '1 Dec 2026', match: 49, tone: '', saved: false, available: true },
-]
+const { listingIds, storageError, toggleShortlist } = useShortlist()
+const selectedArea = ref('Any')
+const selectedType = ref('Any')
+const selectedBedrooms = ref('Any')
+const maximumRent = ref('')
+const sortBy = ref('match')
+const selectedListing = ref(null)
+const actionError = ref('')
 
-const breakdown = [
-  { label: 'Budget', detail: '$933 each across 3 (limit $1,100)', status: 'met' },
-  { label: 'Area', detail: 'Clementi', status: 'met' },
-  { label: 'Commute', detail: 'About 40 min (limit 30)', status: 'unmet' },
-  { label: 'Move-in date', detail: 'Availability date not listed', status: 'unknown' },
-  { label: 'Bedrooms', detail: '3 bedrooms (need 3)', status: 'met' },
-  { label: 'Amenities', detail: 'Has everything wanted', status: 'met' },
-]
-const statusText = { met: 'Met', unmet: 'Not met', unknown: 'Insufficient data' }
-const statusClass = { met: 'tag-ok', unmet: 'tag-red', unknown: 'tag-warn' }
+const areas = [...new Set(listings.map((listing) => listing.area))].sort()
+const filteredListings = computed(() => {
+  const filtered = listings.filter((listing) => {
+    if (selectedArea.value !== 'Any' && listing.area !== selectedArea.value) return false
+    if (selectedType.value !== 'Any' && listing.type !== selectedType.value) return false
+    if (selectedBedrooms.value === '5+' && listing.beds < 5) return false
+    if (
+      selectedBedrooms.value !== 'Any' &&
+      selectedBedrooms.value !== '5+' &&
+      listing.beds !== Number(selectedBedrooms.value)
+    ) {
+      return false
+    }
+    return !maximumRent.value || listing.price <= Number(maximumRent.value)
+  })
 
-// Set to true to preview the property details dialog.
-const showDetails = false
+  return filtered.sort((a, b) => {
+    if (sortBy.value === 'rent-asc') return a.price - b.price
+    if (sortBy.value === 'rent-desc') return b.price - a.price
+    return b.match - a.match
+  })
+})
+
+function clearFilters() {
+  selectedArea.value = 'Any'
+  selectedType.value = 'Any'
+  selectedBedrooms.value = 'Any'
+  maximumRent.value = ''
+  sortBy.value = 'match'
+}
+
+function toggleSaved(listing) {
+  actionError.value = ''
+  try {
+    if (!listing.available && !listingIds.value.includes(listing.id)) return
+    toggleShortlist(listing.id)
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : 'Unable to update your shortlist.'
+  }
+}
 </script>
 
 <template>
   <div>
     <header class="page-head">
       <h1>Browse</h1>
-      <p>Listings scored against your preferences</p>
+      <p>Browse listings and compare sample suitability scores</p>
     </header>
 
     <div class="content">
@@ -39,124 +73,155 @@ const showDetails = false
         <!-- Browsing as + filters -->
         <section class="card" aria-label="Filters">
           <div class="between wrap">
-            <div class="segmented" role="group" aria-label="Browse as">
-              <button type="button" aria-pressed="false">Just me</button>
-              <button type="button" class="on" aria-pressed="true">Flat Hunt 2025</button>
-            </div>
-            <p class="small muted">Scores use your group's combined preferences.</p>
+            <span class="pill">Sample group suitability scores</span>
+            <RouterLink class="link" to="/shortlist">Shortlist ({{ listingIds.length }})</RouterLink>
           </div>
 
           <div class="filters">
             <div class="field">
               <label for="f-area">Area</label>
-              <select id="f-area" class="input"><option>Any</option><option>Clementi</option><option>Tampines</option></select>
+              <select id="f-area" v-model="selectedArea" class="input">
+                <option>Any</option>
+                <option v-for="area in areas" :key="area">{{ area }}</option>
+              </select>
             </div>
             <div class="field">
               <label for="f-type">Type</label>
-              <select id="f-type" class="input"><option>Any</option><option>HDB</option><option>Condo</option><option>Landed</option></select>
+              <select id="f-type" v-model="selectedType" class="input">
+                <option>Any</option><option>HDB</option><option>Condo</option><option>Landed</option>
+              </select>
             </div>
             <div class="field">
               <label for="f-beds">Bedrooms</label>
-              <select id="f-beds" class="input"><option>Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5 or more</option></select>
+              <select id="f-beds" v-model="selectedBedrooms" class="input">
+                <option value="Any">Any</option>
+                <option value="1">1</option><option value="2">2</option>
+                <option value="3">3</option><option value="4">4</option>
+                <option value="5+">5 or more</option>
+              </select>
             </div>
             <div class="field">
               <label for="f-rent">Max rent</label>
-              <input id="f-rent" class="input" type="number" placeholder="$ / month" />
+              <input id="f-rent" v-model="maximumRent" class="input" type="number" min="0" placeholder="$ / month" />
             </div>
             <div class="field">
               <label for="f-sort">Sort by</label>
-              <select id="f-sort" class="input"><option>Best match</option><option>Newest</option><option>Rent: low to high</option><option>Rent: high to low</option></select>
+              <select id="f-sort" v-model="sortBy" class="input">
+                <option value="match">Best match</option>
+                <option value="rent-asc">Rent: low to high</option>
+                <option value="rent-desc">Rent: high to low</option>
+              </select>
             </div>
           </div>
         </section>
 
         <div class="between">
-          <p class="small muted">6 listings</p>
-          <button class="link" type="button">Clear filters</button>
+          <p class="small muted">{{ filteredListings.length }} listings</p>
+          <button class="link" type="button" @click="clearFilters">Clear filters</button>
         </div>
+        <p v-if="storageError || actionError" class="listing-error" role="alert">
+          {{ actionError || storageError }}
+        </p>
 
         <!-- Listing grid -->
         <div class="listing-grid">
-          <article v-for="l in listings" :key="l.id" class="listing" :class="{ gone: !l.available }">
+          <article v-for="l in filteredListings" :key="l.id" class="listing" :class="{ gone: !l.available }">
             <div class="listing-img thumb" :class="l.tone">
               <span v-if="l.available" class="pill badge">{{ l.match }}% match</span>
               <span v-else class="tag badge">Unavailable</span>
               <button
                 class="save-btn"
-                :class="{ saved: l.saved }"
+                :class="{ saved: listingIds.includes(l.id) }"
                 type="button"
-                :aria-pressed="l.saved"
-                :aria-label="l.saved ? 'Remove from shortlist' : 'Add to shortlist'"
+                :disabled="!l.available && !listingIds.includes(l.id)"
+                :aria-pressed="listingIds.includes(l.id)"
+                :aria-label="listingIds.includes(l.id) ? 'Remove from shortlist' : 'Add to shortlist'"
+                @click="toggleSaved(l)"
               >
-                <AppIcon name="bookmark" :size="15" :fill="l.saved" />
+                <AppIcon name="bookmark" :size="15" :fill="listingIds.includes(l.id)" />
               </button>
             </div>
 
             <div class="listing-body">
               <h3>{{ l.title }}</h3>
-              <p class="price">{{ l.price }}<span class="muted">/mo</span></p>
+              <p class="price">{{ formatRent(l.price) }}<span class="muted">/mo</span></p>
               <p class="small muted row-inline"><AppIcon name="pin" :size="11" /> {{ l.area }}</p>
               <p class="small muted">{{ l.type }} · {{ l.beds }} bedrooms · From {{ l.from }}</p>
 
               <div class="row actions">
-                <button class="btn btn-sm" type="button" style="flex: 1">View details</button>
+                <button class="btn btn-sm" type="button" style="flex: 1" @click="selectedListing = l">
+                  View details
+                </button>
                 <button
                   class="btn btn-sm"
-                  :class="{ 'btn-primary': !l.saved }"
+                  :class="{ 'btn-primary': !listingIds.includes(l.id) }"
                   type="button"
-                  :disabled="!l.available && !l.saved"
+                  :disabled="!l.available && !listingIds.includes(l.id)"
                   style="flex: 1"
+                  @click="toggleSaved(l)"
                 >
-                  {{ l.saved ? 'Remove' : 'Add to shortlist' }}
+                  {{ listingIds.includes(l.id) ? 'Remove' : 'Add to shortlist' }}
                 </button>
               </div>
             </div>
           </article>
         </div>
+        <p v-if="!filteredListings.length" class="empty-state">
+          No listings match these filters.
+        </p>
       </div>
     </div>
 
     <!-- Property details dialog -->
-    <div v-if="showDetails" class="modal-backdrop">
+    <div v-if="selectedListing" class="modal-backdrop" @click.self="selectedListing = null" @keydown.esc="selectedListing = null">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
         <div class="between" style="align-items: flex-start">
           <div>
-            <h2 id="detail-title" style="font-size: 17px">Clementi Ave 2 Condo</h2>
+            <h2 id="detail-title" style="font-size: 17px">{{ selectedListing.title }}</h2>
             <p class="small muted row-inline" style="margin-top: 2px">
-              <AppIcon name="pin" :size="11" /> Clementi · Condo · 3 bedrooms
+              <AppIcon name="pin" :size="11" />
+              {{ selectedListing.area }} · {{ selectedListing.type }} · {{ selectedListing.beds }} bedrooms
             </p>
           </div>
-          <button class="icon-btn" type="button" aria-label="Close details"><AppIcon name="x" :size="16" /></button>
+          <button class="icon-btn" type="button" aria-label="Close details" @click="selectedListing = null">
+            <AppIcon name="x" :size="16" />
+          </button>
         </div>
 
         <div class="between" style="margin: 0.9rem 0">
-          <p class="price big">$2,800<span class="muted">/mo</span></p>
+          <p class="price big">{{ formatRent(selectedListing.price) }}<span class="muted">/mo</span></p>
           <div class="row">
-            <span class="tag tag-ok">Available</span>
-            <span class="pill">94% match</span>
+            <span class="tag" :class="selectedListing.available ? 'tag-ok' : 'tag-warn'">
+              {{ selectedListing.available ? 'Available' : 'Unavailable' }}
+            </span>
+            <span class="pill">{{ selectedListing.match }}% match</span>
           </div>
         </div>
 
         <h3>Amenities</h3>
         <div class="chips" style="margin-bottom: 1rem">
-          <span class="tag">WiFi</span><span class="tag">Aircon</span><span class="tag">Gym</span><span class="tag">Pool</span>
+          <span v-for="amenity in selectedListing.amenities" :key="amenity" class="tag">{{ amenity }}</span>
         </div>
 
         <h3>How it fits your group</h3>
         <ul class="breakdown">
-          <li v-for="b in breakdown" :key="b.label">
-            <span class="tag" :class="statusClass[b.status]">{{ statusText[b.status] }}</span>
+          <li v-for="b in selectedListing.breakdown" :key="b.label">
+            <span class="tag" :class="suitabilityStatusClass[b.status]">{{ suitabilityStatusText[b.status] }}</span>
             <strong>{{ b.label }}</strong>
             <span class="small muted">{{ b.detail }}</span>
           </li>
         </ul>
 
-        <p class="small" style="margin: 0.9rem 0">
-          <a class="link" href="#" target="_blank" rel="noopener noreferrer">View the original listing</a>
-        </p>
-
         <div class="row" style="justify-content: flex-end">
-          <button class="btn btn-primary" type="button">Add to shortlist</button>
+          <button
+            class="btn"
+            :class="{ 'btn-primary': !listingIds.includes(selectedListing.id) }"
+            type="button"
+            :disabled="!selectedListing.available && !listingIds.includes(selectedListing.id)"
+            @click="toggleSaved(selectedListing)"
+          >
+            {{ listingIds.includes(selectedListing.id) ? 'Remove from shortlist' : 'Add to shortlist' }}
+          </button>
         </div>
       </div>
     </div>
@@ -203,6 +268,26 @@ const showDetails = false
 .price.big { font-size: 22px; }
 .price.big span { font-size: 12px; }
 .actions { margin-top: 0.6rem; }
+
+.listing-error,
+.empty-state {
+  color: var(--red);
+  font-size: 13px;
+}
+
+.empty-state {
+  padding: 24px;
+  border: 1px dashed var(--chip-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+  text-align: center;
+}
+
+.save-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 
 .breakdown { list-style: none; padding: 0; margin: 0.6rem 0 0; display: grid; gap: 0.55rem; }
 .breakdown li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; font-size: 13px; }
