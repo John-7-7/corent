@@ -71,6 +71,8 @@ function reauthenticate(user, password) {
 /**
  * Deletes the signed-in user's account (F-REQ-006): re-authenticates (Firebase
  * requires a recent login), removes their preference docs, then the Auth user.
+ * Group records are intentionally left untouched so remaining members can
+ * continue using their shared decisions.
  */
 export async function deleteAccount(password) {
   const user = auth.currentUser
