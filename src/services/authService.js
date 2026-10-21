@@ -1,5 +1,6 @@
 import {
   deleteUser,
+  createUserWithEmailAndPassword,
   EmailAuthProvider,
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -7,13 +8,15 @@ import {
   reauthenticateWithPopup,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
+  updateProfile,
 } from 'firebase/auth'
 import { auth } from '../firebase'
 import { deletePreferences } from './preferencesService'
 
-// TEMP dev-only test account, read from VITE_DEV_TEST_EMAIL / VITE_DEV_TEST_PASSWORD
-// in .env.local. The ternary folds to null in production builds, so the
-// credentials are never bundled. Remove once the real login page exists.
+// Optional dev-only test account, read from VITE_DEV_TEST_EMAIL /
+// VITE_DEV_TEST_PASSWORD in .env.local. Credentials are never bundled in
+// production builds.
 const DEV_TEST_ACCOUNT = import.meta.env.DEV
   ? {
       email: import.meta.env.VITE_DEV_TEST_EMAIL,
@@ -54,6 +57,42 @@ export function onAuthChange(callback) {
 
 export function signOutUser() {
   return signOut(auth)
+}
+
+export async function registerAccount(name, email, password) {
+  const displayName = name.trim()
+  if (!displayName) throw new Error('Enter your name to continue.')
+  const credential = await createUserWithEmailAndPassword(auth, email.trim(), password)
+  await updateProfile(credential.user, { displayName })
+  return credential.user
+}
+
+export async function signInUser(email, password) {
+  const credential = await signInWithEmailAndPassword(auth, email.trim(), password)
+  return credential.user
+}
+
+export async function updateAccountName(name) {
+  const user = auth.currentUser
+  if (!user) throw new Error('No user is signed in.')
+  const displayName = name.trim()
+  if (!displayName) throw new Error('Enter your name to continue.')
+  await updateProfile(user, { displayName })
+  return user
+}
+
+export async function changeAccountPassword(currentPassword, newPassword) {
+  const user = auth.currentUser
+  if (!user) throw new Error('No user is signed in.')
+  if (!usesPasswordSignIn(user)) {
+    throw new Error('Password changes are only available for email and password accounts.')
+  }
+
+  await reauthenticateWithCredential(
+    user,
+    EmailAuthProvider.credential(user.email, currentPassword),
+  )
+  await updatePassword(user, newPassword)
 }
 
 /** True when the user signed up with email + password (so re-auth needs a password). */

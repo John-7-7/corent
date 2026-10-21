@@ -1,560 +1,759 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
-import { onBeforeRouteLeave, useRouter } from 'vue-router'
-import AccountSettings from '../components/profile/AccountSettings.vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseIcon from '../components/profile/BaseIcon.vue'
+import DeleteAccountDialog from '../components/profile/DeleteAccountDialog.vue'
+import FieldMessage from '../components/profile/FieldMessage.vue'
 import PreferenceForm from '../components/profile/PreferenceForm.vue'
-import ProfileSummary from '../components/profile/ProfileSummary.vue'
 import { normalizePreferences } from '../components/profile/preferenceOptions'
 import {
+  changeAccountPassword,
   deleteAccount,
   getCurrentUser,
   onAuthChange,
   signOutUser,
+  updateAccountName,
   usesPasswordSignIn,
 } from '../services/authService'
 import { getPreferences, savePreferences } from '../services/preferencesService'
 import '../components/profile/theme.css'
 
-const SAVE_TIMEOUT_MS = 15000
-const TOAST_MS = 3500
-
 const router = useRouter()
-
-const user = shallowRef(null)
-const status = ref('loading') // 'loading' | 'ready' | 'error'
-const loadError = ref('')
-const isNew = ref(false)
-// What is stored in Firestore; resets the form when it changes.
-const savedValues = ref(normalizePreferences(null))
-// Latest form snapshot; drives the live summary.
-const liveValues = ref(savedValues.value)
-// Serialized form state at the last load/save, for unsaved-change detection.
-const baseline = ref(null)
-
-const saving = ref(false)
-const signingOut = ref(false)
-const deleting = ref(false)
+const user = ref(null)
+const profileName = ref('')
+const nameDialogOpen = ref(false)
+const passwordDialogOpen = ref(false)
+const deleteDialogOpen = ref(false)
+const preferencesOpen = ref(false)
+const preferencesLoading = ref(false)
+const preferencesLoaded = ref(false)
+const preferencesSaving = ref(false)
+const preferencesError = ref('')
+const preferencesSaved = ref(false)
+const preferencesAreNew = ref(false)
+const preferenceValues = ref(normalizePreferences(null))
+const name = ref('')
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const nameError = ref('')
+const passwordError = ref('')
 const deleteError = ref('')
-const toast = ref(null)
-let toastTimer = null
-let leavingIntentionally = false
+const actionError = ref('')
+const savingName = ref(false)
+const changingPassword = ref(false)
+const deleting = ref(false)
+const signingOut = ref(false)
 let unsubscribeAuth = null
-let unmounted = false
-// Incremented per load so a slow response for a previous user is ignored.
-let loadRequestId = 0
 
-const isDirty = computed(
-  () => baseline.value !== null && JSON.stringify(liveValues.value) !== baseline.value,
+const displayName = computed(
+  () =>
+    profileName.value ||
+    user.value?.displayName ||
+    user.value?.email?.split('@')[0] ||
+    'Guest profile',
 )
-
-const saveStatus = computed(() => {
-  if (status.value !== 'ready') return null
-  if (isNew.value) return { tone: 'neutral', text: 'New profile' }
-  if (isDirty.value) return { tone: 'warning', text: 'Unsaved changes' }
-  return { tone: 'success', text: 'All changes saved' }
+const initials = computed(() => {
+  const parts = displayName.value.trim().split(/\s+/).filter(Boolean)
+  return parts.length > 1
+    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    : displayName.value.slice(0, 2).toUpperCase()
 })
-
-const requiresPassword = computed(() => usesPasswordSignIn(user.value))
-
-function showToast(type, message) {
-  clearTimeout(toastTimer)
-  toast.value = { type, message }
-  toastTimer = setTimeout(() => (toast.value = null), TOAST_MS)
-}
-
-function withTimeout(promise, ms, message) {
-  let timer
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(message)), ms)
-  })
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
-}
+const passwordAccount = computed(() => usesPasswordSignIn(user.value))
 
 function describeError(error) {
   switch (error?.code) {
-    case 'permission-denied':
-      return "You don't have permission to access these preferences. Please sign in again."
-    case 'unavailable':
-      return 'You appear to be offline. Check your connection and try again.'
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
-      return 'Incorrect password. Please try again.'
+      return 'The current password is incorrect.'
+    case 'auth/weak-password':
+      return 'Choose a stronger password and try again.'
+    case 'auth/requires-recent-login':
+      return 'Please sign out and sign in again before changing this setting.'
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait a moment and try again.'
-    case 'auth/popup-closed-by-user':
-    case 'auth/cancelled-popup-request':
-      return 'Re-authentication was cancelled.'
     case 'auth/network-request-failed':
       return 'Network error. Check your connection and try again.'
+    case 'permission-denied':
+      return "You don't have permission to delete this data. Please sign in again."
+    case 'unavailable':
+      return 'You appear to be offline. Check your connection and try again.'
     default:
       return error?.message || 'Something went wrong. Please try again.'
   }
 }
 
-async function loadPreferences(uid) {
-  const requestId = ++loadRequestId
-  status.value = 'loading'
+function openNameDialog() {
+  name.value = displayName.value
+  nameError.value = ''
+  nameDialogOpen.value = true
+}
+
+async function saveName() {
+  nameError.value = ''
+  savingName.value = true
   try {
-    const preferences = await getPreferences(uid)
-    if (requestId !== loadRequestId) return
-    isNew.value = preferences === null
-    savedValues.value = normalizePreferences(preferences)
-    baseline.value = null // captured from the form's first snapshot
-    status.value = 'ready'
+    await updateAccountName(name.value)
+    profileName.value = name.value.trim()
+    nameDialogOpen.value = false
   } catch (error) {
-    if (requestId !== loadRequestId) return
-    loadError.value = describeError(error)
-    status.value = 'error'
+    nameError.value = describeError(error)
+  } finally {
+    savingName.value = false
   }
 }
 
-function retryLoad() {
-  if (user.value) loadPreferences(user.value.uid)
+async function openPreferences() {
+  preferencesOpen.value = true
+  preferencesLoading.value = true
+  preferencesLoaded.value = false
+  preferencesError.value = ''
+  preferencesSaved.value = false
+  try {
+    const saved = await getPreferences(user.value.uid)
+    preferencesAreNew.value = saved === null
+    preferenceValues.value = normalizePreferences(saved)
+    preferencesLoaded.value = true
+  } catch (error) {
+    preferencesError.value = describeError(error)
+  } finally {
+    preferencesLoading.value = false
+  }
 }
 
-// Driven by onAuthStateChanged: (re)loads when the signed-in user changes and
-// leaves the page if they sign out (e.g. in another tab).
-function onUserChange(nextUser) {
-  const previousUid = user.value?.uid
-  user.value = nextUser
-  if (!nextUser) {
-    loadRequestId++
-    if (!leavingIntentionally) {
-      leavingIntentionally = true
-      router.replace({ name: 'login', query: { redirect: '/profile' } })
-    }
+async function savePreferencesForm(values) {
+  preferencesSaving.value = true
+  preferencesError.value = ''
+  try {
+    await savePreferences(user.value.uid, values)
+    preferenceValues.value = values
+    preferencesAreNew.value = false
+    preferencesSaved.value = true
+  } catch (error) {
+    preferencesError.value = describeError(error)
+  } finally {
+    preferencesSaving.value = false
+  }
+}
+
+async function savePassword() {
+  passwordError.value = ''
+  if (newPassword.value.length < 8 || !/[A-Z]/.test(newPassword.value) || !/\d/.test(newPassword.value)) {
+    passwordError.value = 'Use at least 8 characters, including an uppercase letter and a number.'
     return
   }
-  if (nextUser.uid !== previousUid) loadPreferences(nextUser.uid)
-}
+  if (newPassword.value !== confirmPassword.value) {
+    passwordError.value = 'The new passwords do not match.'
+    return
+  }
 
-function onFormChange(snapshot) {
-  liveValues.value = snapshot
-  if (baseline.value === null) baseline.value = JSON.stringify(snapshot)
-}
-
-async function onSave(data) {
-  saving.value = true
+  changingPassword.value = true
   try {
-    await withTimeout(
-      savePreferences(user.value.uid, data),
-      SAVE_TIMEOUT_MS,
-      'Saving is taking too long. Check your connection and try again.',
-    )
-    const created = isNew.value
-    isNew.value = false
-    baseline.value = JSON.stringify(data)
-    savedValues.value = data
-    showToast('success', created ? 'Your preference profile has been created' : 'Preferences saved')
+    await changeAccountPassword(currentPassword.value, newPassword.value)
+    passwordDialogOpen.value = false
+    currentPassword.value = ''
+    newPassword.value = ''
+    confirmPassword.value = ''
   } catch (error) {
-    showToast('error', describeError(error))
+    passwordError.value = describeError(error)
   } finally {
-    saving.value = false
+    changingPassword.value = false
   }
 }
 
 async function onSignOut() {
-  if (isDirty.value && !window.confirm('You have unsaved changes. Sign out without saving?')) return
+  actionError.value = ''
   signingOut.value = true
-  leavingIntentionally = true
   try {
     await signOutUser()
-    router.replace({ name: 'login' })
+    await router.replace({ name: 'login' })
   } catch (error) {
-    leavingIntentionally = false
-    showToast('error', describeError(error))
+    actionError.value = describeError(error)
   } finally {
     signingOut.value = false
   }
 }
 
 async function onDeleteAccount(password) {
-  deleting.value = true
   deleteError.value = ''
-  leavingIntentionally = true
+  deleting.value = true
   try {
     await deleteAccount(password)
-    router.replace({ name: 'home' })
+    await router.replace({ name: 'login' })
   } catch (error) {
-    leavingIntentionally = false
     deleteError.value = describeError(error)
   } finally {
     deleting.value = false
   }
 }
 
-function goBack() {
-  if (window.history.state?.back) router.back()
-  else router.push({ name: 'home' })
+function onUserChange(nextUser) {
+  user.value = nextUser
+  profileName.value = nextUser?.displayName || ''
 }
-
-function onBeforeUnload(event) {
-  if (isDirty.value) event.preventDefault()
-}
-
-onBeforeRouteLeave(() => {
-  if (leavingIntentionally || !isDirty.value) return true
-  return window.confirm('You have unsaved changes. Leave without saving?')
-})
 
 onMounted(async () => {
-  window.addEventListener('beforeunload', onBeforeUnload)
-  // Wait for the restored session (and dev test sign-in) before subscribing,
-  // so the first auth event isn't a transient "signed out".
   await getCurrentUser()
-  if (unmounted) return
   unsubscribeAuth = onAuthChange(onUserChange)
 })
 
-onBeforeUnmount(() => {
-  unmounted = true
-  unsubscribeAuth?.()
-  window.removeEventListener('beforeunload', onBeforeUnload)
-  clearTimeout(toastTimer)
-})
+onBeforeUnmount(() => unsubscribeAuth?.())
 </script>
 
 <template>
-  <div class="profile-page">
-    <header class="topbar">
-      <div class="topbar__inner">
-        <button type="button" class="back-btn" aria-label="Go back" @click="goBack">
-          <BaseIcon name="chevron-left" :size="18" />
-        </button>
-        <h1 class="topbar__title">{{ isNew ? 'Create Your Preferences' : 'My Preferences' }}</h1>
-        <span v-if="saveStatus" class="status-chip" :class="`status-chip--${saveStatus.tone}`">
-          <span class="status-chip__dot" aria-hidden="true" />
-          {{ saveStatus.text }}
+  <main class="profile-page">
+    <section class="profile-card" aria-label="Profile">
+      <div class="avatar" aria-hidden="true">{{ initials }}</div>
+      <div class="profile-identity">
+        <h1>{{ displayName }}</h1>
+        <p>{{ user?.email || 'Viewing without a signed-in account' }}</p>
+        <span class="account-tag">{{ user ? 'CoRent account' : 'Guest profile' }}</span>
+      </div>
+      <button class="edit-profile" type="button" :disabled="!user" @click="openNameDialog">
+        <BaseIcon name="edit" :size="14" />
+        Edit
+      </button>
+    </section>
+
+    <p v-if="!user" class="guest-notice">
+      You can view this page, but you’ll need to sign in to manage account details and preferences.
+      <router-link :to="{ name: 'login', query: { redirect: '/profile' } }">Log in</router-link>
+      or
+      <router-link to="/register">create an account</router-link>.
+    </p>
+
+    <section class="settings-card" aria-labelledby="security-title">
+      <h2 id="security-title" class="section-label">Security and preferences</h2>
+      <button
+        v-if="passwordAccount"
+        class="setting-row"
+        type="button"
+        @click="passwordDialogOpen = true"
+      >
+        <span class="setting-icon"><BaseIcon name="lock" :size="18" /></span>
+        <span class="setting-copy">
+          <strong>Change Password</strong>
+          <span>Update your account password</span>
+        </span>
+        <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
+      </button>
+      <div v-else-if="user" class="setting-row setting-row--static">
+        <span class="setting-icon"><BaseIcon name="lock" :size="18" /></span>
+        <span class="setting-copy">
+          <strong>Password managed by your sign-in provider</strong>
+          <span>Change your password with your provider</span>
         </span>
       </div>
-    </header>
+      <div v-else class="setting-row setting-row--static">
+        <span class="setting-icon"><BaseIcon name="lock" :size="18" /></span>
+        <span class="setting-copy">
+          <strong>Sign in to manage your account</strong>
+          <span>Account security settings are unavailable in guest view</span>
+        </span>
+      </div>
+      <button class="setting-row" type="button" :disabled="!user" @click="openPreferences">
+        <span class="setting-icon"><BaseIcon name="edit" :size="18" /></span>
+        <span class="setting-copy">
+          <strong>Edit Preferences</strong>
+          <span>Update your rental preferences</span>
+        </span>
+        <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
+      </button>
+    </section>
 
-    <!-- Loading skeleton -->
-    <div
-      v-if="status === 'loading'"
-      class="layout"
-      aria-busy="true"
-      aria-label="Loading preferences"
+    <button class="action-card" type="button" :disabled="!user || signingOut" @click="onSignOut">
+      <span class="setting-icon"><BaseIcon name="log-out" :size="18" /></span>
+      <span class="setting-copy"><strong>{{ signingOut ? 'Logging out…' : 'Log Out' }}</strong></span>
+      <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
+    </button>
+
+    <button
+      class="action-card action-card--danger"
+      type="button"
+      :disabled="!user"
+      @click="deleteDialogOpen = true"
     >
-      <div class="column">
-        <div v-for="n in 5" :key="n" class="skeleton-card">
-          <span class="skeleton skeleton--title" />
-          <span class="skeleton skeleton--bar" />
-          <span class="skeleton skeleton--short" />
-        </div>
-      </div>
-      <div class="sidebar">
-        <div class="skeleton-card skeleton-card--tall">
-          <span v-for="n in 7" :key="n" class="skeleton skeleton--row" />
-        </div>
-      </div>
-    </div>
+      <span class="setting-icon"><BaseIcon name="trash" :size="18" /></span>
+      <span class="setting-copy">
+        <strong>Delete Account</strong>
+        <span>Permanently remove your account and all data</span>
+      </span>
+      <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
+    </button>
 
-    <!-- Load error -->
-    <div v-else-if="status === 'error'" class="layout layout--single">
-      <div class="message-card" role="alert">
-        <BaseIcon name="alert-circle" :size="22" />
-        <h2>We couldn't load your preferences</h2>
-        <p>{{ loadError }}</p>
-        <button type="button" class="btn-secondary" @click="retryLoad">Try again</button>
-      </div>
-    </div>
+    <p v-if="actionError" class="action-error" role="alert">{{ actionError }}</p>
 
-    <div v-else class="layout">
-      <div class="column">
-        <div v-if="isNew" class="intro">
-          <h2>Set up your rental preference profile</h2>
-          <p>
-            Tell us what you're looking for. Your group uses these preferences to find listings that
-            work for everyone, and you can edit them any time.
-          </p>
-        </div>
+    <section v-if="preferencesOpen" class="preferences-card" aria-labelledby="preferences-title">
+      <div class="preferences-heading">
+        <h2 id="preferences-title">Rental Preferences</h2>
+        <button type="button" @click="preferencesOpen = false">Close</button>
+      </div>
+      <p v-if="preferencesLoading" class="preferences-status" role="status">Loading preferences…</p>
+      <div v-else-if="!preferencesLoaded" class="preferences-status" role="alert">
+        <p>{{ preferencesError }}</p>
+        <button type="button" @click="openPreferences">Try again</button>
+      </div>
+      <template v-else>
+        <p v-if="preferencesSaved" class="preferences-success" role="status">Preferences saved.</p>
+        <FieldMessage v-if="preferencesError">{{ preferencesError }}</FieldMessage>
         <PreferenceForm
-          :initial-values="savedValues"
-          :saving="saving"
-          :submit-label="isNew ? 'Create Profile' : 'Save Preferences'"
-          @change="onFormChange"
-          @save="onSave"
+          :initial-values="preferenceValues"
+          :saving="preferencesSaving"
+          :submit-label="preferencesAreNew ? 'Create Profile' : 'Save Preferences'"
+          @save="savePreferencesForm"
         />
+      </template>
+    </section>
+
+    <DeleteAccountDialog
+      :open="deleteDialogOpen"
+      :busy="deleting"
+      :error="deleteError"
+      :requires-password="passwordAccount"
+      @close="deleteDialogOpen = false; deleteError = ''"
+      @confirm="onDeleteAccount"
+    />
+
+    <Teleport to="body">
+      <div v-if="nameDialogOpen" class="modal-backdrop" @click.self="nameDialogOpen = false">
+        <form class="modal-card" aria-labelledby="name-title" @submit.prevent="saveName">
+          <h2 id="name-title">Edit profile</h2>
+          <label for="profile-name">Name</label>
+          <input id="profile-name" v-model="name" maxlength="80" autocomplete="name" required />
+          <FieldMessage v-if="nameError">{{ nameError }}</FieldMessage>
+          <div class="modal-actions">
+            <button type="button" class="modal-cancel" :disabled="savingName" @click="nameDialogOpen = false">
+              Cancel
+            </button>
+            <button type="submit" class="modal-save" :disabled="savingName">
+              {{ savingName ? 'Saving…' : 'Save' }}
+            </button>
+          </div>
+        </form>
       </div>
 
-      <div class="sidebar">
-        <ProfileSummary :preferences="liveValues" />
-        <AccountSettings
-          :email="user?.email ?? ''"
-          :requires-password="requiresPassword"
-          :deleting="deleting"
-          :delete-error="deleteError"
-          :signing-out="signingOut"
-          @sign-out="onSignOut"
-          @delete-account="onDeleteAccount"
-          @dismiss-error="deleteError = ''"
-        />
+      <div v-if="passwordDialogOpen" class="modal-backdrop" @click.self="passwordDialogOpen = false">
+        <form class="modal-card" aria-labelledby="password-title" @submit.prevent="savePassword">
+          <h2 id="password-title">Change password</h2>
+          <label for="current-password">Current password</label>
+          <input
+            id="current-password"
+            v-model="currentPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+          <label for="new-password">New password</label>
+          <input
+            id="new-password"
+            v-model="newPassword"
+            type="password"
+            autocomplete="new-password"
+            required
+          />
+          <label for="confirm-password">Confirm new password</label>
+          <input
+            id="confirm-password"
+            v-model="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            required
+          />
+          <FieldMessage v-if="passwordError">{{ passwordError }}</FieldMessage>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="modal-cancel"
+              :disabled="changingPassword"
+              @click="passwordDialogOpen = false"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="modal-save" :disabled="changingPassword">
+              {{ changingPassword ? 'Updating…' : 'Update password' }}
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
-
-    <Transition name="toast">
-      <div
-        v-if="toast"
-        class="toast"
-        :class="`toast--${toast.type}`"
-        :role="toast.type === 'error' ? 'alert' : 'status'"
-      >
-        <BaseIcon :name="toast.type === 'error' ? 'alert-circle' : 'check'" :size="16" />
-        {{ toast.message }}
-      </div>
-    </Transition>
-  </div>
+    </Teleport>
+  </main>
 </template>
 
 <style scoped>
 .profile-page {
-  min-height: 100vh;
-  background: var(--cr-bg);
-  font-family: var(--cr-font);
-  color: var(--cr-text);
-}
-
-/* Top bar */
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--cr-surface);
-  border-bottom: 1px solid var(--cr-border);
-}
-.topbar__inner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 1080px;
-  height: 56px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-.topbar__title {
-  flex: 1;
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-}
-.back-btn {
   display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  margin-left: -8px;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--cr-text);
-  cursor: pointer;
-}
-.back-btn:hover {
-  background: #f2f2f2;
-}
-.back-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--cr-focus-ring);
-}
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-.status-chip__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.status-chip--neutral {
-  background: #efefef;
-  color: var(--cr-muted);
-}
-.status-chip--warning {
-  background: var(--cr-warning-soft);
-  color: var(--cr-warning);
-}
-.status-chip--success {
-  background: var(--cr-success-soft);
-  color: var(--cr-success);
-}
-
-/* Layout */
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  align-items: start;
-  gap: 20px;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 20px 24px 0;
-}
-.layout--single {
-  grid-template-columns: minmax(0, 520px);
-  justify-content: center;
-  padding-top: 48px;
-}
-.column {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.sidebar {
-  position: sticky;
-  top: 76px;
-  display: flex;
-  flex-direction: column;
   gap: 12px;
-}
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 16px 16px 0;
-  }
-  .sidebar {
-    position: static;
-    padding-bottom: 24px;
-  }
-  .topbar__inner {
-    padding: 0 16px;
-  }
-}
-
-.intro {
-  padding: 16px 18px;
-  border-radius: var(--cr-radius-card);
-  background: linear-gradient(135deg, var(--cr-accent) 0%, var(--cr-accent-hover) 100%);
-  color: #fff;
-}
-.intro h2 {
-  margin: 0 0 4px;
-  font-size: 15px;
-  font-weight: 700;
-}
-.intro p {
-  margin: 0;
-  font-size: 12.5px;
-  line-height: 1.5;
-  opacity: 0.92;
-}
-
-/* Error state */
-.message-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 32px 24px;
-  border: 1px solid var(--cr-border);
-  border-radius: var(--cr-radius-card);
-  background: var(--cr-surface);
-  text-align: center;
-  color: var(--cr-error);
-}
-.message-card h2 {
-  margin: 4px 0 0;
-  font-size: 16px;
+  width: min(100% - 32px, 620px);
+  margin: 24px auto;
   color: var(--cr-text);
+  font-family: var(--cr-font);
 }
-.message-card p {
-  margin: 0 0 8px;
-  font-size: 13px;
-  color: var(--cr-muted);
+
+.profile-card,
+.settings-card,
+.action-card {
+  overflow: hidden;
+  border: 1px solid var(--cr-border);
+  border-radius: 18px;
+  background: var(--cr-surface);
+  box-shadow: var(--cr-shadow-card);
 }
-.btn-secondary {
-  height: 36px;
-  padding: 0 18px;
-  border: none;
-  border-radius: 8px;
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 124px;
+  padding: 20px 22px;
+  box-sizing: border-box;
+}
+
+.avatar {
+  display: grid;
+  flex: 0 0 70px;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
   background: var(--cr-accent);
   color: #fff;
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.profile-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-identity h1 {
+  margin: 0 0 3px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.profile-identity p {
+  margin: 0 0 10px;
+  color: var(--cr-muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.account-tag {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--cr-accent-soft);
+  color: var(--cr-accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.guest-notice {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--cr-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--cr-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.edit-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 0 8px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--cr-accent);
   font: 600 13px var(--cr-font);
   cursor: pointer;
 }
 
-/* Skeleton */
-.skeleton-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 18px;
-  border: 1px solid var(--cr-border);
-  border-radius: var(--cr-radius-card);
-  background: var(--cr-surface);
-}
-.skeleton {
-  display: block;
-  height: 10px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #eee 25%, #f6f6f6 50%, #eee 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
-}
-.skeleton--title {
-  width: 30%;
-  height: 12px;
-}
-.skeleton--bar {
-  width: 100%;
-  height: 6px;
-}
-.skeleton--short {
-  width: 18%;
-}
-.skeleton--row:nth-child(odd) {
-  width: 80%;
-}
-@keyframes shimmer {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
+.settings-card {
+  padding-top: 2px;
 }
 
-/* Toast */
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  z-index: 50;
+.section-label {
+  margin: 0;
+  padding: 17px 18px 12px;
+  color: #999;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.setting-row,
+.action-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 16px;
-  border-radius: 10px;
-  background: var(--cr-dark);
-  color: #fff;
+  width: 100%;
+  min-height: 70px;
+  gap: 14px;
+  padding: 12px 18px;
+  border: 0;
+  border-top: 1px solid #f0efee;
+  background: var(--cr-surface);
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.setting-row:hover:not(.setting-row--static),
+.action-card:hover:not(:disabled) {
+  background: #fcfbfb;
+}
+
+.setting-row:disabled,
+.edit-profile:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.setting-row--static {
+  cursor: default;
+}
+
+.setting-icon {
+  display: grid;
+  flex: 0 0 40px;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: #f4f4f4;
+  color: #555;
+}
+
+.setting-copy {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+
+.setting-copy strong {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.setting-copy > span {
+  color: var(--cr-muted);
   font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
-  transform: translateX(-50%);
 }
-.toast--success .base-icon {
-  color: #5ee59a;
+
+.row-chevron {
+  color: #c7c7c7;
 }
-.toast--error {
-  background: var(--cr-error);
+
+.action-card {
+  min-height: 72px;
+  border: 1px solid var(--cr-border);
+  border-radius: 18px;
+  box-shadow: var(--cr-shadow-card);
 }
-.toast-enter-active,
-.toast-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+
+.action-card .setting-icon {
+  background: #f4f4f4;
 }
-.toast-enter-from,
-.toast-leave-to {
-  opacity: 0;
-  transform: translate(-50%, 8px);
+
+.action-card--danger {
+  border-color: #f1d8d8;
+  color: var(--cr-error);
+}
+
+.action-card--danger .setting-icon {
+  background: var(--cr-error-soft);
+  color: var(--cr-error);
+}
+
+.action-card--danger .setting-copy > span {
+  color: var(--cr-muted);
+}
+
+.action-card--danger .row-chevron {
+  color: #e79a9a;
+}
+
+.action-card:disabled,
+.edit-profile:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.action-error {
+  margin: 0;
+  color: var(--cr-error);
+  font-size: 13px;
+}
+
+.preferences-card {
+  padding: 18px;
+  border: 1px solid var(--cr-border);
+  border-radius: 18px;
+  background: var(--cr-surface);
+  box-shadow: var(--cr-shadow-card);
+}
+
+.preferences-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.preferences-heading h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.preferences-heading button,
+.preferences-status button {
+  border: 0;
+  background: transparent;
+  color: var(--cr-accent);
+  font: 600 12px var(--cr-font);
+  cursor: pointer;
+}
+
+.preferences-status {
+  margin: 12px 0;
+  color: var(--cr-muted);
+  font-size: 13px;
+}
+
+.preferences-status p {
+  margin: 0 0 8px;
+  color: var(--cr-error);
+}
+
+.preferences-success {
+  color: var(--cr-success);
+  font-size: 13px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(17 17 17 / 45%);
+}
+
+.modal-card {
+  display: grid;
+  width: min(100%, 380px);
+  gap: 10px;
+  padding: 22px;
+  border-radius: 14px;
+  background: var(--cr-surface);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 20%);
+  font-family: var(--cr-font);
+}
+
+.modal-card h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.modal-card label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.modal-card input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  padding: 0 11px;
+  border: 1px solid var(--cr-border-strong);
+  border-radius: 8px;
+  font: 13px var(--cr-font);
+}
+
+.modal-card input:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--cr-focus-ring);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modal-actions button {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font: 600 13px var(--cr-font);
+  cursor: pointer;
+}
+
+.modal-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.modal-cancel {
+  border: 1px solid var(--cr-border-strong);
+  background: var(--cr-surface);
+  color: var(--cr-text);
+}
+
+.modal-save {
+  border: 1px solid var(--cr-accent);
+  background: var(--cr-accent);
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    width: min(100% - 24px, 620px);
+    margin-top: 16px;
+    gap: 10px;
+  }
+
+  .profile-card {
+    gap: 12px;
+    min-height: 112px;
+    padding: 16px;
+  }
+
+  .avatar {
+    flex-basis: 58px;
+    width: 58px;
+    height: 58px;
+    font-size: 21px;
+  }
+
+  .profile-identity h1 {
+    font-size: 16px;
+  }
+
+  .profile-identity p {
+    font-size: 12px;
+  }
+
+  .edit-profile {
+    font-size: 12px;
+  }
+
+  .setting-row,
+  .action-card {
+    gap: 11px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
 }
 </style>

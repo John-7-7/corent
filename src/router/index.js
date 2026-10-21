@@ -28,7 +28,7 @@ const router = createRouter({
 
     // App pages (with sidebar)
     { path: '/home', name: 'home', component: HomeView },
-    { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
+    { path: '/profile', name: 'profile', component: ProfileView },
     { path: '/listings', name: 'listings', component: ListingsView },
     { path: '/group-summary', name: 'group summary', component: GroupSummaryView, meta: {requiresAuth: true},},
     { path: '/shortlist', name: 'shortlist', component: ShortlistView, meta: {requiresAuth: true},} 
