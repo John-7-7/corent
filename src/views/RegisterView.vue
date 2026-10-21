@@ -3,13 +3,17 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import FlowTopBar from '@/components/FlowTopBar.vue'
+import { registerAccount } from '@/services/authService'
 
 const router = useRouter()
 
+const name = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const submitAttempted = ref(false)
+const submitting = ref(false)
+const submitError = ref('')
 
 const isEmailValid = computed(() => {
   const emailValue = email.value.trim()
@@ -42,9 +46,12 @@ const passwordsMatch = computed(() =>
 
 function onSubmit() {
   submitAttempted.value = true
+  submitError.value = ''
+  name.value = name.value.trim()
   email.value = email.value.trim()
 
   if (
+    !name.value ||
     !isEmailValid.value ||
     !isPasswordValid.value ||
     !passwordsMatch.value
@@ -52,7 +59,30 @@ function onSubmit() {
     return
   }
 
-  router.push('/preferences')
+  submitting.value = true
+  registerAccount(name.value, email.value, password.value)
+    .then(() => router.push('/preferences'))
+    .catch((error) => {
+      switch (error?.code) {
+        case 'auth/email-already-in-use':
+          submitError.value = 'An account already exists for this email. Log in instead.'
+          break
+        case 'auth/invalid-email':
+          submitError.value = 'Enter a valid email address.'
+          break
+        case 'auth/weak-password':
+          submitError.value = 'Choose a stronger password.'
+          break
+        case 'auth/network-request-failed':
+          submitError.value = 'Network error. Check your connection and try again.'
+          break
+        default:
+          submitError.value = error?.message || 'Unable to create your account. Please try again.'
+      }
+    })
+    .finally(() => {
+      submitting.value = false
+    })
 }
 </script>
 
@@ -70,15 +100,20 @@ function onSubmit() {
         </div>
 
         <div class="field">
-          <label for="username">Username</label>
+          <label for="username">Name</label>
 
           <input
-            id="username"
+            id="name"
+            v-model="name"
             class="input"
             type="text"
-            placeholder="e.g. alice_tan"
-            autocomplete="username"
+            placeholder="e.g. Alice Tan"
+            autocomplete="name"
+            required
           />
+          <p v-if="submitAttempted && !name" class="field-error" role="alert">
+            Enter your name.
+          </p>
         </div>
 
         <div class="field">
@@ -198,8 +233,9 @@ function onSubmit() {
           </p>
         </div>
 
-        <button class="btn btn-primary btn-block" type="submit">
-          Create Account
+        <p v-if="submitError" class="field-error" role="alert">{{ submitError }}</p>
+        <button class="btn btn-primary btn-block" type="submit" :disabled="submitting">
+          {{ submitting ? 'Creating account…' : 'Create Account' }}
         </button>
 
         <p class="auth-foot">
@@ -264,5 +300,10 @@ function onSubmit() {
 
 .invalid {
   border-color: var(--red);
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 </style>

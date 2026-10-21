@@ -24,11 +24,16 @@ const router = createRouter({
       component: ForgotPasswordView,
       meta: { bare: true },
     },
-    { path: '/preferences', name: 'preferences', component: PreferencesView, meta: { bare: true } },
+    {
+      path: '/preferences',
+      name: 'preferences',
+      component: PreferencesView,
+      meta: { bare: true, requiresAuth: true },
+    },
 
     // App pages (with sidebar)
     { path: '/home', name: 'home', component: HomeView },
-    { path: '/profile', name: 'profile', component: ProfileView},
+    { path: '/profile', name: 'profile', component: ProfileView },
     { path: '/listings', name: 'listings', component: ListingsView },
     { path: '/group-summary', name: 'group summary', component: GroupSummaryView},
     { path: '/shortlist', name: 'shortlist', component: ShortlistView} //i removed the meta: { requiresAuth: true } from this route to allow access without authentication for now so we can see the layout for all

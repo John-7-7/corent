@@ -57,8 +57,9 @@ function confirm() {
           <div class="dialog__icon"><BaseIcon name="trash" :size="18" /></div>
           <h2 id="delete-title" class="dialog__title">Delete your account?</h2>
           <p id="delete-desc" class="dialog__text">
-            This permanently deletes your CoRent account and your rental preference profile. This
-            cannot be undone.
+            This permanently deletes your CoRent account and personal rental preferences. Your
+            groups and their shared decisions will remain available to other members. This cannot
+            be undone.
           </p>
 
           <form class="dialog__form" @submit.prevent="confirm">
@@ -74,7 +75,7 @@ function confirm() {
             </label>
             <label class="check">
               <input v-model="acknowledged" type="checkbox" :disabled="busy" />
-              <span>I understand my account and preferences will be deleted.</span>
+              <span>I understand my account and personal preferences will be deleted.</span>
             </label>
 
             <FieldMessage v-if="error">{{ error }}</FieldMessage>
