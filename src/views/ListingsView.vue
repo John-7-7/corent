@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import ListingCard from '@/components/listings/ListingCard.vue'
 import ListingMap from '@/components/listings/ListingMap.vue'
 import { getListings } from '@/services/listings'
+import { useShortlist } from '@/services/shortlistService'
 
 const listings = ref([])
 const loading = ref(true)
@@ -72,14 +74,19 @@ const destinations = ref([
 ])
 
 /* ---------- shortlist (F-REQ-016) ---------- */
-// Local only for now. Swap for services/shortlist.js against Selected_Listing
-// once groups exist — the component API below does not change.
-const savedIds = ref(new Set())
-const isSaved = (l) => savedIds.value.has(l.ListingID)
+// Persisted in localStorage and shared with ShortlistView. Swap shortlistService
+// for Selected_Listing once groups exist — the component API below does not change.
+const { listingIds, storageError, toggleShortlist } = useShortlist()
+const actionError = ref('')
+const isSaved = (l) => listingIds.value.includes(l.ListingID)
 function toggleSave(l) {
-  const next = new Set(savedIds.value)
-  next.has(l.ListingID) ? next.delete(l.ListingID) : next.add(l.ListingID)
-  savedIds.value = next
+  actionError.value = ''
+  try {
+    if (!l.IsAvailable && !isSaved(l)) return
+    toggleShortlist(l.ListingID)
+  } catch (e) {
+    actionError.value = e instanceof Error ? e.message : 'Unable to update your shortlist.'
+  }
 }
 
 /* ---------- details dialog ---------- */
@@ -104,7 +111,7 @@ const breakdown = computed(() => {
   <div>
     <header class="page-head">
       <h1>Browse</h1>
-      <p>Listings scored against your preferences</p>
+      <p>Browse listings and compare sample suitability scores</p>
     </header>
 
     <div class="content">
@@ -117,7 +124,7 @@ const breakdown = computed(() => {
                 My group
               </button>
             </div>
-            <p class="small muted">Scores use your group's combined preferences.</p>
+            <RouterLink class="link" to="/shortlist">Shortlist ({{ listingIds.length }})</RouterLink>
           </div>
 
           <div class="filters">
@@ -172,6 +179,9 @@ const breakdown = computed(() => {
             </button>
           </div>
         </div>
+        <p v-if="storageError || actionError" class="listing-error" role="alert">
+          {{ actionError || storageError }}
+        </p>
 
         <p v-if="loading" class="small muted">Loading listings…</p>
         <p v-else-if="error" class="small" style="color: var(--red)">Could not load listings: {{ error }}</p>
@@ -276,6 +286,7 @@ const breakdown = computed(() => {
 .price { color: var(--red); font-weight: 700; }
 .price.big { font-size: 22px; }
 .price.big span { font-size: 12px; font-weight: 400; }
+.listing-error { color: var(--red); font-size: 13px; }
 .breakdown { list-style: none; padding: 0; margin: 0.6rem 0 0; display: grid; gap: 0.55rem; }
 .breakdown li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; font-size: 13px; }
 </style>
