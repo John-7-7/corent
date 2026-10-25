@@ -8,7 +8,7 @@ defineProps({
   },
 })
 
-const emit = defineEmits(['view-preview'])
+const emit = defineEmits(['view-group'])
 </script>
 
 <template>
@@ -19,7 +19,7 @@ const emit = defineEmits(['view-preview'])
     <div class="group-info">
       <div class="group-title-row">
         <h3>{{ group.name }}</h3>
-        <span class="preview-label">Preview</span>
+        <span class="preview-label">Rental group</span>
       </div>
       <p class="group-meta">
         {{ group.memberCount }} {{ group.memberCount === 1 ? 'member' : 'members' }}
@@ -31,7 +31,7 @@ const emit = defineEmits(['view-preview'])
       class="icon-btn"
       type="button"
       :aria-label="`Preview ${group.name}`"
-      @click="emit('view-preview', group.id)"
+      @click="emit('view-group', group.id)"
     >
       <AppIcon name="chevron" :size="16" />
     </button>
