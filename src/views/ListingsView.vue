@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
+import ListingCard from '@/components/listings/ListingCard.vue'
 import {
   formatRent,
   listings,
@@ -125,46 +126,14 @@ function toggleSaved(listing) {
 
         <!-- Listing grid -->
         <div class="listing-grid">
-          <article v-for="l in filteredListings" :key="l.id" class="listing" :class="{ gone: !l.available }">
-            <div class="listing-img thumb" :class="l.tone">
-              <span v-if="l.available" class="pill badge">{{ l.match }}% match</span>
-              <span v-else class="tag badge">Unavailable</span>
-              <button
-                class="save-btn"
-                :class="{ saved: listingIds.includes(l.id) }"
-                type="button"
-                :disabled="!l.available && !listingIds.includes(l.id)"
-                :aria-pressed="listingIds.includes(l.id)"
-                :aria-label="listingIds.includes(l.id) ? 'Remove from shortlist' : 'Add to shortlist'"
-                @click="toggleSaved(l)"
-              >
-                <AppIcon name="bookmark" :size="15" :fill="listingIds.includes(l.id)" />
-              </button>
-            </div>
-
-            <div class="listing-body">
-              <h3>{{ l.title }}</h3>
-              <p class="price">{{ formatRent(l.price) }}<span class="muted">/mo</span></p>
-              <p class="small muted row-inline"><AppIcon name="pin" :size="11" /> {{ l.area }}</p>
-              <p class="small muted">{{ l.type }} · {{ l.beds }} bedrooms · From {{ l.from }}</p>
-
-              <div class="row actions">
-                <button class="btn btn-sm" type="button" style="flex: 1" @click="selectedListing = l">
-                  View details
-                </button>
-                <button
-                  class="btn btn-sm"
-                  :class="{ 'btn-primary': !listingIds.includes(l.id) }"
-                  type="button"
-                  :disabled="!l.available && !listingIds.includes(l.id)"
-                  style="flex: 1"
-                  @click="toggleSaved(l)"
-                >
-                  {{ listingIds.includes(l.id) ? 'Remove' : 'Add to shortlist' }}
-                </button>
-              </div>
-            </div>
-          </article>
+            <ListingCard
+              v-for="listing in filteredListings"
+              :key="listing.id"
+              :listing="listing"
+              :is-shortlisted="listingIds.includes(listing.id)"
+              @view-details="selectedListing = $event"
+              @toggle-shortlist="toggleSaved"
+            />
         </div>
         <p v-if="!filteredListings.length" class="empty-state">
           No listings match these filters.

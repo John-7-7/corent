@@ -2,233 +2,190 @@
 import AppIcon from '@/components/AppIcon.vue'
 import { formatRent } from '@/services/listingsService'
 
-// The parent supplies the existing listing object.
 defineProps({
   listing: {
     type: Object,
     required: true,
   },
-  selected: {
+
+  isShortlisted: {
     type: Boolean,
     default: false,
   },
 })
+
+defineEmits(['view-details', 'toggle-shortlist'])
 </script>
 
 <template>
   <article
-    class="listing-card"
-    :class="{
-      'listing-card--selected': selected,
-      'listing-card--unavailable': listing.available === false,
-    }"
+    class="listing"
+    :class="{ gone: !listing.available }"
   >
-    <div class="listing-main">
-      <!-- Property photo.
-           Supply an actual photo through the optional imageUrl field. -->
-      <div class="listing-photo">
-        <img
-          v-if="listing.imageUrl"
-          :src="listing.imageUrl"
-          :alt="listing.title || 'Rental property'"
+    <div
+      class="listing-img thumb"
+      :class="listing.tone"
+    >
+      <span
+        v-if="listing.available"
+        class="pill badge"
+      >
+        {{ listing.match }}% match
+      </span>
+
+      <span
+        v-else
+        class="tag badge"
+      >
+        Unavailable
+      </span>
+
+      <button
+        class="save-btn"
+        :class="{ saved: isShortlisted }"
+        type="button"
+        :disabled="!listing.available && !isShortlisted"
+        :aria-pressed="isShortlisted"
+        :aria-label="
+          isShortlisted
+            ? 'Remove from shortlist'
+            : 'Add to shortlist'
+        "
+        @click="$emit('toggle-shortlist', listing)"
+      >
+        <AppIcon
+          name="bookmark"
+          :size="15"
+          :fill="isShortlisted"
         />
-        <span v-else class="photo-placeholder">Photo unavailable</span>
-
-        <span
-          v-if="listing.available === false"
-          class="availability"
-        >
-          Unavailable
-        </span>
-      </div>
-
-      <div class="listing-info">
-        <!-- Property title and match percentage.
-             The parent calculates/provides the match value. -->
-        <div class="listing-title-row">
-          <h3>{{ listing.title || 'Property name unavailable' }}</h3>
-
-          <div class="listing-title-actions">
-            <span v-if="listing.match != null" class="match-pill">
-              {{ listing.match }}%
-            </span>
-
-            <!-- Parent supplies a shortlist/remove button if needed. -->
-            <slot name="title-actions" />
-          </div>
-        </div>
-
-        <!-- Rent and basic property information. -->
-        <p class="rent">
-          {{ listing.price != null ? formatRent(listing.price) : '—' }}
-          <span>/mo</span>
-        </p>
-
-        <p class="listing-meta">
-          <AppIcon name="pin" :size="12" />
-          {{ listing.area || 'Location unavailable' }}
-          · {{ listing.beds ?? '—' }} rooms
-        </p>
-
-        <!-- Parent supplies voting, member avatars or other controls.
-             Their behaviour remains in the parent page. -->
-        <div v-if="$slots.actions" class="card-actions">
-          <slot name="actions" />
-        </div>
-      </div>
+      </button>
     </div>
 
-    <!-- Parent supplies comments or additional information below the card. -->
-    <div v-if="$slots.footer" class="card-footer">
-      <slot name="footer" />
+    <div class="listing-body">
+      <h3>{{ listing.title }}</h3>
+
+      <p class="price">
+        {{ formatRent(listing.price) }}
+        <span class="muted">/mo</span>
+      </p>
+
+      <p class="small muted row-inline">
+        <AppIcon
+          name="pin"
+          :size="11"
+        />
+        {{ listing.area }}
+      </p>
+
+      <p class="small muted">
+        {{ listing.type }} ·
+        {{ listing.beds }} bedrooms ·
+        From {{ listing.from }}
+      </p>
+
+      <div class="row actions">
+        <button
+          class="btn btn-sm"
+          type="button"
+          style="flex: 1"
+          @click="$emit('view-details', listing)"
+        >
+          View details
+        </button>
+
+        <button
+          class="btn btn-sm"
+          :class="{ 'btn-primary': !isShortlisted }"
+          type="button"
+          :disabled="!listing.available && !isShortlisted"
+          style="flex: 1"
+          @click="$emit('toggle-shortlist', listing)"
+        >
+          {{ isShortlisted ? 'Remove' : 'Add to shortlist' }}
+        </button>
+      </div>
     </div>
   </article>
 </template>
 
 <style scoped>
-/* Card container and selection/availability states. */
-.listing-card {
-  overflow: hidden;
-  min-width: 0;
-  border: 1px solid var(--line, #e7e5e2);
-  border-radius: 15px;
-  background: #fff;
-  color: var(--text, #242424);
-  box-shadow: 0 2px 5px rgb(0 0 0 / 7%);
-}
-
-.listing-card--selected {
-  border-color: var(--red, #ed003b);
-  box-shadow: 0 0 0 2px rgb(200 41 47 / 13%);
-}
-
-.listing-card--unavailable {
-  opacity: 0.78;
-}
-
-/* Horizontal photo-and-details arrangement. */
-.listing-main {
-  display: flex;
-  min-height: 112px;
-}
-
-.listing-photo {
-  position: relative;
-  display: grid;
-  flex: 0 0 112px;
-  place-items: center;
-  overflow: hidden;
-  background: #f1efec;
-}
-
-.listing-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.photo-placeholder {
-  padding: 10px;
-  color: #737373;
-  text-align: center;
-  font-size: 10px;
-}
-
-.availability {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  padding: 3px 6px;
-  border-radius: 20px;
-  background: #fff;
-  color: #626262;
-  font-size: 9px;
-  font-weight: 700;
-}
-
-/* Property heading and page-specific action area. */
-.listing-info {
-  flex: 1;
-  min-width: 0;
-  padding: 12px;
-}
-
-.listing-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.listing-title-row h3 {
-  min-width: 0;
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-.listing-title-actions {
-  display: flex;
-  flex-shrink: 0;
+.row-inline {
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.25rem;
 }
 
-.match-pill {
-  padding: 3px 8px;
-  border-radius: 20px;
-  background: var(--red-tint, #fff0f3);
-  color: var(--red, #ed003b);
-  font-size: 10px;
-  font-weight: 700;
+.listing {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* Rent and location details. */
-.rent {
-  margin: 5px 0 0;
-  color: var(--red, #ed003b);
+.listing.gone {
+  opacity: 0.8;
+}
+
+.listing-img {
+  position: relative;
+  height: 140px;
+}
+
+.badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #ffffff;
+}
+
+.save-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--muted);
+  cursor: pointer;
+  background: #ffffff;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.save-btn.saved {
+  color: var(--red);
+}
+
+.save-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.listing-body {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+  align-content: start;
+  padding: 0.8rem;
+}
+
+.price {
+  color: var(--red);
   font-size: 14px;
   font-weight: 700;
 }
 
-.rent span {
-  color: var(--muted, #737373);
-  font-size: 10px;
+.price span {
+  font-size: 11px;
   font-weight: 400;
 }
 
-.listing-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  margin: 5px 0 0;
-  color: var(--muted, #737373);
-  font-size: 10px;
-}
-
-/* Slots hold controls supplied and styled by the parent page. */
-.card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.card-footer {
-  border-top: 1px solid var(--line, #f1f0ef);
-}
-
-/* Smaller image on narrow screens. */
-@media (max-width: 560px) {
-  .listing-photo {
-    flex-basis: 82px;
-  }
-
-  .listing-info {
-    padding: 9px;
-  }
+.actions {
+  margin-top: 0.6rem;
 }
 </style>
