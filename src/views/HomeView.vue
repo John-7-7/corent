@@ -1,9 +1,11 @@
 <script setup>
 import { computed, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import GroupCard from '@/components/groups/GroupCard.vue'
 import { onAuthChange } from '@/services/authService'
 
+const router = useRouter()
 const currentUser = ref(null)
 const groups = ref([])
 const selectedGroup = ref(null)
@@ -19,7 +21,7 @@ const firstName = computed(() => currentUser.value?.displayName?.trim().split(/\
 const picks = [
   { title: 'Clementi Ave 2 Condo', price: '$2,800', area: 'Clementi', match: 94, tone: '' },
   { title: 'Tampines St 86 HDB', price: '$2,200', area: 'Tampines', match: 87, tone: 'alt' },
-]
+] // hardcoded top picks placed in as placeholder for now, to change later!
 
 function readGroups() {
   try {
@@ -119,6 +121,13 @@ function openGroupPreview(groupId) {
   activeDialog.value = 'preview'
 }
 
+function viewGroupDetails() {
+  if (!selectedGroup.value) return
+  const groupId = selectedGroup.value.id
+  closeDialog()
+  router.push({ name: 'group-details', params: { groupId } })
+} 
+
 const unsubscribeAuth = onAuthChange((user) => {
   currentUser.value = user
   storageKey = user ? `corent:group-previews:${user.uid}` : 'corent:group-previews:guest'
@@ -178,7 +187,7 @@ onUnmounted(unsubscribeAuth)
               v-for="group in groups"
               :key="group.id"
               :group="group"
-              @view-preview="openGroupPreview"
+              @view-group="openGroupPreview"
             />
           </div>
           <article v-else class="card empty-groups">
@@ -292,7 +301,23 @@ onUnmounted(unsubscribeAuth)
             <strong class="invite-code">{{ selectedGroup.inviteCode }}</strong>
           </div>
           <p class="hint">This is a browser-only group preview. It is not shared with other users.</p>
-          <button class="btn btn-primary btn-block" type="button" @click="closeDialog">Done</button>
+             <div class="preview-actions">
+              <button
+                class="btn btn-block"
+                type="button"
+                @click="closeDialog"
+              >
+                Close
+              </button>
+
+              <button
+                class="btn btn-primary btn-block"
+                type="button"
+                @click="viewGroupDetails"
+              >
+                View group details
+              </button>
+            </div>           
         </div>
       </section>
     </div>
@@ -361,6 +386,7 @@ onUnmounted(unsubscribeAuth)
 .group-modal .field { margin: 0; }
 .group-modal .field-error { margin: -0.7rem 0 0; }
 .preview-details { display: grid; gap: 0.85rem; }
+.preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;}
 .preview-detail { display: grid; gap: 0.2rem; }
 .preview-detail span { color: var(--muted); font-size: 11px; }
 .preview-detail strong { font-size: 13px; }
