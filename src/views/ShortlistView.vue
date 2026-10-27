@@ -1,11 +1,47 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
-import { formatRent, listings } from '@/services/listingsService'
+import { formatRent } from '@/services/listingsService'
+import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
 
 const { listingIds, storageError, removeFromShortlist } = useShortlist()
+const listings = ref([])
+
+// Rough Singapore bounds, used to place real coordinates on the overview map.
+const SG = { north: 1.47, south: 1.22, west: 103.6, east: 104.05 }
+const clampPct = (n) => `${Math.min(95, Math.max(5, n * 100)).toFixed(1)}%`
+
+// Map a Housing_Listing record onto the shape this page renders.
+function toShortlistItem(l) {
+  const n = [...String(l.ListingID)].reduce((a, c) => a + c.charCodeAt(0), 0) % 3
+  return {
+    id: l.ListingID,
+    title: l.Title,
+    price: l.MonthlyRent,
+    area: l.Neighbourhood,
+    beds: l.Bedrooms,
+    available: l.IsAvailable,
+    tone: ['', 'alt', 'cool'][n],
+    // null until F-REQ-015 can compute a real score.
+    match: null,
+    mapPosition: l.Coordinates && {
+      left: clampPct((l.Coordinates.lng - SG.west) / (SG.east - SG.west)),
+      top: clampPct((SG.north - l.Coordinates.lat) / (SG.north - SG.south)),
+    },
+    sampleVotes: 0,
+    sampleComments: 0,
+  }
+}
+
+onMounted(async () => {
+  try {
+    listings.value = (await getListings()).map(toShortlistItem)
+  } catch (error) {
+    storageError.value = error instanceof Error ? error.message : 'Unable to load listings.'
+  }
+})
 const selectedListingId = ref('')
 const expandedCommentsId = ref('')
 const enquiryDialogOpen = ref(false)
@@ -13,7 +49,7 @@ const enquirySent = ref(false)
 const enquiryError = ref('')
 
 const savedListings = computed(() =>
-  listingIds.value.map((id) => listings.find((listing) => listing.id === id)).filter(Boolean),
+  listingIds.value.map((id) => listings.value.find((listing) => listing.id === id)).filter(Boolean),
 )
 const enquiryListing = computed(
   () =>
@@ -89,10 +125,10 @@ function confirmEnquiry() {
               :class="{ 'map-pin--selected': selectedListingId === listing.id }"
               :style="listing.mapPosition"
               type="button"
-              :aria-label="`${listing.match}% match, ${listing.title}`"
+              :aria-label="listing.title"
               @click="selectMapPin(listing)"
             >
-              <span>{{ listing.match }}%</span>
+              <span>{{ listing.match !== null ? `${listing.match}%` : formatRent(listing.price) }}</span>
               <i aria-hidden="true" />
             </button>
             <p v-if="!savedListings.length" class="map-empty">
@@ -123,7 +159,7 @@ function confirmEnquiry() {
                 <div class="listing-title-row">
                   <h3>{{ listing.title }}</h3>
                   <div class="listing-title-actions">
-                    <span class="match-pill">{{ listing.match }}%</span>
+                    <span v-if="listing.match !== null" class="match-pill">{{ listing.match }}%</span>
                     <button
                       class="remove-listing"
                       type="button"

@@ -1,107 +1,79 @@
 <script setup>
+import { ref, computed, watch } from 'vue'
 import AppIcon from '@/components/AppIcon.vue'
-import { formatRent } from '@/services/listingsService'
 
-defineProps({
-  listing: {
-    type: Object,
-    required: true,
-  },
+const props = defineProps({
+  listing:  { type: Object, required: true },
+  saved:    { type: Boolean, default: false },
+  // null until F-REQ-015 can compute a real score — we never invent one.
+  matchScore: { type: Number, default: null },
+})
+defineEmits(['toggle-save', 'view-details'])
 
-  isShortlisted: {
-    type: Boolean,
-    default: false,
-  },
+// 99.co photo URLs are signed and expire; fall back to the gradient thumb.
+const src = ref(props.listing.ImageURL)
+watch(() => props.listing.ImageURL, (v) => { src.value = v })
+
+// Deterministic thumb variant so the grid keeps the designed colour rhythm.
+const tone = computed(() => {
+  const id = String(props.listing.ListingID)
+  const n = [...id].reduce((a, c) => a + c.charCodeAt(0), 0) % 3
+  return ['', 'alt', 'cool'][n]
 })
 
-defineEmits(['view-details', 'toggle-shortlist'])
+const rent = computed(() => `$${props.listing.MonthlyRent.toLocaleString()}`)
+const availableFrom = computed(() => props.listing.AvailableDate || 'Not listed')
 </script>
 
 <template>
-  <article
-    class="listing"
-    :class="{ gone: !listing.available }"
-  >
-    <div
-      class="listing-img thumb"
-      :class="listing.tone"
-    >
-      <span
-        v-if="listing.available"
-        class="pill badge"
-      >
-        {{ listing.match }}% match
-      </span>
+  <article class="listing" :class="{ gone: !listing.IsAvailable }">
+    <div class="listing-img thumb" :class="tone">
+      <img v-if="src" :src="src" :alt="listing.Title" loading="lazy" @error="src = null" />
 
-      <span
-        v-else
-        class="tag badge"
-      >
-        Unavailable
-      </span>
+      <span v-if="!listing.IsAvailable" class="tag badge">Unavailable</span>
+      <span v-else-if="matchScore !== null" class="pill badge">{{ matchScore }}% match</span>
 
       <button
         class="save-btn"
-        :class="{ saved: isShortlisted }"
+        :class="{ saved }"
         type="button"
-        :disabled="!listing.available && !isShortlisted"
-        :aria-pressed="isShortlisted"
-        :aria-label="
-          isShortlisted
-            ? 'Remove from shortlist'
-            : 'Add to shortlist'
-        "
-        @click="$emit('toggle-shortlist', listing)"
+        :disabled="!listing.IsAvailable && !saved"
+        :aria-pressed="saved"
+        :aria-label="saved ? 'Remove from shortlist' : 'Add to shortlist'"
+        @click="$emit('toggle-save', listing)"
       >
-        <AppIcon
-          name="bookmark"
-          :size="15"
-          :fill="isShortlisted"
-        />
+        <AppIcon name="bookmark" :size="15" :fill="saved" />
       </button>
     </div>
 
     <div class="listing-body">
-      <h3>{{ listing.title }}</h3>
-
-      <p class="price">
-        {{ formatRent(listing.price) }}
-        <span class="muted">/mo</span>
-      </p>
-
+      <h3>{{ listing.Title }}</h3>
+      <p class="price">{{ rent }}<span class="muted">/mo</span></p>
       <p class="small muted row-inline">
-        <AppIcon
-          name="pin"
-          :size="11"
-        />
-        {{ listing.area }}
+        <AppIcon name="pin" :size="11" /> {{ listing.Neighbourhood }}
+      </p>
+      <p class="small muted">
+        {{ listing.PropertyType }} · {{ listing.Bedrooms }} bedrooms · From {{ availableFrom }}
+      </p>
+      <p v-if="listing.NearestMrt" class="small muted">
+        {{ listing.MrtWalkingMinutes }} min walk to {{ listing.NearestMrt }}
       </p>
 
-      <p class="small muted">
-        {{ listing.type }} ·
-        {{ listing.beds }} bedrooms ·
-        From {{ listing.from }}
-      </p>
+      <slot name="extra" />
 
       <div class="row actions">
-        <button
-          class="btn btn-sm"
-          type="button"
-          style="flex: 1"
-          @click="$emit('view-details', listing)"
-        >
+        <button class="btn btn-sm" type="button" style="flex: 1" @click="$emit('view-details', listing)">
           View details
         </button>
-
         <button
           class="btn btn-sm"
-          :class="{ 'btn-primary': !isShortlisted }"
+          :class="{ 'btn-primary': !saved }"
           type="button"
-          :disabled="!listing.available && !isShortlisted"
+          :disabled="!listing.IsAvailable && !saved"
           style="flex: 1"
-          @click="$emit('toggle-shortlist', listing)"
+          @click="$emit('toggle-save', listing)"
         >
-          {{ isShortlisted ? 'Remove' : 'Add to shortlist' }}
+          {{ saved ? 'Remove' : 'Add to shortlist' }}
         </button>
       </div>
     </div>
@@ -109,83 +81,29 @@ defineEmits(['view-details', 'toggle-shortlist'])
 </template>
 
 <style scoped>
-.row-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
 .listing {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: #ffffff;
+  background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
+  overflow: hidden;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
 }
-
-.listing.gone {
-  opacity: 0.8;
-}
-
-.listing-img {
-  position: relative;
-  height: 140px;
-}
-
-.badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: #ffffff;
-}
-
+.listing.gone { opacity: 0.8; }
+.listing-img { position: relative; height: 140px; }
+.listing-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.badge { position: absolute; top: 10px; left: 10px; background: #fff; }
 .save-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  color: var(--muted);
-  cursor: pointer;
-  background: #ffffff;
-  border: 0;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  position: absolute; top: 8px; right: 8px; display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%; border: 0; background: #fff;
+  color: var(--muted); cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
-
-.save-btn.saved {
-  color: var(--red);
-}
-
-.save-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.listing-body {
-  display: grid;
-  flex: 1;
-  gap: 3px;
-  align-content: start;
-  padding: 0.8rem;
-}
-
-.price {
-  color: var(--red);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.price span {
-  font-size: 11px;
-  font-weight: 400;
-}
-
-.actions {
-  margin-top: 0.6rem;
-}
+.save-btn.saved { color: var(--red); }
+.save-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+.listing-body { padding: 0.8rem; display: grid; gap: 3px; flex: 1; align-content: start; }
+.price { color: var(--red); font-weight: 700; font-size: 14px; }
+.price span { font-weight: 400; font-size: 11px; }
+.row-inline { display: inline-flex; align-items: center; gap: 0.25rem; }
+.actions { margin-top: 0.6rem; }
 </style>
