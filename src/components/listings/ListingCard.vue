@@ -37,6 +37,7 @@ const availableFrom = computed(() => props.listing.AvailableDate || 'Not listed'
         class="save-btn"
         :class="{ saved }"
         type="button"
+        :disabled="!listing.IsAvailable && !saved"
         :aria-pressed="saved"
         :aria-label="saved ? 'Remove from shortlist' : 'Add to shortlist'"
         @click="$emit('toggle-save', listing)"
@@ -99,6 +100,7 @@ const availableFrom = computed(() => props.listing.AvailableDate || 'Not listed'
   color: var(--muted); cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 .save-btn.saved { color: var(--red); }
+.save-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 .listing-body { padding: 0.8rem; display: grid; gap: 3px; flex: 1; align-content: start; }
 .price { color: var(--red); font-weight: 700; font-size: 14px; }
 .price span { font-weight: 400; font-size: 11px; }
