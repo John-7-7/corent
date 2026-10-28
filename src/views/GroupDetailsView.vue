@@ -2,6 +2,7 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthChange } from '@/services/authService'
+import { getGroupById } from '@/services/groupService' 
 
 const route = useRoute()
 const router = useRouter()
@@ -22,44 +23,46 @@ const inviteUrl = computed(() => {
   return `${window.location.origin}/home?invite=${group.value.inviteCode}`
 })
 
-function loadGroup(user) {
+async function loadGroup(user) {
   loading.value = true
   error.value = ''
+  group.value = null
+  members.value = []
+
+  if (!user?.uid) {
+    error.value = 'You must be signed in to view this group.'
+    loading.value = false
+    return
+  }
 
   try {
-    const storageKey = user
-      ? `corent:group-previews:${user.uid}`
-      : 'corent:group-previews:guest'
-
-    const saved = localStorage.getItem(storageKey)
-    const savedGroups = saved ? JSON.parse(saved) : []
-
-    if (!Array.isArray(savedGroups)) {
-      throw new Error('Saved group information is invalid.')
-    }
-
-    const selectedGroup = savedGroups.find(
-      (item) => item.id === route.params.groupId,
+    const selectedGroup = await getGroupById(
+      route.params.groupId,
     )
 
-    if (!selectedGroup) {
-      group.value = null
-      members.value = []
-      error.value = 'The selected group could not be found.'
-      return
+    const memberIds = Array.isArray(selectedGroup.memberIds)
+      ? selectedGroup.memberIds
+      : []
+
+    if (!memberIds.includes(user.uid)) {
+      throw new Error(
+        'You do not have permission to view this group.',
+      )
     }
 
     group.value = selectedGroup
+
     members.value = Array.isArray(selectedGroup.members)
       ? selectedGroup.members
       : []
   } catch (loadError) {
     group.value = null
     members.value = []
+
     error.value =
       loadError instanceof Error
         ? loadError.message
-        : 'Unable to load the group.'
+        : 'Unable to load the selected group.'
   } finally {
     loading.value = false
   }
@@ -111,8 +114,8 @@ function getPreferenceStatus(member) {
   return 'Status unavailable'
 }
 
-const unsubscribeAuth = onAuthChange((user) => {
-  loadGroup(user)
+const unsubscribeAuth = onAuthChange(async (user) => {
+  await loadGroup(user)
 })
 
 onUnmounted(unsubscribeAuth)
@@ -139,7 +142,7 @@ onUnmounted(unsubscribeAuth)
 
     <div v-else class="group-card">
       <section class="group-section">
-        <h2 class="section-label">Group name</h2> <!-- for further checking later!--> 
+        <h2 class="section-label">Group name</h2> <!-- group name -->
         <p class="group-name">{{ group.name || 'Unnamed group' }}</p>
       </section>
 
