@@ -240,7 +240,6 @@ onBeforeUnmount(() => {
               <span aria-hidden="true">→</span>
             </button>
           </div>
-          <span class="image-index" aria-hidden="true">CoRent / 2026</span>
         </div>
       </main>
     </div>
@@ -522,18 +521,6 @@ onBeforeUnmount(() => {
   color: var(--red);
 }
 
-.image-index {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  padding: 0.4rem 0.55rem;
-  background: rgb(255 255 255 / 88%);
-  color: var(--text);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
 .how {
   padding: 5rem 1.5rem 2rem;
 }
@@ -559,6 +546,25 @@ onBeforeUnmount(() => {
   margin: 2.5rem auto;
   padding: 0;
   list-style: none;
+}
+
+.steps li {
+  padding: 1.25rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.steps li:hover,
+.steps li:focus-within {
+  transform: translateY(-6px);
+  border-color: var(--line);
+  background: #fff;
+  box-shadow: 0 12px 28px rgb(23 23 23 / 9%);
 }
 
 .num {
@@ -703,6 +709,10 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: reduce) {
   .slide-fade-enter-active,
   .slide-fade-leave-active {
+    transition: none;
+  }
+
+  .steps li {
     transition: none;
   }
 
