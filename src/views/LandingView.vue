@@ -285,9 +285,8 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   min-height: 104px;
   gap: 1.5rem;
-  border-bottom: 1px solid var(--line);
-  background: var(--glass);
-  backdrop-filter: var(--glass-blur);
+  border-bottom: 0;
+  background: transparent;
 }
 
 .brand {
@@ -484,8 +483,7 @@ onBeforeUnmount(() => {
   gap: 0.6rem;
   min-height: 48px;
   padding: 0.5rem 0.65rem;
-  background: var(--glass);
-  backdrop-filter: var(--glass-blur);
+  background: transparent;
 }
 
 .slide-dots {
