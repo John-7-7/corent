@@ -14,6 +14,7 @@ const confirmPassword = ref('')
 const emailRegistration = ref(false)
 const submitAttempted = ref(false)
 const submitting = ref(false)
+const googleSignInPending = ref(false)
 const submitError = ref('')
 
 const isEmailValid = computed(() => {
@@ -89,6 +90,7 @@ async function onSubmit() {
 async function onGoogleSignIn() {
   submitError.value = ''
   submitting.value = true
+  googleSignInPending.value = true
   try {
     await signInWithGoogle()
     await router.push('/preferences')
@@ -114,6 +116,7 @@ async function onGoogleSignIn() {
     }
   } finally {
     submitting.value = false
+    googleSignInPending.value = false
   }
 }
 </script>
@@ -155,6 +158,7 @@ async function onGoogleSignIn() {
             <button
               class="btn btn-primary auth-provider"
               type="button"
+              :disabled="submitting"
               @click="emailRegistration = true"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -289,6 +293,7 @@ async function onGoogleSignIn() {
 
           <p v-if="submitError" class="field-error" role="alert">{{ submitError }}</p>
           <button class="btn btn-primary btn-block" type="submit" :disabled="submitting">
+            <span v-if="submitting" class="loading-spinner" aria-hidden="true" />
             {{ submitting ? 'Creating account…' : 'Create Account' }}
           </button>
 
@@ -301,6 +306,14 @@ async function onGoogleSignIn() {
         </template>
       </form>
     </main>
+
+    <div v-if="googleSignInPending" class="auth-loading-overlay" role="status" aria-live="polite">
+      <div class="auth-loading-card">
+        <span class="loading-spinner loading-spinner-large" aria-hidden="true" />
+        <p>Signing in with Google…</p>
+        <span class="sr-only">Complete sign-in in the Google window.</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -347,6 +360,7 @@ async function onGoogleSignIn() {
 }
 
 .auth-provider-google {
+  --spinner-surface: #fff;
   background: #fff;
   border-color: var(--chip-line);
 }
@@ -376,6 +390,63 @@ async function onGoogleSignIn() {
 button:disabled {
   cursor: wait;
   opacity: 0.7;
+}
+
+.loading-spinner {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background:
+    linear-gradient(var(--spinner-surface, var(--red)), var(--spinner-surface, var(--red))) padding-box,
+    conic-gradient(#4285f4, #34a853, #fbbc05, #ea4335, #4285f4) border-box;
+  animation: loading-spin 0.8s linear infinite;
+}
+
+.auth-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(22 22 22 / 42%);
+}
+
+.auth-loading-card {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  min-width: 220px;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 16%);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.loading-spinner-large {
+  width: 36px;
+  height: 36px;
+  border-width: 4px;
+  --spinner-surface: var(--card);
+}
+
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
 }
 
 .back-link {
