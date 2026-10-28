@@ -469,20 +469,4 @@ select:focus-visible {
   border: 0;
 }
 
-@media (max-width: 960px) {
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* mobile (maybe take out later if not necessary) */
-@media (max-width: 720px) {
-  .summary-page {
-    padding: 24px 16px 100px;
-  }
-
-  .card {
-    padding: 20px;
-  }
-}
 </style>

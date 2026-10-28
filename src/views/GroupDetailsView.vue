@@ -448,30 +448,4 @@ a:focus-visible {
   outline: 2px solid var(--red, #ed003b);
   outline-offset: 3px;
 }
-
-/* mobile layout - maybe can remove this if we no need and it overcomplicates things */
-@media (max-width: 720px) {
-  .group-page {
-    padding: 24px 16px 100px;
-  }
-
-  .group-card,
-  .state-card {
-    padding: 20px;
-  }
-}
-
-@media (max-width: 420px) {
-  .invite-row {
-    flex-direction: column;
-  }
-
-  .member {
-    flex-wrap: wrap;
-  }
-
-  .status {
-    margin-left: 50px;
-  }
-}
 </style>
