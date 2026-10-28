@@ -265,13 +265,16 @@ onBeforeUnmount(() => {
 .landing {
   min-height: 100vh;
   padding: 12px;
-  background: #fff;
+  background:
+    radial-gradient(ellipse at 18% 18%, rgb(123 140 240 / 14%), transparent 32rem),
+    radial-gradient(ellipse at 82% 72%, rgb(245 196 107 / 18%), transparent 28rem),
+    var(--bg);
 }
 
 .landing-frame {
   min-height: min(840px, calc(100vh - 24px));
   padding: 0 clamp(1.25rem, 7vw, 7.5rem);
-  border: 6px solid #d88a76;
+  border: 6px solid var(--red);
   border-radius: 48px;
   overflow: hidden;
 }
@@ -282,6 +285,8 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   min-height: 104px;
   gap: 1.5rem;
+  border-bottom: 0;
+  background: transparent;
 }
 
 .brand {
@@ -312,7 +317,6 @@ onBeforeUnmount(() => {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-
 .top-nav a:hover,
 .text-link:hover {
   color: var(--red);
@@ -345,7 +349,8 @@ onBeforeUnmount(() => {
   grid-row: 1;
   margin-right: -4rem;
   padding: clamp(1.5rem, 4vw, 3.5rem);
-  background: #f7e5dc;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
   container-type: inline-size;
 }
 
@@ -361,7 +366,7 @@ onBeforeUnmount(() => {
 .hero h1 {
   font-family: var(--font-heading);
   padding-left: 1.25rem;
-  border-left: 4px solid #d88a76;
+  border-left: 4px solid var(--highlight);
   font-size: clamp(1.75rem, 11cqi, 3.5rem);
   font-weight: 700;
   line-height: 1.05;
@@ -406,7 +411,7 @@ onBeforeUnmount(() => {
 .lead {
   max-width: 35ch;
   margin: 1.4rem 0 1.5rem;
-  color: #5e5752;
+  color: var(--muted);
   font-size: 13px;
   line-height: 1.7;
 }
@@ -436,7 +441,7 @@ onBeforeUnmount(() => {
 }
 
 .slide-caption-detail {
-  color: #716963;
+  color: var(--muted);
   font-size: 10px;
   line-height: 1.5;
 }
@@ -447,7 +452,7 @@ onBeforeUnmount(() => {
   grid-row: 1;
   height: clamp(340px, 43vw, 520px);
   overflow: hidden;
-  background: #e9e3dd;
+  background: var(--soft);
 }
 
 .slide-image {
@@ -478,7 +483,7 @@ onBeforeUnmount(() => {
   gap: 0.6rem;
   min-height: 48px;
   padding: 0.5rem 0.65rem;
-  background: rgb(255 255 255 / 94%);
+  background: transparent;
 }
 
 .slide-dots {
@@ -494,7 +499,7 @@ onBeforeUnmount(() => {
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #d3ccc6;
+  background: color-mix(in srgb, var(--highlight) 45%, transparent);
   cursor: pointer;
 }
 
@@ -511,7 +516,8 @@ onBeforeUnmount(() => {
   height: 30px;
   border: 1px solid var(--line);
   border-radius: 50%;
-  background: #fff;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
   color: var(--text);
   cursor: pointer;
 }
@@ -547,11 +553,12 @@ onBeforeUnmount(() => {
   padding: 0;
   list-style: none;
 }
-
 .steps li {
   padding: 1.25rem;
-  border: 1px solid transparent;
+  border: 1px solid var(--line);
   border-radius: 12px;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -563,7 +570,7 @@ onBeforeUnmount(() => {
 .steps li:focus-within {
   transform: translateY(-6px);
   border-color: var(--line);
-  background: #fff;
+  background: rgb(255 255 255 / 75%);
   box-shadow: 0 12px 28px rgb(23 23 23 / 9%);
 }
 
@@ -574,8 +581,8 @@ onBeforeUnmount(() => {
   height: 30px;
   margin-bottom: 0.8rem;
   border-radius: 50%;
-  background: #f7e5dc;
-  color: var(--red);
+  background: color-mix(in srgb, var(--highlight) 35%, transparent);
+  color: #78551e;
   font-size: 10px;
   font-weight: 700;
 }

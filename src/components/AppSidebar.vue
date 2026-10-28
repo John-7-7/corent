@@ -34,12 +34,13 @@ const links = [
 .sidebar {
   width: 220px;
   flex: none;
-  background: #fff;
+  background: var(--glass);
   border-right: 1px solid var(--line);
   padding: 0 0.75rem 1rem;
   position: sticky;
   top: 0;
   height: 100vh;
+  backdrop-filter: var(--glass-blur);
 }
 .brand {
   display: flex;
@@ -61,7 +62,7 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
   gap: 0.65rem;
   padding: 0.6rem 0.75rem;
   border-radius: 10px;
-  color: #555;
+  color: var(--text);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
