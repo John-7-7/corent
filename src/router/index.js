@@ -33,7 +33,12 @@ const router = createRouter({
 
     // App pages (with sidebar)
     { path: '/home', name: 'home', component: HomeView },
-    { path: '/profile', name: 'profile', component: ProfileView },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
+      meta: { requiresAuth: true },
+    },
     { path: '/listings', name: 'listings', component: ListingsView },
     { path: '/group-summary', name: 'group summary', component: GroupSummaryView},
     { path: '/shortlist', name: 'shortlist', component: ShortlistView} //i removed the meta: { requiresAuth: true } from this route to allow access without authentication for now so we can see the layout for all
