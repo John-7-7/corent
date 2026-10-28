@@ -191,25 +191,28 @@ const solo = computed(() => shapes.value.find((shape) => shape.uid === soloUid.v
       </dl>
       <p v-else class="hint">Select a name to see how they compare with you.</p>
 
-      <table class="sr-only">
-        <caption>
-          Match with you by preference
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Member</th>
-            <th v-for="axis in axes" :key="axis.key" scope="col">{{ axis.label }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="shape in shapes" :key="shape.uid">
-            <th scope="row">{{ shape.name }}</th>
-            <td v-for="value in shape.values" :key="value.key">
-              {{ value.word }}: {{ value.brief }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Wrapped: .sr-only alone does not shrink a table, which then widens the page. -->
+      <div class="sr-only">
+        <table>
+          <caption>
+            Match with you by preference
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Member</th>
+              <th v-for="axis in axes" :key="axis.key" scope="col">{{ axis.label }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="shape in shapes" :key="shape.uid">
+              <th scope="row">{{ shape.name }}</th>
+              <td v-for="value in shape.values" :key="value.key">
+                {{ value.word }}: {{ value.brief }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </template>
   </div>
 </template>
