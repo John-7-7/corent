@@ -41,7 +41,7 @@ const displayName = computed(
     profileName.value ||
     user.value?.displayName ||
     user.value?.email?.split('@')[0] ||
-    'Guest profile',
+    'CoRent member',
 )
 const initials = computed(() => {
   const parts = displayName.value.trim().split(/\s+/).filter(Boolean)
@@ -146,6 +146,10 @@ async function onDeleteAccount(password) {
 }
 
 function onUserChange(nextUser) {
+  if (!nextUser) {
+    router.replace({ name: 'login', query: { redirect: '/profile' } })
+    return
+  }
   user.value = nextUser
   profileName.value = nextUser?.displayName || ''
 }
@@ -164,21 +168,14 @@ onBeforeUnmount(() => unsubscribeAuth?.())
       <div class="avatar" aria-hidden="true">{{ initials }}</div>
       <div class="profile-identity">
         <h1>{{ displayName }}</h1>
-        <p>{{ user?.email || 'Viewing without a signed-in account' }}</p>
-        <span class="account-tag">{{ user ? 'CoRent account' : 'Guest profile' }}</span>
+        <p>{{ user?.email || 'Signed-in CoRent account' }}</p>
+        <span class="account-tag">CoRent account</span>
       </div>
-      <button class="edit-profile" type="button" :disabled="!user" @click="openNameDialog">
+      <button class="edit-profile" type="button" @click="openNameDialog">
         <BaseIcon name="edit" :size="14" />
         Edit
       </button>
     </section>
-
-    <p v-if="!user" class="guest-notice">
-      You can view this page, but you’ll need to sign in to manage account details and preferences.
-      <router-link :to="{ name: 'login', query: { redirect: '/profile' } }">Log in</router-link>
-      or
-      <router-link to="/register">create an account</router-link>.
-    </p>
 
     <section class="settings-card" aria-labelledby="security-title">
       <h2 id="security-title" class="section-label">Security and preferences</h2>
@@ -195,24 +192,16 @@ onBeforeUnmount(() => unsubscribeAuth?.())
         </span>
         <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
       </button>
-      <div v-else-if="user" class="setting-row setting-row--static">
+      <div v-else class="setting-row setting-row--static">
         <span class="setting-icon"><BaseIcon name="lock" :size="18" /></span>
         <span class="setting-copy">
           <strong>Password managed by your sign-in provider</strong>
           <span>Change your password with your provider</span>
         </span>
       </div>
-      <div v-else class="setting-row setting-row--static">
-        <span class="setting-icon"><BaseIcon name="lock" :size="18" /></span>
-        <span class="setting-copy">
-          <strong>Sign in to manage your account</strong>
-          <span>Account security settings are unavailable in guest view</span>
-        </span>
-      </div>
       <button
         class="setting-row"
         type="button"
-        :disabled="!user"
         @click="router.push({ path: '/preferences', query: { edit: '1' } })"
       >
         <span class="setting-icon"><BaseIcon name="edit" :size="18" /></span>
@@ -227,7 +216,7 @@ onBeforeUnmount(() => unsubscribeAuth?.())
     <button
       class="action-card"
       type="button"
-      :disabled="!user || signingOut"
+      :disabled="signingOut"
       @click="signOutDialogOpen = true; actionError = ''"
     >
       <span class="setting-icon"><BaseIcon name="log-out" :size="18" /></span>
@@ -238,7 +227,6 @@ onBeforeUnmount(() => unsubscribeAuth?.())
     <button
       class="action-card action-card--danger"
       type="button"
-      :disabled="!user"
       @click="deleteDialogOpen = true"
     >
       <span class="setting-icon"><BaseIcon name="trash" :size="18" /></span>
@@ -430,17 +418,6 @@ onBeforeUnmount(() => unsubscribeAuth?.())
   color: var(--cr-accent);
   font-size: 11px;
   font-weight: 700;
-}
-
-.guest-notice {
-  margin: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--cr-border);
-  border-radius: 12px;
-  background: #fff;
-  color: var(--cr-muted);
-  font-size: 13px;
-  line-height: 1.5;
 }
 
 .edit-profile {
