@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
+  signInWithPopup,
   signInWithEmailAndPassword,
   signOut,
   updatePassword,
@@ -64,6 +65,11 @@ export async function registerAccount(name, email, password) {
   if (!displayName) throw new Error('Enter your name to continue.')
   const credential = await createUserWithEmailAndPassword(auth, email.trim(), password)
   await updateProfile(credential.user, { displayName })
+  return credential.user
+}
+
+export async function signInWithGoogle() {
+  const credential = await signInWithPopup(auth, new GoogleAuthProvider())
   return credential.user
 }
 
