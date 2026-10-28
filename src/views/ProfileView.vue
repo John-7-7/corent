@@ -562,7 +562,9 @@ onBeforeUnmount(() => unsubscribeAuth?.())
   gap: 10px;
   padding: 22px;
   border-radius: 14px;
-  background: var(--cr-surface);
+  background: rgb(255 255 255 / 96%);
+  color: var(--cr-text);
+  backdrop-filter: var(--cr-glass-blur);
   box-shadow: 0 20px 50px rgb(0 0 0 / 20%);
   font-family: var(--cr-font);
 }
@@ -615,7 +617,7 @@ button:focus-visible {
 
 .modal-cancel {
   border: 1px solid var(--cr-border-strong);
-  background: var(--cr-surface);
+  background: #fff;
   color: var(--cr-text);
 }
 
@@ -627,7 +629,7 @@ button:focus-visible {
 
 .confirm-modal > p {
   margin: 0;
-  color: var(--cr-muted);
+  color: #55596f;
   font-size: 13px;
   line-height: 1.5;
 }
