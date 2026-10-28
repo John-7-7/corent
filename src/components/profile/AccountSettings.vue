@@ -54,6 +54,7 @@ function closeDialog() {
 <style scoped>
 .account {
   background: var(--cr-surface);
+  backdrop-filter: var(--cr-glass-blur);
   border: 1px solid var(--cr-border);
   border-radius: var(--cr-radius-card);
   box-shadow: var(--cr-shadow-card);

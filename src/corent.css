@@ -1,18 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --red: #c8292f;
-  --red-dark: #a81f25;
-  --red-tint: #fbe9e8;
-  --red-disabled: #ebbcbc;
-  --bg: #f6f5f4;
-  --card: #ffffff;
-  --line: #ebe8e6;
-  --chip-line: #dcd8d4;
-  --text: #161616;
-  --muted: #8c8883;
-  --soft: #efeeec;
-  --ink: #171717;
+  --red: #7b8cf0;
+  --red-dark: #6576dc;
+  --red-tint: rgb(123 140 240 / 14%);
+  --red-disabled: #b5b8c9;
+  --error: #c8292f;
+  --error-tint: #fbe9e8;
+  --bg: #f0f2fc;
+  --card: rgb(255 255 255 / 55%);
+  --glass: rgb(255 255 255 / 55%);
+  --glass-blur: blur(20px);
+  --line: rgb(93 103 151 / 16%);
+  --chip-line: rgb(93 103 151 / 24%);
+  --text: #2a2d3e;
+  --muted: #9a9db5;
+  --soft: rgb(123 140 240 / 9%);
+  --ink: #2a2d3e;
+  --disabled: #b5b8c9;
+  --highlight: #f5c46b;
   --ok: #2e7d5b;
   --ok-tint: #e2f3ea;
   --warn: #8a5a00;
@@ -59,7 +65,12 @@ button, input, select { font: inherit; }
 /* ---------- App shell ---------- */
 .shell { display: flex; min-height: 100vh; }
 .shell-main { flex: 1; min-width: 0; }
-.page-head { background: #fff; border-bottom: 1px solid var(--line); padding: 1rem 1.5rem; }
+.page-head {
+  background: var(--glass);
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.5rem;
+  backdrop-filter: var(--glass-blur);
+}
 .page-head p { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 .content { padding: 1.25rem 1.5rem 3rem; }
 .stack { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.75rem; }
@@ -75,7 +86,8 @@ button, input, select { font: inherit; }
   border-radius: 12px;
   padding: 1rem;
   border: 1px solid var(--line);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 24px rgb(42 45 62 / 5%);
+  backdrop-filter: var(--glass-blur);
 }
 .card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
@@ -84,15 +96,15 @@ button, input, select { font: inherit; }
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
-  border-radius: 10px; border: 1px solid var(--chip-line); background: #fff; color: var(--text);
+  border-radius: 10px; border: 1px solid var(--chip-line); background: var(--glass); color: var(--text);
   padding: 0.55rem 0.95rem; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none;
 }
 .btn:hover { background: var(--soft); }
 .btn-primary { background: var(--red); border-color: var(--red); color: #fff; }
 .btn-primary:hover { background: var(--red-dark); border-color: var(--red-dark); }
-.btn-primary:disabled { background: var(--red-disabled); border-color: var(--red-disabled); cursor: not-allowed; }
-.btn-danger { color: var(--red); border-color: var(--red); }
-.btn-danger:hover { background: var(--red-tint); }
+.btn-primary:disabled { background: var(--glass); border-color: var(--disabled); color: var(--disabled); cursor: not-allowed; }
+.btn-danger { color: var(--error); border-color: var(--error); }
+.btn-danger:hover { background: var(--error-tint); }
 .btn-block { width: 100%; padding: 0.8rem 1rem; }
 .btn-sm { padding: 0.35rem 0.7rem; font-size: 12px; }
 .icon-btn {
@@ -108,21 +120,21 @@ button, input, select { font: inherit; }
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
 }
 .input {
-  width: 100%; background: #fff; color: var(--text); border: 1px solid var(--chip-line);
+  width: 100%; background: var(--glass); color: var(--text); border: 1px solid var(--chip-line);
   border-radius: 10px; padding: 0.7rem 0.9rem; font-size: 13.5px;
 }
-.input::placeholder { color: #b9b5b0; }
-.input:disabled { background: var(--soft); color: var(--muted); }
-.input.invalid { border-color: var(--red); background: var(--red-tint); }
+.input::placeholder { color: var(--muted); }
+.input:disabled { background: var(--soft); color: var(--disabled); }
+.input.invalid { border-color: var(--error); background: var(--error-tint); }
 .hint { font-size: 11px; color: var(--muted); margin-top: 0.3rem; }
-.field-error { font-size: 11.5px; color: var(--red); margin-top: 0.3rem; }
+.field-error { font-size: 11.5px; color: var(--error); margin-top: 0.3rem; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
 @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
 
 /* ---------- Chips ---------- */
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
 .chip {
-  display: inline-flex; align-items: center; gap: 0.3rem; background: #fff;
+  display: inline-flex; align-items: center; gap: 0.3rem; background: var(--glass);
   border: 1px solid var(--chip-line); border-radius: 999px; color: #555;
   padding: 0.28rem 0.75rem; font-size: 11px; font-weight: 600; cursor: pointer;
 }
@@ -135,7 +147,7 @@ button, input, select { font: inherit; }
   border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 700;
 }
 .tag { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600; background: var(--soft); color: #444; }
-.tag-red { background: var(--red-tint); color: var(--red); }
+.tag-red { background: var(--error-tint); color: var(--error); }
 .tag-ok { background: var(--ok-tint); color: var(--ok); }
 .tag-warn { background: var(--warn-tint); color: var(--warn); }
 
@@ -182,8 +194,8 @@ button, input, select { font: inherit; }
   background: rgba(23, 23, 23, 0.5); padding: 1rem;
 }
 .modal {
-  background: #fff; border-radius: 14px; width: min(520px, 100%); max-height: 90vh;
-  overflow-y: auto; padding: 1.25rem;
+  background: var(--glass); backdrop-filter: var(--glass-blur); border-radius: 14px;
+  width: min(520px, 100%); max-height: 90vh; overflow-y: auto; padding: 1.25rem;
 }
 
 /* ---------- Auth pages ---------- */
