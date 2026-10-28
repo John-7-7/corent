@@ -36,6 +36,7 @@ const router = createRouter({
     { path: '/profile', name: 'profile', component: ProfileView },
     { path: '/listings', name: 'listings', component: ListingsView },
     { path: '/group-summary', name: 'group summary', component: GroupSummaryView},
+    { path: '/group-summary/:groupId', name: 'group summary detail', component: GroupSummaryView, meta: { requiresAuth: true } },
     { path: '/shortlist', name: 'shortlist', component: ShortlistView} //i removed the meta: { requiresAuth: true } from this route to allow access without authentication for now so we can see the layout for all
     //later we can add it back in once we have the authentication flow set up -yp
   ],

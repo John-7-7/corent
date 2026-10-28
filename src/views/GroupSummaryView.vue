@@ -1,488 +1,1270 @@
+<script setup>
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import GroupPreferencesCard from '../components/groups/GroupPreferencesCard.vue'
+import MemberRadarChart from '../components/groups/MemberRadarChart.vue'
+import PriorityRanking from '../components/groups/PriorityRanking.vue'
+import {
+  mockGroup,
+  mockUsers,
+  mockProfiles,
+  mockViewer,
+  mockVotes,
+} from '../mock/groupSummaryMock.js'
+import { BUDGET_RANGE, formatCurrency } from '../components/profile/preferenceOptions.js'
+import {
+  PREFERENCE_SECTIONS as preferenceSections,
+  PREFERENCE_ROWS,
+  PRIORITY_FACTORS,
+  RADAR_FACTORS,
+  DEFAULT_PRIORITY_ORDER,
+  SEARCH_FACTORS,
+  analyseGroup,
+  buildGroupPreference,
+  compareWithMember,
+  flexibleMembers,
+  groupMatchScore,
+  matchScore,
+  summariseMaxVotes,
+  displayPreference as formatPreference,
+} from '../services/groupAggregation.js'
+import { saveGroupPreference, watchGroupPreference } from '../services/groupPreferencesService.js'
+import {
+  getMembers,
+  getMyPrivateBudget,
+  saveVote,
+  watchGroup,
+  watchVotes,
+} from '../services/groupSummaryService.js'
+import { getCurrentUser } from '../services/authService.js'
+
+// /group-summary shows the demo group from groupSummaryMock.js and saves nothing.
+// /group-summary/:groupId loads that group from Firestore and saves votes,
+// finalised results and priorities for every member to see.
+const route = useRoute()
+const groupId = computed(() => route.params.groupId || null)
+const isDemo = computed(() => !groupId.value)
+// loading | ready | signed-out | not-found | not-member | error
+const loadState = ref('loading')
+const group = ref(null)
+const users = ref([])
+const profiles = ref([])
+const viewer = ref({ uid: null, privateBudget: null })
+
+// Ballots per factor, separate from profiles: votes[groupId][factorKey][uid].
+// Budget ballots are a maximum amount per person; every other ballot is an option value.
+// finalised[groupId][factorKey] holds the locked-in result. Both come from
+// Firestore for a real group; in the demo they reset on reload.
+const votes = ref({})
+const finalised = ref({})
+const ballotsFor = (key) => votes.value[group.value?.GroupID]?.[key] || {}
+const finalFor = (key) => finalised.value[group.value?.GroupID]?.[key] ?? null
+const viewerIsMember = computed(() =>
+  members.value.some((member) => member.uid === viewer.value.uid),
+)
+
+function castVote(key, value) {
+  const groupId = group.value?.GroupID
+  if (!groupId || !viewerIsMember.value || finalFor(key) !== null) return
+  if (key === 'budget') {
+    if (!(Number.isFinite(value) && value > 0)) return
+  } else {
+    const factor = preferenceAnalysis.value.find((item) => item.key === key)
+    if (!factor?.voteOptions?.some((option) => option.value === value)) return
+  }
+  votes.value[groupId] ??= {}
+  votes.value[groupId][key] ??= {}
+  votes.value[groupId][key][viewer.value.uid] = value
+  if (!isDemo.value) {
+    saveVote(groupId, viewer.value.uid, key, value).catch((error) => {
+      console.error('Could not save vote:', error)
+      saveState.value = 'error'
+    })
+  }
+}
+// Any member can finalise once everyone has voted and one option leads.
+function finalise(key) {
+  const row = groupPreferenceRows.value.find((item) => item.key === key)
+  const leader = row?.voting?.allVoted && row.voting.leader
+  if (!leader || !viewerIsMember.value) return
+  finalised.value[group.value.GroupID] ??= {}
+  finalised.value[group.value.GroupID][key] = { value: leader.value, label: leader.label }
+  saveNow()
+}
+function reopen(key) {
+  if (!viewerIsMember.value) return
+  delete finalised.value[group.value?.GroupID]?.[key]
+  saveNow()
+}
+
+function votingFor(factor) {
+  const ballots = ballotsFor(factor.key)
+  const voters = members.value.filter((member) => ballots[member.uid] != null)
+  const base = {
+    total: voters.length,
+    allVoted: voters.length === members.value.length,
+    canVote: viewerIsMember.value,
+    finalised: finalFor(factor.key),
+  }
+  if (factor.key === 'budget') {
+    // Everyone accepts up to the lowest maximum voted, so that is the result.
+    const summary = summariseMaxVotes(ballots)
+    const leader =
+      summary.lowest == null
+        ? null
+        : { value: summary.lowest, label: `Up to ${formatCurrency(summary.lowest)}` }
+    return {
+      ...base,
+      type: 'range',
+      summary,
+      mine: ballots[viewer.value.uid] ?? null,
+      leader,
+      leading: leader ? `${leader.label} so far` : null,
+    }
+  }
+  const options = factor.voteOptions.map((option) => ({
+    ...option,
+    count: voters.filter((member) => ballots[member.uid] === option.value).length,
+  }))
+  const highest = Math.max(0, ...options.map((option) => option.count))
+  const leaders = options.filter((option) => highest > 0 && option.count === highest)
+  return {
+    ...base,
+    type: 'options',
+    options,
+    flexible: flexibleMembers(factor.key, members.value),
+    mine: ballots[viewer.value.uid] ?? null,
+    leader: leaders.length === 1 ? leaders[0] : null,
+    leading: !voters.length
+      ? null
+      : leaders.length === 1
+        ? `${leaders[0].label} leading`
+        : 'Tie · Needs discussion',
+  }
+}
+// The group's priority ranking, most important first. Loaded from and saved to
+// Group_Preferences with the rest of the group preference.
+const priorities = ref([...DEFAULT_PRIORITY_ORDER])
+const viewMode = ref(null)
+const selectedUid = ref(null)
+const preferencesDialog = ref(null)
+const privateHint = ref(null)
+const privacyExplanation =
+  "Only you can see your private budget. Other members' private budgets stay hidden."
+
+// Only show this group's members. A missing profile is a data-loading problem,
+// not a separate submission step for joining the group.
+const members = computed(() => {
+  const memberIds = [...new Set(group.value?.Members ?? [])]
+  // Move Me first for display without changing the stored membership array.
+  memberIds.sort((a, b) => Number(b === viewer.value.uid) - Number(a === viewer.value.uid))
+  return memberIds.map((uid) => ({
+    uid,
+    name:
+      uid === viewer.value.uid
+        ? 'Me'
+        : users.value.find((user) => user.UserID === uid)?.Username || 'Group member',
+    initials: (users.value.find((user) => user.UserID === uid)?.Username || '?')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase(),
+    profile: profiles.value.find((profile) => profile.UserID === uid) || null,
+  }))
+})
+// Same colours as the member avatars (.member-avatar), so charts match the list.
+const AVATAR_COLORS = ['#bd1745', '#326dcc', '#198463', '#a96b0c']
+const memberColor = (uid) =>
+  AVATAR_COLORS[members.value.findIndex((member) => member.uid === uid) % AVATAR_COLORS.length]
+const avatarMembers = computed(() =>
+  members.value.map(({ uid, name, initials }) => ({
+    uid,
+    name,
+    initials,
+    color: memberColor(uid),
+  })),
+)
+
+const selectedMember = computed(
+  () => members.value.find((member) => member.uid === selectedUid.value) || null,
+)
+
+async function openPreferences(mode) {
+  viewMode.value = mode
+  privateHint.value = null
+  await nextTick()
+  preferencesDialog.value?.showModal()
+}
+
+function selectMember(uid) {
+  selectedUid.value = uid
+  return openPreferences('individual')
+}
+
+function resetPopup() {
+  viewMode.value = null
+  selectedUid.value = null
+  privateHint.value = null
+}
+
+function closeOnBackdrop(event) {
+  if (event.target !== preferencesDialog.value) return
+  const bounds = preferencesDialog.value.getBoundingClientRect()
+  if (
+    event.clientX < bounds.left ||
+    event.clientX > bounds.right ||
+    event.clientY < bounds.top ||
+    event.clientY > bounds.bottom
+  ) {
+    preferencesDialog.value.close()
+  }
+}
+
+// Member popups may show the viewer's own private budget; group results never do.
+const displayPreference = (profile, row) => formatPreference(profile, row, viewer.value)
+const overviewKeys = [
+  'budget',
+  'PreferredLocations',
+  'MaxCommuteTime',
+  'PreferredMoveInDate',
+  'bedrooms',
+  'PropertyType',
+]
+const overviewRows = overviewKeys.map((key) => PREFERENCE_ROWS.find((row) => row.key === key))
+const detailRows = PREFERENCE_ROWS.filter((row) => !overviewKeys.includes(row.key))
+// The group only votes on and finalises what listing search filters by.
+// Lifestyle preferences stay in the member comparison.
+const cardKeys = SEARCH_FACTORS
+const attentionStatuses = ['conflict', 'discussion']
+// Budget is always voted: each member states their maximum, which may be private.
+const needsVote = (factor) => factor.key === 'budget' || attentionStatuses.includes(factor.status)
+
+// Analyse public profiles only. The viewer's private budget is never used here.
+const preferenceAnalysis = computed(() => analyseGroup(members.value))
+
+const groupPreferenceRows = computed(() => {
+  const rows = preferenceAnalysis.value
+    .filter((factor) => cardKeys.includes(factor.key))
+    .map((factor) => {
+      const item = {
+        ...factor,
+        needsAttention: needsVote(factor),
+        details: factor.details.map((detail) => ({ ...detail })),
+      }
+      if (item.needsAttention && (factor.key === 'budget' || factor.voteOptions?.length)) {
+        item.voting = votingFor(factor)
+        if (item.voting.finalised) item.value = item.voting.finalised.label
+        else if (item.voting.leading) item.value = item.voting.leading
+      }
+      return item
+    })
+  const rank = (item) =>
+    item.voting?.finalised ? 3 : ({ conflict: 0, discussion: 1, unavailable: 2 }[item.status] ?? 3)
+  return rows.sort((a, b) => rank(a) - rank(b))
+})
+
+// Budget slider scale: from $0 to the highest member maximum (per person).
+// My own maximum counts even if private, since only I see this slider.
+const myBudgetMax = computed(() => {
+  const me = members.value.find((member) => member.uid === viewer.value.uid)?.profile
+  const budget = me?.IsBudgetPrivate ? viewer.value.privateBudget : me
+  return Number.isFinite(budget?.BudgetMax) ? budget.BudgetMax : null
+})
+const budgetScale = computed(() => {
+  const maxima = [
+    ...members.value
+      .filter(({ profile }) => profile?.IsBudgetPrivate === false)
+      .map(({ profile }) => profile.BudgetMax),
+    myBudgetMax.value,
+    ...Object.values(ballotsFor('budget')),
+  ].filter(Number.isFinite)
+  const step = BUDGET_RANGE.step
+  const high = maxima.length ? Math.max(...maxima) : BUDGET_RANGE.max
+  return { min: 0, max: Math.ceil(high / step) * step, step }
+})
+// My starting vote is my own maximum.
+const budgetInitial = myBudgetMax
+
+// Overall compatibility: the average match of every pair of members (public data only).
+const compatibility = computed(() => {
+  const score = groupMatchScore(members.value, priorities.value)
+  if (score == null) return null
+  const open = groupPreferenceRows.value.filter(
+    (row) => row.needsAttention && !row.voting?.finalised,
+  )
+  return {
+    score,
+    conflicts: open.filter((row) => row.status === 'conflict').length,
+    discussions: open.filter((row) => row.status !== 'conflict').length,
+  }
+})
+// Once all four search preferences are settled, the card says so; the score
+// itself stays member compatibility, since finalising doesn't change profiles.
+const searchAgreed = computed(() => groupPreference.value.IsComplete)
+const compatibilityVerdict = computed(() => {
+  const score = compatibility.value?.score
+  if (searchAgreed.value) return '✓ Search preferences agreed'
+  if (score == null) return 'Not enough preferences to compare yet'
+  if (score >= 80) return 'Strong match'
+  if (score >= 60) return 'Some differences to discuss'
+  return 'Major differences to resolve'
+})
+
+// Me against each other member. My own budget is used even when private,
+// because only I see this view; theirs only when they share it.
+const memberComparisons = computed(() => {
+  const me = members.value.find((member) => member.uid === viewer.value.uid)
+  if (!me) return []
+  const myBudget = me.profile?.IsBudgetPrivate ? viewer.value.privateBudget : me.profile
+  return members.value
+    .filter((member) => member.uid !== me.uid)
+    .map((member) => {
+      const rows = compareWithMember(me.profile, member.profile, {
+        myBudget,
+        name: member.name,
+      })
+      return {
+        uid: member.uid,
+        name: member.name,
+        color: memberColor(member.uid),
+        rows,
+        score: matchScore(rows, priorities.value),
+      }
+    })
+})
+// Table rows map onto comparison keys; both commute rows share one comparison.
+// Only the radar's preferences are shaded; every other row keeps the default colour.
+const COMPARE_KEY = { MaxCommuteTime: 'commute', CommuteDestination: 'commute' }
+const SHADED_KEYS = RADAR_FACTORS.map((factor) => factor.key)
+const comparisonCell = (uid, rowKey) => {
+  const key = COMPARE_KEY[rowKey] || rowKey
+  if (!SHADED_KEYS.includes(key)) return null
+  return memberComparisons.value
+    .find((comparison) => comparison.uid === uid)
+    ?.rows.find((row) => row.key === key)
+}
+
+// What the group agreed, ready for listing search (Group_Preferences/{GroupID}).
+const decisions = computed(() =>
+  Object.fromEntries(
+    Object.entries(finalised.value[group.value?.GroupID] || {}).map(([key, final]) => [
+      key,
+      final.value,
+    ]),
+  ),
+)
+const groupPreference = computed(() =>
+  buildGroupPreference({
+    groupId: group.value?.GroupID,
+    members: members.value,
+    analysis: preferenceAnalysis.value,
+    decisions: decisions.value,
+    priorities: priorities.value,
+  }),
+)
+
+// Saving Group_Preferences/{GroupID} with the finalised votes. Saved whenever a
+// member finalises, reopens or re-ranks, so listing search never reads a stale
+// record (a reopened vote saves IsComplete false).
+const router = useRouter()
+const saveState = ref('idle') // idle | saving | saved | error | demo
+let saveTimer = null
+async function saveNow() {
+  clearTimeout(saveTimer)
+  if (isDemo.value) return true
+  saveState.value = 'saving'
+  try {
+    await saveGroupPreference(
+      { ...groupPreference.value, Finalised: finalised.value[group.value.GroupID] || {} },
+      viewer.value.uid,
+    )
+    saveState.value = 'saved'
+    return true
+  } catch (error) {
+    console.error('Could not save group preferences:', error)
+    saveState.value = 'error'
+    return false
+  }
+}
+// Re-ranking saves after a short pause, so dragging doesn't write every step.
+function savePrioritiesSoon() {
+  if (isDemo.value) return
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(saveNow, 800)
+}
+
+// Applies the saved record from Firestore: finalised votes and the ranking.
+function applySavedPreference(id, saved) {
+  finalised.value = { [id]: saved?.Finalised || {} }
+  const ranked = PRIORITY_FACTORS.filter(({ field }) => saved?.Priorities?.[field] > 0)
+    .sort((a, b) => saved.Priorities[a.field] - saved.Priorities[b.field])
+    .map(({ key }) => key)
+  if (ranked.length === PRIORITY_FACTORS.length) priorities.value = ranked
+}
+
+// Loading. Live listeners keep the group, ballots and saved record in sync
+// across members; member profiles are re-read when the member list changes.
+let stopListeners = []
+function stopWatching() {
+  stopListeners.forEach((stop) => stop())
+  stopListeners = []
+}
+function loadDemo() {
+  group.value = mockGroup
+  users.value = mockUsers
+  profiles.value = mockProfiles
+  viewer.value = mockViewer
+  votes.value = { [mockGroup.GroupID]: structuredClone(mockVotes) }
+  saveState.value = 'demo'
+  loadState.value = 'ready'
+}
+async function loadGroup(id) {
+  stopWatching()
+  group.value = null
+  votes.value = {}
+  finalised.value = {}
+  priorities.value = [...DEFAULT_PRIORITY_ORDER]
+  saveState.value = 'idle'
+  if (!id) return loadDemo()
+
+  loadState.value = 'loading'
+  const user = await getCurrentUser()
+  if (id !== groupId.value) return // navigated away meanwhile
+  if (!user) {
+    loadState.value = 'signed-out'
+    return
+  }
+  viewer.value = { uid: user.uid, privateBudget: null }
+  getMyPrivateBudget(user.uid)
+    .then((budget) => (viewer.value = { ...viewer.value, privateBudget: budget }))
+    .catch((error) => console.error('Could not load your private budget:', error))
+
+  const fail = (error) => {
+    console.error('Could not load the group:', error)
+    loadState.value = 'error'
+  }
+  let memberKey = null
+  stopListeners.push(
+    watchGroup(
+      id,
+      async (data) => {
+        if (!data) return (loadState.value = 'not-found')
+        const memberIds = data.Members || []
+        if (!memberIds.includes(user.uid)) return (loadState.value = 'not-member')
+        if (memberIds.join() !== memberKey) {
+          memberKey = memberIds.join()
+          try {
+            const loaded = await getMembers(memberIds)
+            profiles.value = loaded.profiles
+            users.value = loaded.users
+          } catch (error) {
+            return fail(error)
+          }
+        }
+        group.value = data
+        loadState.value = 'ready'
+      },
+      fail,
+    ),
+    watchVotes(id, (ballots) => (votes.value = { [id]: ballots }), fail),
+    watchGroupPreference(id, (saved) => applySavedPreference(id, saved), fail),
+  )
+}
+watch(groupId, loadGroup, { immediate: true })
+onBeforeUnmount(() => {
+  stopWatching()
+  clearTimeout(saveTimer)
+})
+const loadMessages = {
+  loading: { title: 'Loading group…' },
+  'signed-out': { title: 'Sign in to see this group', link: '/login', action: 'Sign in' },
+  'not-found': { title: 'Group not found', link: '/home', action: 'Go to Home' },
+  'not-member': {
+    title: "You're not in this group",
+    text: 'Ask a member to add you, or pick one of your groups from Home.',
+    link: '/home',
+    action: 'Go to Home',
+  },
+  error: { title: "Couldn't load this group", text: 'Check your connection and refresh.' },
+}
+// Comparisons need the viewer's own profile.
+const viewerHasProfile = computed(
+  () => !!members.value.find((member) => member.uid === viewer.value.uid)?.profile,
+)
+
+async function searchListings() {
+  if (await saveNow()) router.push('/listings')
+}
+const saveMessage = computed(
+  () =>
+    ({
+      demo: 'Demo data · not saved',
+      saving: 'Saving…',
+      saved: '✓ Saved for the group',
+      error: "Couldn't save. Try again.",
+    })[saveState.value] || '',
+)
+</script>
+
 <template>
-  <section class="summary-page">
-    <header class="page-header">
+  <div>
+    <header class="page-head">
       <h1>Group Summary</h1>
-      <p>Review your shared preferences and view group compatibility</p>
     </header>
 
-    <div class="summary-grid">
-      <div class="column">
-        <section class="card alignment-card">
-          <h2>Group alignment</h2>
+    <div class="content">
+      <div class="summary-layout">
+        <section v-if="loadState !== 'ready'" class="card" role="status">
+          <h2>{{ loadMessages[loadState].title }}</h2>
+          <p v-if="loadMessages[loadState].text" class="table-description">
+            {{ loadMessages[loadState].text }}
+          </p>
+          <RouterLink
+            v-if="loadMessages[loadState].link"
+            :to="loadMessages[loadState].link"
+            class="btn btn-primary"
+            >{{ loadMessages[loadState].action }}</RouterLink
+          >
+        </section>
+        <template v-else-if="group">
+          <section v-if="!isDemo && !viewerHasProfile" class="card profile-prompt">
+            <h2>Create your profile to compare</h2>
+            <p class="table-description">Your matches and votes need your own preferences first.</p>
+            <RouterLink to="/profile" class="btn btn-primary">Set up profile</RouterLink>
+          </section>
+          <!-- Yi Phu's layout, with our interactive members card in second place. -->
+          <div class="summary-grid">
+            <div class="summary-column">
+              <section class="card alignment-card">
+                <h2>Group alignment</h2>
+                <div class="alignment-content">
+                  <div
+                    class="alignment-circle"
+                    role="img"
+                    :style="{ '--score': compatibility?.score ?? 0 }"
+                    :aria-label="
+                      compatibility
+                        ? `Compatibility score ${compatibility.score} out of 100`
+                        : 'Compatibility score not calculated'
+                    "
+                  >
+                    <span>{{ compatibility ? `${compatibility.score}%` : '—' }}</span>
+                  </div>
+                  <div>
+                    <h3>Overall compatibility</h3>
+                    <p class="alignment-verdict" :class="{ 'is-agreed': searchAgreed }">
+                      {{ compatibilityVerdict }}
+                    </p>
+                    <p v-if="compatibility && searchAgreed" class="alignment-meta">
+                      {{ compatibility.score }}% member compatibility ·
+                      {{
+                        compatibility.score >= 80 ? 'strong match' : 'lifestyle differences remain'
+                      }}
+                    </p>
+                    <p v-else-if="compatibility" class="alignment-meta">
+                      {{ compatibility.conflicts }}
+                      {{ compatibility.conflicts === 1 ? 'conflict' : 'conflicts' }} ·
+                      {{ compatibility.discussions }} to discuss
+                    </p>
+                  </div>
+                </div>
+              </section>
+              <section class="card" aria-labelledby="members-title">
+                <div class="group-heading">
+                  <div>
+                    <h2 id="members-title">Group members</h2>
+                    <p class="group-description">
+                      {{ group.GroupName }} · {{ members.length }} members
+                    </p>
+                  </div>
+                  <button
+                    v-if="members.length"
+                    type="button"
+                    class="btn btn-secondary"
+                    aria-haspopup="dialog"
+                    aria-controls="member-preferences"
+                    @click="openPreferences('table')"
+                  >
+                    Compare all members
+                  </button>
+                </div>
+                <div
+                  class="member-avatars"
+                  role="group"
+                  aria-label="Select a member to view preferences"
+                >
+                  <button
+                    v-for="member in members"
+                    :key="member.uid"
+                    type="button"
+                    class="member-button"
+                    :aria-label="
+                      member.uid === viewer.uid
+                        ? 'View my preferences'
+                        : `View ${member.name}'s preferences`
+                    "
+                    aria-haspopup="dialog"
+                    aria-controls="member-preferences"
+                    @click="selectMember(member.uid)"
+                  >
+                    <span class="member-avatar" aria-hidden="true">{{ member.initials }}</span>
+                    <span class="member-name">{{ member.name }}</span>
+                  </button>
+                </div>
+              </section>
 
-          <div class="alignment-content">
-            <div class="alignment-circle">
-              <span>—</span>
+              <GroupPreferencesCard
+                :member-count="members.length"
+                :rows="groupPreferenceRows"
+                :members="avatarMembers"
+                :budget-scale="budgetScale"
+                :budget-initial="budgetInitial"
+                @vote="castVote"
+                @finalise="finalise"
+                @reopen="reopen"
+              />
             </div>
 
-            <!-- view group competibilty score --> 
-            <div>
-              <h3>Overall compatibility</h3>
-              <p class="muted">
-                View your group's preference alignment
+            <div class="summary-column">
+              <section class="card">
+                <h2>Your match with each member</h2>
+                <MemberRadarChart :comparisons="memberComparisons" :axes="RADAR_FACTORS" />
+              </section>
+
+              <section class="card">
+                <h2>Set group priorities</h2>
+                <PriorityRanking
+                  v-model="priorities"
+                  :factors="PRIORITY_FACTORS"
+                  @update:model-value="savePrioritiesSoon"
+                />
+                <p class="implementation-note">
+                  Drag to rank. #1 counts most in match scores and listing search.
+                </p>
+              </section>
+            </div>
+          </div>
+
+          <footer class="page-actions">
+            <button
+              v-if="groupPreference.IsComplete"
+              type="button"
+              class="btn btn-primary btn-block"
+              :disabled="saveState === 'saving'"
+              @click="searchListings"
+            >
+              Search listings with group preference
+            </button>
+            <button v-else type="button" class="btn btn-primary btn-block" disabled>
+              Finalise {{ groupPreference.PendingPreferences.length }} more to search listings
+            </button>
+            <p
+              v-if="saveMessage && (groupPreference.IsComplete || saveState !== 'demo')"
+              class="save-status"
+              :class="`is-${saveState}`"
+              role="status"
+            >
+              {{ saveMessage }}
+            </p>
+          </footer>
+
+          <dialog
+            v-if="members.length"
+            ref="preferencesDialog"
+            id="member-preferences"
+            class="preferences-dialog"
+            :class="{ 'comparison-dialog': viewMode === 'table' }"
+            aria-labelledby="preferences-title"
+            @close="resetPopup"
+            @click="closeOnBackdrop"
+          >
+            <div class="group-heading">
+              <h2 id="preferences-title">
+                {{
+                  viewMode === 'table'
+                    ? 'Member preferences'
+                    : selectedMember?.uid === viewer.uid
+                      ? 'My preferences'
+                      : `${selectedMember?.name}'s preferences`
+                }}
+              </h2>
+              <button
+                type="button"
+                class="close-popup"
+                aria-label="Close preferences"
+                autofocus
+                @click="preferencesDialog.close()"
+              >
+                ×
+              </button>
+            </div>
+
+            <div v-if="viewMode === 'individual' && selectedMember" class="individual-view">
+              <template v-if="selectedMember.profile">
+                <dl class="preference-grid">
+                  <div v-for="row in overviewRows" :key="row.key">
+                    <dt>{{ row.label }}</dt>
+                    <dd>
+                      {{ displayPreference(selectedMember.profile, row) }}
+                      <span
+                        v-if="row.key === 'budget' && selectedMember.profile.IsBudgetPrivate"
+                        class="privacy-info"
+                        @mouseenter="privateHint = selectedMember.uid"
+                        @mouseleave="privateHint = null"
+                        @keydown.esc.stop="privateHint = null"
+                      >
+                        <button
+                          type="button"
+                          class="privacy-badge"
+                          aria-label="Private budget information"
+                          :aria-describedby="
+                            privateHint === selectedMember.uid
+                              ? 'individual-budget-privacy'
+                              : undefined
+                          "
+                          @click="privateHint = selectedMember.uid"
+                          @focus="privateHint = selectedMember.uid"
+                          @blur="privateHint = null"
+                        >
+                          P
+                        </button>
+                        <span
+                          v-if="privateHint === selectedMember.uid"
+                          id="individual-budget-privacy"
+                          class="privacy-tooltip"
+                          role="tooltip"
+                          >{{ privacyExplanation }}</span
+                        >
+                      </span>
+                    </dd>
+                  </div>
+                </dl>
+                <details :key="selectedMember.uid" class="more-preferences">
+                  <summary>More preferences ({{ detailRows.length }})</summary>
+                  <dl class="preference-grid">
+                    <div v-for="row in detailRows" :key="row.key">
+                      <dt>{{ row.label }}</dt>
+                      <dd>{{ displayPreference(selectedMember.profile, row) }}</dd>
+                    </div>
+                  </dl>
+                </details>
+              </template>
+              <p v-else class="table-description" role="status">
+                We couldn't load this member's preferences. Please try again later.
               </p>
             </div>
-          </div>
-        </section>
 
-        <section class="card">
-          <h2>Group preferences</h2>
-          <p class="section-description">
-            Your shared housing requirements at a glance.
-          </p>
-
-          <dl class="preference-list">
-            <div>
-              <dt>Monthly budget</dt>
-              <dd>—</dd> // dashes need to be replaced later
+            <div
+              v-if="viewMode === 'table'"
+              class="table-scroll"
+              role="region"
+              aria-label="Member preference comparison"
+              tabindex="0"
+            >
+              <table>
+                <caption class="sr-only">
+                  Each member's preferences compared with yours for
+                  {{
+                    group.GroupName
+                  }}
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Preference</th>
+                    <th v-for="member in members" :key="member.uid" scope="col">
+                      <span class="column-name">{{ member.name }}</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody v-for="section in preferenceSections" :key="section.title">
+                  <tr class="section-row">
+                    <th :colspan="members.length + 1" scope="rowgroup">{{ section.title }}</th>
+                  </tr>
+                  <tr v-for="row in section.rows" :key="row.key">
+                    <th scope="row">{{ row.label }}</th>
+                    <td
+                      v-for="member in members"
+                      :key="member.uid"
+                      :class="{
+                        'missing-value': !member.profile,
+                        'cell-match':
+                          member.uid !== viewer.uid &&
+                          comparisonCell(member.uid, row.key)?.state === 'compatible',
+                        'cell-partial':
+                          member.uid !== viewer.uid &&
+                          comparisonCell(member.uid, row.key)?.state === 'discuss',
+                        'cell-differ':
+                          member.uid !== viewer.uid &&
+                          comparisonCell(member.uid, row.key)?.state === 'conflict',
+                      }"
+                      :title="
+                        member.uid === viewer.uid
+                          ? undefined
+                          : comparisonCell(member.uid, row.key)?.reason
+                      "
+                    >
+                      {{ displayPreference(member.profile, row) }}
+                      <span
+                        v-if="member.uid !== viewer.uid && comparisonCell(member.uid, row.key)"
+                        class="sr-only"
+                      >
+                        ({{
+                          comparisonCell(member.uid, row.key).state === 'compatible'
+                            ? 'works with yours'
+                            : comparisonCell(member.uid, row.key).state === 'unknown'
+                              ? 'not compared'
+                              : comparisonCell(member.uid, row.key).state === 'discuss'
+                                ? 'partly works with yours'
+                                : 'differs from yours'
+                        }})
+                      </span>
+                      <span
+                        v-if="row.key === 'budget' && member.profile?.IsBudgetPrivate"
+                        class="privacy-info"
+                        @mouseenter="privateHint = member.uid"
+                        @mouseleave="privateHint = null"
+                        @keydown.esc.stop="privateHint = null"
+                      >
+                        <button
+                          type="button"
+                          class="privacy-badge"
+                          aria-label="Private budget information"
+                          :aria-describedby="
+                            privateHint === member.uid ? `budget-privacy-${member.uid}` : undefined
+                          "
+                          @click="privateHint = member.uid"
+                          @focus="privateHint = member.uid"
+                          @blur="privateHint = null"
+                        >
+                          P
+                        </button>
+                        <span
+                          v-if="privateHint === member.uid"
+                          :id="`budget-privacy-${member.uid}`"
+                          class="privacy-tooltip"
+                          role="tooltip"
+                          >{{ privacyExplanation }}</span
+                        >
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th scope="row">Match with you</th>
+                    <td v-for="member in members" :key="member.uid" class="match-cell">
+                      {{
+                        member.uid === viewer.uid
+                          ? '—'
+                          : `${memberComparisons.find((item) => item.uid === member.uid)?.score ?? '—'}%`
+                      }}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
-            <div>
-              <dt>Commute time</dt>
-              <dd>—</dd>
-            </div>
-            <div>
-              <dt>Bedrooms</dt>
-              <dd>—</dd>
-            </div>
-            <div>
-              <dt>Move-in date</dt>
-              <dd>—</dd>
-            </div>
-            <div>
-              <dt>Property type</dt>
-              <dd>—</dd>
-            </div>
-            <div>
-              <dt>Preferred locations</dt>
-              <dd>—</dd>
-            </div>
-          </dl>
-        </section>
-
-        <!--group member information--> 
-        <section class="card">
-          <h2>Members</h2>
-          <div class="empty-area">
-            Group members will appear here.
-          </div>
-        </section>
-
-        <!-- conflict management --> 
-        <section class="card">
-          <h2>Preferences to discuss</h2>
-          <p class="section-description">
-            Identify differences and decide where your group can compromise.
-          </p>
-
-          <div class="notice">
-            Preference conflicts will appear after the group's preferences
-            have been analysed.
-          </div>
-        </section>
-      </div>
-
-      <div class="column">
-        <!-- preference comparison visualisations (added for further analytics) --> 
-        <section class="card">
-          <h2>Preference alignment</h2>
-          <p class="section-description">
-            Compare requirements across group members.
-          </p>
-
-          <div class="chart-area">
-            <span>Preference comparison chart</span>
-            <small>Waiting for group preference data</small>
-          </div>
-        </section>
-
-        <!-- support levels-->
-        <section class="card">
-          <h2>Preference support</h2>
-          <p class="section-description">
-            See how strongly members support each requirement.
-          </p>
-
-          <div class="support-list">
-            <div class="support-item">
-              <div class="support-label">
-                <span>Budget</span>
-                <span>—</span>
-              </div>
-              <div class="support-track" aria-hidden="true"></div>
-            </div>
-
-            <div class="support-item">
-              <div class="support-label">
-                <span>Commute</span>
-                <span>—</span>
-              </div>
-              <div class="support-track" aria-hidden="true"></div>
-            </div>
-
-            <div class="support-item">
-              <div class="support-label">
-                <span>Bedrooms</span>
-                <span>—</span>
-              </div>
-              <div class="support-track" aria-hidden="true"></div>
-            </div>
-
-            <div class="support-item">
-              <div class="support-label">
-                <span>Location</span>
-                <span>—</span>
-              </div>
-              <div class="support-track" aria-hidden="true"></div>
-            </div>
-
-            <div class="support-item">
-              <div class="support-label">
-                <span>Amenities</span>
-                <span>—</span>
-              </div>
-              <div class="support-track" aria-hidden="true"></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- priority control -->
-        <section class="card">
-          <h2>Set group priorities</h2>
-          <p class="section-description">
-            Decide which requirements matter most to your group.
-          </p>
-
-          <fieldset class="priority-fields" disabled>
-            <legend class="sr-only">Group requirement priorities</legend>
-
-            <label class="priority-row">
-              <span>Budget</span>
-              <select>
-                <option value="">Select priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </label>
-
-            <label class="priority-row">
-              <span>Commute</span>
-              <select>
-                <option value="">Select priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </label>
-
-            <label class="priority-row">
-              <span>Bedrooms</span>
-              <select>
-                <option value="">Select priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </label>
-
-            <label class="priority-row">
-              <span>Location</span>
-              <select>
-                <option value="">Select priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </label>
-
-            <label class="priority-row">
-              <span>Amenities</span>
-              <select>
-                <option value="">Select priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </label>
-          </fieldset>
-
-          <p class="implementation-note">
-            Priority editing is not connected yet.
-          </p>
+          </dialog>
+          <p v-else class="card">This group has no members to compare yet.</p>
+        </template>
+        <section v-else class="card">
+          <h2>No group selected</h2>
+          <p class="table-description">Create or join a group from Home to compare preferences.</p>
+          <RouterLink to="/home" class="btn btn-primary">Go to Home</RouterLink>
         </section>
       </div>
     </div>
-
-    <!-- preserve selected group - this one to rethink thru later --> 
-    <footer class="page-actions">
-      <RouterLink to="/listings" class="primary-button">
-        Browse rental listings
-      </RouterLink>
-    </footer>
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.summary-page {
-  width: 100%;
+.summary-layout {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 32px 24px;
-  box-sizing: border-box;
-  color: var(--text, #242424);
 }
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-header h1 {
-  margin: 0 0 8px;
-  font-size: 26px;
-}
-
-.page-header p,
-.section-description,
-.muted {
-  margin: 0;
-  color: #737373;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
+  margin-top: 20px;
 }
-
-.column {
+.summary-column {
   display: flex;
-  min-width: 0;
   flex-direction: column;
+  min-width: 0;
   gap: 20px;
 }
-
-.card {
+.summary-grid .card {
   padding: 24px;
   border: 1px solid var(--line, #e9e9e9);
   border-radius: 14px;
   background: #fff;
 }
-
-.card h2 {
+.summary-grid h2 {
   margin: 0 0 12px;
   font-size: 15px;
   font-weight: 700;
 }
-
+.section-description {
+  margin: 0;
+  color: #737373;
+  font-size: 13px;
+  line-height: 1.6;
+}
 .alignment-content {
   display: flex;
   align-items: center;
   gap: 18px;
   margin-top: 20px;
 }
-
 .alignment-content h3 {
   margin: 0 0 6px;
   font-size: 16px;
 }
-
 .alignment-circle {
   display: grid;
   flex-shrink: 0;
   place-items: center;
   width: 82px;
   height: 82px;
-  box-sizing: border-box;
-  border: 7px solid var(--red-tint, #fff0f3);
   border-radius: 50%;
+  /* Ring fills clockwise to the score; the white disc covers the centre. */
+  background:
+    radial-gradient(closest-side, #fff calc(100% - 7px), transparent calc(100% - 6px)),
+    conic-gradient(var(--red, #ed003b) calc(var(--score) * 1%), var(--red-tint, #fff0f3) 0);
   color: var(--red, #ed003b);
   font-size: 25px;
   font-weight: 700;
 }
-
-.preference-list {
-  margin: 16px 0 0;
-}
-
-.preference-list > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 11px 0;
-  border-bottom: 1px solid var(--line, #e9e9e9);
-  font-size: 13px;
-}
-
-.preference-list > div:last-child {
-  border-bottom: 0;
-}
-
-.preference-list dt {
-  color: #737373;
-}
-
-.preference-list dd {
-  margin: 0;
-  text-align: right;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.empty-area,
-.notice {
-  padding: 18px;
-  border-radius: 9px;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.empty-area {
-  background: #fafafa;
-  color: #737373;
-}
-
-.notice {
-  margin-top: 16px;
-  border: 1px solid #f0dfbb;
-  background: #fffaf0;
-  color: #795b23;
-}
-
-/* space for comparison chart (for further analytics if we need later)*/
 .chart-area {
   display: flex;
   min-height: 230px;
   margin-top: 18px;
   padding: 20px;
-  box-sizing: border-box;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px dashed var(--line, #dedede);
+  border: 1px dashed var(--line);
   border-radius: 10px;
   background: #fafafa;
   color: #737373;
   text-align: center;
   font-size: 13px;
 }
-
 .chart-area small {
   font-size: 11px;
 }
-
-.support-list {
-  display: grid;
-  gap: 17px;
-  margin-top: 20px;
-}
-
-.support-label {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 7px;
-  font-size: 12px;
-}
-
-.support-track {
-  height: 7px;
-  border-radius: 20px;
-  background: #f0f0f0;
-}
-
-.priority-fields {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-  margin: 18px 0 0;
-  padding: 0;
-  border: 0;
-}
-
-.priority-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+.alignment-verdict {
+  margin: 0;
   font-size: 13px;
+  font-weight: 600;
 }
-
-.priority-row select {
-  width: 150px;
-  max-width: 60%;
-  padding: 9px 10px;
-  border: 1px solid var(--line, #e9e9e9);
-  border-radius: 8px;
-  background: #fafafa;
-  color: #626262;
-  font: inherit;
+.alignment-verdict.is-agreed {
+  color: var(--ok, #2e7d5b);
+}
+.alignment-meta {
+  margin: 4px 0 0;
+  color: #737373;
   font-size: 12px;
+  line-height: 1.5;
 }
-
 .implementation-note {
   margin: 14px 0 0;
   color: #737373;
   font-size: 11px;
 }
-
 .page-actions {
   margin-top: 24px;
 }
-
-.primary-button {
-  display: flex;
-  min-height: 44px;
-  padding: 10px 20px;
-  box-sizing: border-box;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  background: var(--red, #ed003b);
-  color: #fff;
+.profile-prompt {
+  margin-bottom: 20px;
+}
+.save-status {
+  margin: 8px 0 0;
+  color: #737373;
+  font-size: 12px;
   text-align: center;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
 }
-
-.primary-button:hover {
-  filter: brightness(0.94);
+.save-status.is-saved {
+  color: var(--ok, #2e7d5b);
 }
-
-.primary-button:focus-visible,
-select:focus-visible {
-  outline: 2px solid var(--red, #ed003b);
-  outline-offset: 3px;
+.save-status.is-error {
+  color: #9b1c2c;
 }
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-
 @media (max-width: 960px) {
   .summary-grid {
     grid-template-columns: 1fr;
   }
 }
-
-/* mobile (maybe take out later if not necessary) */
+.group-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.group-description,
+.table-description {
+  margin-top: 5px;
+  color: #6d6863;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.table-description {
+  margin-bottom: 12px;
+}
+.member-avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 18px;
+}
+.member-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 64px;
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #625d58;
+  font: inherit;
+  cursor: pointer;
+}
+.member-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #bd1745;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+}
+.member-button:nth-child(4n + 2) .member-avatar {
+  background: #326dcc;
+}
+.member-button:nth-child(4n + 3) .member-avatar {
+  background: #198463;
+}
+.member-button:nth-child(4n + 4) .member-avatar {
+  background: #a96b0c;
+}
+.member-button:hover .member-avatar {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+.member-button:hover .member-name {
+  color: var(--red);
+  font-weight: 600;
+}
+.member-button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+.member-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.preferences-dialog {
+  margin: auto;
+  padding: 24px;
+  width: min(680px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: 85dvh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+  color: var(--text);
+  box-shadow: 0 16px 60px #0003;
+  min-width: 0;
+}
+.cell-match {
+  background: #e9f6ee;
+}
+.cell-partial {
+  background: #fdf5dc;
+}
+.cell-differ {
+  background: #fcebec;
+}
+.match-cell {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.page-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.comparison-dialog {
+  width: min(1100px, calc(100vw - 32px));
+}
+.preferences-dialog::backdrop {
+  background: #201b2859;
+}
+:global(body:has(.preferences-dialog[open])) {
+  overflow: hidden;
+}
+.close-popup {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #f6f5f4;
+  color: #625d58;
+  font-size: 24px;
+  cursor: pointer;
+}
+.close-popup:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+.individual-view,
+.scroll-hint {
+  margin-top: 14px;
+}
+.privacy-info {
+  display: inline-block;
+  position: relative;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid #d8c5ed;
+  border-radius: 50%;
+  background: #f1e9fa;
+  color: #703da0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.privacy-badge:focus-visible {
+  outline: 2px solid #703da0;
+  outline-offset: 2px;
+}
+.privacy-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 3;
+  width: 200px;
+  max-width: calc(100vw - 72px);
+  padding: 10px 12px;
+  border: 1px solid #d8c5ed;
+  border-radius: 8px;
+  background: #faf6ff;
+  color: #513069;
+  box-shadow: 0 4px 12px #5130691a;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.table-scroll .privacy-tooltip {
+  left: auto;
+  right: 0;
+}
+.preference-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 20px;
+  margin: 18px 0;
+}
+.preference-grid dt {
+  font-size: 11px;
+  color: #6d6863;
+  margin-bottom: 4px;
+}
+.preference-grid dd {
+  margin: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.more-preferences {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.more-preferences summary {
+  cursor: pointer;
+  color: var(--red);
+  font-size: 12px;
+}
+.scroll-hint {
+  color: #6d6863;
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+.table-scroll {
+  overflow: auto;
+  max-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+th,
+td {
+  min-width: 150px;
+  max-width: 240px;
+  padding: 13px 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+thead th {
+  background: #faf9f8;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+th[scope='row'] {
+  font-weight: 500;
+  color: #625d58;
+}
+.column-name {
+  display: block;
+  font-size: 13px;
+}
+.section-row th {
+  background: #f6f5f4;
+  font-size: 11px;
+  font-weight: 600;
+  color: #625d58;
+}
+.missing-value {
+  color: #827b74;
+  font-style: italic;
+}
+tbody:last-child tr:last-child th,
+tbody:last-child tr:last-child td {
+  border-bottom: 0;
+}
 @media (max-width: 720px) {
-  .summary-page {
-    padding: 24px 16px 100px;
+  .preference-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .card {
-    padding: 20px;
+  .preferences-dialog {
+    padding: 16px;
   }
 }
 </style>
