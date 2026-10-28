@@ -98,8 +98,10 @@ const availableFrom = computed(() => props.listing.AvailableDate || 'Not listed'
   position: absolute; top: 8px; right: 8px; display: grid; place-items: center;
   width: 30px; height: 30px; border-radius: 50%; border: 0; background: #fff;
   color: var(--muted); cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
-.save-btn.saved { color: var(--red); }
+.save-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.save-btn.saved { background: var(--highlight); color: var(--text); }
 .save-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 .listing-body { padding: 0.8rem; display: grid; gap: 3px; flex: 1; align-content: start; }
 .price { color: var(--red); font-weight: 700; font-size: 14px; }
