@@ -1,6 +1,12 @@
 <script setup>
 import AppIcon from '@/components/AppIcon.vue'
 
+defineProps({
+  collapsed: { type: Boolean, default: false },
+})
+
+defineEmits(['toggle'])
+
 const links = [
   { to: '/home', label: 'Home', icon: 'home' },
   { to: '/listings', label: 'Browse', icon: 'search' },
@@ -11,10 +17,24 @@ const links = [
 </script>
 
 <template>
-  <aside class="sidebar">
+  <aside
+    class="sidebar"
+    :class="{ 'is-collapsed': collapsed }"
+    :aria-hidden="collapsed"
+    :inert="collapsed"
+  >
     <div class="brand">
       <AppIcon name="logo" :size="22" />
       <span class="brand-name">Co<span>Rent</span></span>
+      <button
+        class="sidebar-toggle"
+        type="button"
+        aria-label="Close sidebar"
+        aria-expanded="true"
+        @click="$emit('toggle')"
+      >
+        <AppIcon name="chevron" :size="17" />
+      </button>
     </div>
 
     <nav aria-label="Main navigation">
@@ -41,6 +61,14 @@ const links = [
   top: 0;
   height: 100vh;
   backdrop-filter: var(--glass-blur);
+  overflow: hidden;
+  transition: width 180ms ease, padding 180ms ease, border-color 180ms ease;
+}
+.sidebar.is-collapsed {
+  width: 0;
+  padding-right: 0;
+  padding-left: 0;
+  border-right-color: transparent;
 }
 .brand {
   display: flex;
@@ -52,6 +80,26 @@ const links = [
   margin: 0 -0.75rem 0.75rem;
   padding-left: 1.25rem;
   border-bottom: 1px solid var(--line);
+}
+.sidebar-toggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--glass);
+  color: var(--muted);
+  cursor: pointer;
+}
+.sidebar-toggle:hover {
+  background: var(--red-tint);
+  color: var(--red);
+}
+.sidebar-toggle svg {
+  transform: rotate(180deg);
 }
 .brand-name { font-size: 13px; font-weight: 700; color: var(--text); }
 .brand-name span { color: var(--red); }
@@ -80,9 +128,21 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
     padding: 0.35rem 0.5rem;
     border-right: 0;
     border-top: 1px solid var(--line);
+    transition: transform 180ms ease;
   }
-  .brand { display: none; }
+  .sidebar.is-collapsed {
+    width: auto;
+    padding: 0.35rem 0.5rem;
+    border-top-color: transparent;
+    transform: translateY(110%);
+  }
+  .brand,
+  .sidebar-toggle { display: none; }
   ul { grid-auto-flow: column; grid-auto-columns: 1fr; }
   .nav-item { flex-direction: column; gap: 2px; padding: 0.4rem 0.2rem; font-size: 10px; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar { transition: none; }
 }
 </style>
