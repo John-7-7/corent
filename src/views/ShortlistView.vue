@@ -6,7 +6,8 @@ import { formatRent } from '@/services/listingsService'
 import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
 
-const { listingIds, storageError, removeFromShortlist } = useShortlist()
+const { listingIds, entries, storageError, loading, isGroupMode, activeGroup, removeFromShortlist } =
+  useShortlist()
 const listings = ref([])
 
 // Rough Singapore bounds, used to place real coordinates on the overview map.
@@ -66,15 +67,19 @@ function selectMapPin(listing) {
   })
 }
 
-function removeListing(id) {
+async function removeListing(id) {
   try {
-    removeFromShortlist(id)
+    await removeFromShortlist(id)
     if (selectedListingId.value === id) selectedListingId.value = ''
   } catch (error) {
     storageError.value =
       error instanceof Error ? error.message : 'Unable to update your shortlist.'
   }
 }
+
+/** Who added a listing, for the group shortlist. Null in personal mode. */
+const addedByFor = (listingId) =>
+  entries.value.find((entry) => entry.listingId === listingId)?.addedByName ?? null
 
 function confirmEnquiry() {
   if (!enquiryListing.value) {
@@ -90,7 +95,12 @@ function confirmEnquiry() {
   <div>
     <header class="page-head">
       <h1>Shortlist</h1>
-      <p>{{ savedListings.length }} {{ savedListings.length === 1 ? 'listing' : 'listings' }} shortlisted</p>
+      <p>
+        {{ savedListings.length }} {{ savedListings.length === 1 ? 'listing' : 'listings' }}
+        shortlisted
+        <template v-if="isGroupMode"> · shared with {{ activeGroup?.name }}</template>
+        <template v-else> · only on this device until you join a group</template>
+      </p>
     </header>
 
     <main class="content">
@@ -139,6 +149,7 @@ function confirmEnquiry() {
         </section>
 
         <p v-if="storageError" class="error-message" role="alert">{{ storageError }}</p>
+        <p v-else-if="loading" class="muted">Loading your group's shortlist…</p>
 
         <div v-if="savedListings.length" class="listing-list">
           <article
@@ -174,6 +185,9 @@ function confirmEnquiry() {
                 <p class="listing-meta">
                   <AppIcon name="pin" :size="12" />
                   {{ listing.area }} · {{ listing.beds }} rooms
+                  <template v-if="addedByFor(listing.id)">
+                    · added by {{ addedByFor(listing.id) }}
+                  </template>
                 </p>
 
                 <div class="social-row">

@@ -1,10 +1,47 @@
 rules_version = '2';
 
-// Rules for the User_Preferences collection (F-REQ-005/006/007).
-// NOTE: this only covers User_Preferences. Merge this block into the project's
-// existing rules instead of replacing them, or other collections will be locked.
+// Covers User_Preferences (F-REQ-005/006/007) and groups + the shared group
+// shortlist (F-REQ-008/009/016).
+// NOTE: any collection without a match block below is denied by default. Add a
+// block when you add a collection rather than relaxing the rules globally.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Groups and the shared shortlist (F-REQ-008/009/016).
+    match /groups/{groupId} {
+      function memberIds() {
+        return get(/databases/$(database)/documents/groups/$(groupId)).data.memberIds;
+      }
+      function isMember() {
+        return request.auth != null && request.auth.uid in memberIds();
+      }
+
+      // Any signed-in user may read a group so joining by invite code works.
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.memberIds == [request.auth.uid];
+      // Membership changes go through joinGroupByInviteCode / leaveGroup.
+      allow update: if request.auth != null;
+      allow delete: if isMember();
+
+      // groups/{groupId}/shortlist/{listingId} — one doc per saved listing, so
+      // two members saving the same property converge instead of duplicating.
+      match /shortlist/{listingId} {
+        allow read: if isMember();
+
+        // The document ID is the ListingID, and addedBy must be the caller:
+        // a member cannot attribute an entry to someone else.
+        allow create: if isMember()
+          && request.resource.data.listingId == listingId
+          && request.resource.data.addedBy == request.auth.uid;
+
+        // Any member may remove any entry; addedByName keeps it accountable.
+        allow delete: if isMember();
+
+        // Entries are add/remove only — no edits in place.
+        allow update: if false;
+      }
+    }
 
     match /User_Preferences/{uid} {
       function isOwner() {

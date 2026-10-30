@@ -76,14 +76,15 @@ const destinations = ref([
 /* ---------- shortlist (F-REQ-016) ---------- */
 // Persisted in localStorage and shared with ShortlistView. Swap shortlistService
 // for Selected_Listing once groups exist — the component API below does not change.
-const { listingIds, storageError, toggleShortlist } = useShortlist()
+const { listingIds, storageError, toggleShortlist, isShortlisted, isGroupMode, activeGroup } =
+  useShortlist()
 const actionError = ref('')
-const isSaved = (l) => listingIds.value.includes(l.ListingID)
-function toggleSave(l) {
+const isSaved = (l) => isShortlisted(l.ListingID)
+async function toggleSave(l) {
   actionError.value = ''
   try {
     if (!l.IsAvailable && !isSaved(l)) return
-    toggleShortlist(l.ListingID)
+    await toggleShortlist(l.ListingID)
   } catch (e) {
     actionError.value = e instanceof Error ? e.message : 'Unable to update your shortlist.'
   }
@@ -119,9 +120,17 @@ const breakdown = computed(() => {
         <section class="card" aria-label="Filters">
           <div class="between wrap">
             <div class="segmented" role="group" aria-label="Browse as">
-              <button type="button" class="on" aria-pressed="true">Just me</button>
-              <button type="button" aria-pressed="false" disabled title="Needs a group (F-REQ-008)">
-                My group
+              <button type="button" :class="{ on: !isGroupMode }" :aria-pressed="!isGroupMode" disabled>
+                Just me
+              </button>
+              <button
+                type="button"
+                :class="{ on: isGroupMode }"
+                :aria-pressed="isGroupMode"
+                disabled
+                :title="isGroupMode ? activeGroup?.name : 'Join or create a group to share a shortlist'"
+              >
+                {{ isGroupMode ? activeGroup?.name : 'My group' }}
               </button>
             </div>
             <RouterLink class="link" to="/shortlist">Shortlist ({{ listingIds.length }})</RouterLink>

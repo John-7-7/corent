@@ -6,6 +6,7 @@ import AppIcon from '@/components/AppIcon.vue'
 import GroupCard from '@/components/groups/GroupCard.vue'
 import { onAuthChange } from '@/services/authService'
 import {createGroup as createGroupInFirestore, getUserGroups, joinGroupByInviteCode,} from '@/services/groupService.js'
+import { refreshGroups, setActiveGroup } from '@/services/activeGroup'
 
 const router = useRouter()
 
@@ -90,12 +91,14 @@ async function createGroup() {
   groupActionLoading.value = true
 
   try {
-    await createGroupInFirestore(
+    const created = await createGroupInFirestore(
       groupName.value,
       currentUser.value,
     )
 
     await loadGroups()
+    await refreshGroups(currentUser.value)
+    setActiveGroup(created)
     closeDialog()
   } catch (error) {
     groupError.value = getErrorMessage(
@@ -124,6 +127,7 @@ async function joinGroup() {
     )
 
     await loadGroups()
+    await refreshGroups(currentUser.value)
     closeDialog()
   } catch (error) {
     groupError.value = getErrorMessage(
