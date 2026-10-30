@@ -1,8 +1,13 @@
 <script setup>
 import { computed, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
 import AppIcon from '@/components/AppIcon.vue'
 import GroupCard from '@/components/groups/GroupCard.vue'
 import { onAuthChange } from '@/services/authService'
+import {createGroup as createGroupInFirestore, getUserGroups, joinGroupByInviteCode,} from '@/services/groupService.js'
+
+const router = useRouter()
 
 const currentUser = ref(null)
 const groups = ref([])
@@ -12,58 +17,54 @@ const groupName = ref('')
 const inviteCode = ref('')
 const groupError = ref('')
 const dashboardError = ref('')
-let storageKey = ''
+const groupActionLoading = ref(false)
 
-const firstName = computed(() => currentUser.value?.displayName?.trim().split(/\s+/)[0] || 'there')
+const firstName = computed(
+  () =>
+    currentUser.value?.displayName?.trim().split(/\s+/)[0] ||
+    'there',
+)
 
 const picks = [
-  { title: 'Clementi Ave 2 Condo', price: '$2,800', area: 'Clementi', match: 94, tone: '' },
-  { title: 'Tampines St 86 HDB', price: '$2,200', area: 'Tampines', match: 87, tone: 'alt' },
-]
+  {
+    title: 'Clementi Ave 2 Condo',
+    price: '$2,800',
+    area: 'Clementi',
+    match: 94,
+    tone: '',
+  },
+  {
+    title: 'Tampines St 86 HDB',
+    price: '$2,200',
+    area: 'Tampines',
+    match: 87,
+    tone: 'alt',
+  },
+] // Hardcoded top picks used as placeholders for now.
 
-function readGroups() {
-  try {
-    const saved = localStorage.getItem(storageKey)
-    const parsed = saved ? JSON.parse(saved) : []
-    if (
-      !Array.isArray(parsed) ||
-      parsed.some(
-        (group) =>
-          typeof group.id !== 'string' ||
-          typeof group.name !== 'string' ||
-          typeof group.inviteCode !== 'string' ||
-          !Number.isInteger(group.memberCount),
-      )
-    ) {
-      throw new Error('Saved group previews are not valid.')
-    }
-    groups.value = parsed
-  } catch (error) {
-    dashboardError.value = `Unable to load your group previews: ${error.message}`
+function getErrorMessage(error, fallbackMessage) {
+  return error instanceof Error
+    ? error.message
+    : fallbackMessage
+}
+
+async function loadGroups(user = currentUser.value) {
+  dashboardError.value = ''
+
+  if (!user?.uid) {
     groups.value = []
+    return
   }
-}
 
-function saveGroups(nextGroups) {
   try {
-    localStorage.setItem(storageKey, JSON.stringify(nextGroups))
-    groups.value = nextGroups
-    dashboardError.value = ''
-    return true
+    groups.value = await getUserGroups(user.uid)
   } catch (error) {
-    dashboardError.value = `Unable to save this group preview: ${error.message}`
-    return false
+    groups.value = []
+    dashboardError.value = getErrorMessage(
+      error,
+      'Unable to load your groups.',
+    )
   }
-}
-
-function generateInviteCode() {
-  let code
-  do {
-    const value = new Uint32Array(1)
-    window.crypto.getRandomValues(value)
-    code = (value[0] % 1_000_000).toString().padStart(6, '0')
-  } while (groups.value.some((group) => group.inviteCode === code))
-  return code
 }
 
 function openDialog(dialog) {
@@ -78,51 +79,87 @@ function closeDialog() {
   groupError.value = ''
 }
 
-function createGroup() {
-  const name = groupName.value.trim()
-  if (!name) {
-    groupError.value = 'Enter a name for your group.'
+async function createGroup() {
+  groupError.value = ''
+
+  if (!currentUser.value) {
+    groupError.value = 'You must be signed in to create a group.'
     return
   }
 
-  const group = {
-    id: window.crypto.randomUUID(),
-    name,
-    inviteCode: generateInviteCode(),
-    memberCount: 1,
+  groupActionLoading.value = true
+
+  try {
+    await createGroupInFirestore(
+      groupName.value,
+      currentUser.value,
+    )
+
+    await loadGroups()
+    closeDialog()
+  } catch (error) {
+    groupError.value = getErrorMessage(
+      error,
+      'Unable to create the group.',
+    )
+  } finally {
+    groupActionLoading.value = false
   }
-  if (saveGroups([group, ...groups.value])) closeDialog()
 }
 
-function joinGroup() {
-  const code = inviteCode.value.trim()
-  if (!/^\d{6}$/.test(code)) {
-    groupError.value = 'Enter the six-digit invite code.'
+async function joinGroup() {
+  groupError.value = ''
+
+  if (!currentUser.value) {
+    groupError.value = 'You must be signed in to join a group.'
     return
   }
 
-  const index = groups.value.findIndex((group) => group.inviteCode === code)
-  if (index === -1) {
-    groupError.value =
-      'No group with that code is available in this browser. This preview cannot join groups from another device.'
-    return
-  }
+  groupActionLoading.value = true
 
-  const updatedGroups = groups.value.map((group, groupIndex) =>
-    groupIndex === index ? { ...group, memberCount: group.memberCount + 1 } : group,
-  )
-  if (saveGroups(updatedGroups)) closeDialog()
+  try {
+    await joinGroupByInviteCode(
+      inviteCode.value,
+      currentUser.value,
+    )
+
+    await loadGroups()
+    closeDialog()
+  } catch (error) {
+    groupError.value = getErrorMessage(
+      error,
+      'Unable to join the group.',
+    )
+  } finally {
+    groupActionLoading.value = false
+  }
 }
 
 function openGroupPreview(groupId) {
-  selectedGroup.value = groups.value.find((group) => group.id === groupId) || null
-  activeDialog.value = 'preview'
+  selectedGroup.value =
+    groups.value.find((group) => group.id === groupId) || null
+
+  if (selectedGroup.value) {
+    activeDialog.value = 'preview'
+  }
 }
 
-const unsubscribeAuth = onAuthChange((user) => {
+function viewGroupDetails() {
+  if (!selectedGroup.value) return
+
+  const groupId = selectedGroup.value.id
+
+  closeDialog()
+
+  router.push({
+    name: 'group-details',
+    params: { groupId },
+  })
+}
+
+const unsubscribeAuth = onAuthChange(async (user) => {
   currentUser.value = user
-  storageKey = user ? `corent:group-previews:${user.uid}` : 'corent:group-previews:guest'
-  readGroups()
+  await loadGroups(user)
 })
 
 onUnmounted(unsubscribeAuth)
@@ -178,7 +215,7 @@ onUnmounted(unsubscribeAuth)
               v-for="group in groups"
               :key="group.id"
               :group="group"
-              @view-preview="openGroupPreview"
+              @view-group="openGroupPreview"
             />
           </div>
           <article v-else class="card empty-groups">
@@ -189,7 +226,7 @@ onUnmounted(unsubscribeAuth)
               Create your first group
             </button>
           </article>
-          <p class="hint">Group previews are saved only in this browser for this UI demo.</p>
+          <p class="hint">Your rental groups are shared securely with members only.</p>
         </section>
 
         <div class="between">
@@ -257,7 +294,7 @@ onUnmounted(unsubscribeAuth)
             />
           </div>
           <p v-if="groupError" class="field-error" role="alert">{{ groupError }}</p>
-          <button class="btn btn-primary btn-block" type="submit">Create group</button>
+          <button class="btn btn-primary btn-block" type="submit" :disabled="groupActionLoading"> {{ groupActionLoading ? 'Creating…' : 'Create group' }} </button>
         </form>
 
         <form v-else-if="activeDialog === 'join'" @submit.prevent="joinGroup">
@@ -276,7 +313,7 @@ onUnmounted(unsubscribeAuth)
             />
           </div>
           <p v-if="groupError" class="field-error" role="alert">{{ groupError }}</p>
-          <button class="btn btn-primary btn-block" type="submit">Join group</button>
+          <button class="btn btn-primary btn-block" type="submit" :disabled="groupActionLoading"> {{ groupActionLoading ? 'Joining…' : 'Join group' }} </button>
         </form>
         <div v-else-if="selectedGroup" class="preview-details">
           <div class="preview-detail">
@@ -291,8 +328,24 @@ onUnmounted(unsubscribeAuth)
             <span>Invite code</span>
             <strong class="invite-code">{{ selectedGroup.inviteCode }}</strong>
           </div>
-          <p class="hint">This is a browser-only group preview. It is not shared with other users.</p>
-          <button class="btn btn-primary btn-block" type="button" @click="closeDialog">Done</button>
+          <p class="hint">Open group details to view its members and invitation link.</p>
+             <div class="preview-actions">
+              <button
+                class="btn btn-block"
+                type="button"
+                @click="closeDialog"
+              >
+                Close
+              </button>
+
+              <button
+                class="btn btn-primary btn-block"
+                type="button"
+                @click="viewGroupDetails"
+              >
+                View group details
+              </button>
+            </div>           
         </div>
       </section>
     </div>
@@ -361,6 +414,7 @@ onUnmounted(unsubscribeAuth)
 .group-modal .field { margin: 0; }
 .group-modal .field-error { margin: -0.7rem 0 0; }
 .preview-details { display: grid; gap: 0.85rem; }
+.preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;}
 .preview-detail { display: grid; gap: 0.2rem; }
 .preview-detail span { color: var(--muted); font-size: 11px; }
 .preview-detail strong { font-size: 13px; }

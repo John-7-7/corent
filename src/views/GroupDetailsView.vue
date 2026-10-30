@@ -1,43 +1,104 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { onAuthChange } from '@/services/authService'
+import { getGroupById } from '@/services/groupService' 
 
-const props = defineProps({
-  group: {
-    type: Object,
-    default: null,
-  },
-  members: {
-    type: Array,
-    default: () => [],
-  },
-  inviteUrl: {
-    type: String,
-    default: '',
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  error: {
-    type: String,
-    default: '',
-  },
-  copying: {
-    type: Boolean,
-    default: false,
-  },
-  copyFeedback: {
-    type: String,
-    default: '',
-  },
+const route = useRoute()
+const router = useRouter()
+const group = ref(null)
+const members = ref([])
+const loading = ref(true)
+const error = ref('')
+const copying = ref(false)
+const copyFeedback = ref('')
+
+const memberCount = computed(() => {
+  return group.value?.memberCount ?? members.value.length
 })
 
-const emit = defineEmits(['copy-invite', 'view-summary'])
-const memberCount = computed(() => props.members.length)
+const inviteUrl = computed(() => {
+  if (!group.value?.inviteCode) return ''
 
-// Display initials derived from the actual member name.
+  return `${window.location.origin}/home?invite=${group.value.inviteCode}`
+})
+
+async function loadGroup(user) {
+  loading.value = true
+  error.value = ''
+  group.value = null
+  members.value = []
+
+  if (!user?.uid) {
+    error.value = 'You must be signed in to view this group.'
+    loading.value = false
+    return
+  }
+
+  try {
+    const selectedGroup = await getGroupById(
+      route.params.groupId,
+    )
+
+    const memberIds = Array.isArray(selectedGroup.memberIds)
+      ? selectedGroup.memberIds
+      : []
+
+    if (!memberIds.includes(user.uid)) {
+      throw new Error(
+        'You do not have permission to view this group.',
+      )
+    }
+
+    group.value = selectedGroup
+
+    members.value = Array.isArray(selectedGroup.members)
+      ? selectedGroup.members
+      : []
+  } catch (loadError) {
+    group.value = null
+    members.value = []
+
+    error.value =
+      loadError instanceof Error
+        ? loadError.message
+        : 'Unable to load the selected group.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function copyInviteLink() {
+  if (!inviteUrl.value) return
+
+  copying.value = true
+  copyFeedback.value = ''
+
+  try {
+    await navigator.clipboard.writeText(inviteUrl.value)
+    copyFeedback.value = 'Invitation link copied!'
+  } catch {
+    copyFeedback.value =
+      'Unable to copy the link. Please copy it manually.'
+  } finally {
+    copying.value = false
+  }
+}
+
+function viewGroupSummary() {
+  if (!group.value) return
+
+  router.push({
+    name: 'group summary',
+    query: {
+      groupId: group.value.id,
+    },
+  })
+}
+
 function getInitials(name) {
   if (!name?.trim()) return '?'
+
   return name
     .trim()
     .split(/\s+/)
@@ -52,6 +113,12 @@ function getPreferenceStatus(member) {
   if (member.preferencesReady === false) return 'Preferences pending'
   return 'Status unavailable'
 }
+
+const unsubscribeAuth = onAuthChange(async (user) => {
+  await loadGroup(user)
+})
+
+onUnmounted(unsubscribeAuth)
 </script>
 
 <template>
@@ -75,12 +142,12 @@ function getPreferenceStatus(member) {
 
     <div v-else class="group-card">
       <section class="group-section">
-        <h2 class="section-label">Group name</h2> //for further checking later!
+        <h2 class="section-label">Group name</h2> <!-- group name -->
         <p class="group-name">{{ group.name || 'Unnamed group' }}</p>
       </section>
 
       <section class="group-section">
-        <label class="section-label" for="invite-link">Invite housemates</label> //invite members
+        <label class="section-label" for="invite-link">Invite housemates</label> <!--invite members-->
 
         <template v-if="inviteUrl">
           <div class="invite-row">
@@ -96,7 +163,7 @@ function getPreferenceStatus(member) {
               class="copy-button"
               type="button"
               :disabled="copying"
-              @click="emit('copy-invite', inviteUrl)"
+              @click="copyInviteLink"
             >
               {{ copying ? 'Copying…' : 'Copy link' }}
             </button>
@@ -158,7 +225,7 @@ function getPreferenceStatus(member) {
         class="primary-button"
         type="button"
         :disabled="!group.id"
-        @click="emit('view-summary', group.id)"
+        @click="viewGroupSummary"
       >
         View Group Summary
       </button>
@@ -380,31 +447,5 @@ input:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--red, #ed003b);
   outline-offset: 3px;
-}
-
-/* mobile layout - maybe can remove this if we no need and it overcomplicates things */
-@media (max-width: 720px) {
-  .group-page {
-    padding: 24px 16px 100px;
-  }
-
-  .group-card,
-  .state-card {
-    padding: 20px;
-  }
-}
-
-@media (max-width: 420px) {
-  .invite-row {
-    flex-direction: column;
-  }
-
-  .member {
-    flex-wrap: wrap;
-  }
-
-  .status {
-    margin-left: 50px;
-  }
 }
 </style>

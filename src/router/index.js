@@ -10,6 +10,7 @@ import ListingsView from '../views/ListingsView.vue'
 import { getCurrentUser } from '../services/authService'
 import GroupSummaryView from '../views/GroupSummaryView.vue' 
 import ShortlistView from '../views/ShortlistView.vue'
+import GroupDetailsView from '../views/GroupDetailsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,19 +19,8 @@ const router = createRouter({
     { path: '/', name: 'landing', component: LandingView, meta: { bare: true } },
     { path: '/login', name: 'login', component: LoginView, meta: { bare: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { bare: true } },
-    {
-      path: '/forgot-password',
-      name: 'forgot-password',
-      component: ForgotPasswordView,
-      meta: { bare: true },
-    },
-    {
-      path: '/preferences',
-      name: 'preferences',
-      component: PreferencesView,
-      meta: { bare: true, requiresAuth: true },
-    },
-
+    { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView, meta: { bare: true }, },
+    { path: '/preferences', name: 'preferences', component: PreferencesView, meta: { bare: true, requiresAuth: true },},
     // App pages (with sidebar)
     { path: '/home', name: 'home', component: HomeView },
     {
@@ -40,8 +30,8 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     { path: '/listings', name: 'listings', component: ListingsView },
+    { path: '/groups/:groupId', name: 'group-details', component: GroupDetailsView, },
     { path: '/group-summary', name: 'group summary', component: GroupSummaryView},
-    { path: '/group-summary/:groupId', name: 'group summary detail', component: GroupSummaryView, meta: { requiresAuth: true } },
     { path: '/shortlist', name: 'shortlist', component: ShortlistView} //i removed the meta: { requiresAuth: true } from this route to allow access without authentication for now so we can see the layout for all
     //later we can add it back in once we have the authentication flow set up -yp
   ],
