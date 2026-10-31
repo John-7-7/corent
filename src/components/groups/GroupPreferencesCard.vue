@@ -1,16 +1,15 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import BudgetMaxVote from './BudgetMaxVote.vue'
+import BudgetVote from './BudgetVote.vue'
+import OptionVote from './OptionVote.vue'
 
 const props = defineProps({
   memberCount: { type: Number, default: 0 },
   rows: { type: Array, default: () => [] },
   // { uid, name, initials, color } for avatars on vote options.
   members: { type: Array, default: () => [] },
-  budgetScale: { type: Object, default: () => ({ min: 500, max: 5000, step: 50 }) },
-  budgetInitial: { type: Number, default: null },
 })
-const emit = defineEmits(['vote', 'finalise', 'reopen'])
+const emit = defineEmits(['vote', 'ready', 'raise-issue', 'resolve-issue', 'start-vote'])
 const dialog = ref(null)
 const selectedKey = ref(null)
 const selected = computed(() => props.rows.find((row) => row.key === selectedKey.value))
@@ -36,24 +35,55 @@ watch([selected, () => props.memberCount], ([row, count]) => {
   if (!row || count < 2) dialog.value?.close()
 })
 
+// An open issue sits on a finalised result until someone resolves it or starts a vote.
+const hasIssue = (item) => Boolean(item.issue && (item.issue.open || !item.voting?.finalised))
+// "Issue raised" only while the issue is undecided; a vote it started shows as a vote.
 const statusLabel = (item) =>
-  item.voting?.finalised
-    ? '✓ Finalised'
-    : item.needsAttention
-      ? item.status === 'conflict'
-        ? 'Conflict'
-        : 'Discuss together'
-      : item.status === 'shared'
-        ? '✓ Shared match'
-        : null
-const finaliseLabel = (voting) =>
+  item.issue?.open
+    ? 'Issue raised'
+    : item.voting?.settledShared
+      ? '✓ Shared match'
+      : item.voting?.finalised
+        ? '✓ Finalised'
+        : item.voting?.confirming
+          ? 'Confirmation'
+          : item.voting?.flagged
+            ? 'Discuss together'
+            : item.needsAttention
+              ? item.status === 'conflict'
+                ? 'Conflict'
+                : 'Discuss together'
+              : item.voting?.mode === 'vote'
+                ? 'Vote reopened' // a shared match an issue reopened
+                : item.status === 'shared'
+                  ? '✓ Shared match'
+                  : null
+// Raise an issue: a short message for the group, sent without a name.
+const issueOpen = ref(false)
+const issueMessage = ref('')
+watch(selectedKey, () => {
+  issueOpen.value = false
+  issueMessage.value = ''
+})
+function sendIssue() {
+  emit('raise-issue', selected.value.key, issueMessage.value)
+  issueOpen.value = false
+  issueMessage.value = ''
+}
+
+// Confirm button: everyone clicks it to finalise; each click adds that member's avatar.
+const readyLabel = (voting) =>
   !voting.allVoted
-    ? `Finalise · waiting for ${props.memberCount - voting.total} ${
+    ? `Waiting for ${props.memberCount - voting.total} more ${
         props.memberCount - voting.total === 1 ? 'vote' : 'votes'
       }`
-    : voting.leader
-      ? `Finalise: ${voting.leader.label}`
-      : 'Tied · change a vote to finalise'
+    : voting.flagged
+      ? 'No overlap · change a vote'
+      : !voting.leader
+        ? 'Tied · change a vote'
+        : voting.readyMine
+          ? 'Confirmed ✓'
+          : `Confirm ${voting.leader.label}`
 </script>
 
 <template>
@@ -67,8 +97,8 @@ const finaliseLabel = (voting) =>
         type="button"
         class="preference-box"
         :class="{
-          'needs-attention': item.needsAttention && !item.voting?.finalised,
-          'is-shared': item.status === 'shared' || item.voting?.finalised,
+          'needs-attention': (item.needsAttention && !item.voting?.finalised) || hasIssue(item),
+          'is-shared': (item.status === 'shared' || item.voting?.finalised) && !hasIssue(item),
         }"
         :aria-label="item.title + ': view details'"
         aria-haspopup="dialog"
@@ -80,9 +110,9 @@ const finaliseLabel = (voting) =>
         </span>
         <span v-if="statusLabel(item)" class="status-row">
           <span class="status-label">{{ statusLabel(item) }}</span>
-          <span v-if="item.voting && !item.voting.finalised" class="vote-count"
-            >{{ item.voting.total }}/{{ memberCount }} voted</span
-          >
+          <span v-if="item.voting && !item.voting.finalised" class="vote-count">{{
+            item.voting.countLabel
+          }}</span>
         </span>
         <span class="preference-value">{{ item.value }}</span>
       </button>
@@ -107,138 +137,221 @@ const finaliseLabel = (voting) =>
             ×
           </button>
         </div>
+        <!-- Every preference shows its sweet-spot panel; this box is only for an issue. -->
         <div
+          v-if="hasIssue(selected)"
           class="popup-summary"
           :class="{
-            'needs-attention': selected.needsAttention && !selected.voting?.finalised,
-            'is-shared': selected.status === 'shared' || selected.voting?.finalised,
+            'needs-attention':
+              (selected.needsAttention && !selected.voting?.finalised) || hasIssue(selected),
+            'is-shared':
+              (selected.status === 'shared' || selected.voting?.finalised) && !hasIssue(selected),
           }"
         >
           <span v-if="statusLabel(selected)" class="status-label">{{ statusLabel(selected) }}</span>
-          <strong class="summary-value">{{ selected.value }}</strong>
+          <!-- An open issue shows its message instead of the result. -->
+          <template v-if="hasIssue(selected)">
+            <strong class="summary-value issue-message">{{
+              selected.issue.message ? `“${selected.issue.message}”` : 'No message'
+            }}</strong>
+            <span v-if="selected.voting?.finalised" class="issue-note"
+              >Agreed: {{ selected.voting.finalised.label }}</span
+            >
+            <span v-else-if="selected.voting?.leading" class="issue-note"
+              >Now: {{ selected.voting.leading }}</span
+            >
+          </template>
+          <strong v-else class="summary-value">{{ selected.value }}</strong>
         </div>
 
+        <BudgetVote
+          v-if="selected.budget"
+          :bars="selected.budget"
+          :voting="selected.voting"
+          :disabled="!selected.voting?.canVote || selected.voting?.readyMine"
+          @vote="emit('vote', selected.key, $event)"
+        />
+        <OptionVote
+          v-else
+          :item="selected"
+          :disabled="!selected.voting?.canVote || selected.voting?.readyMine"
+          @vote="emit('vote', selected.key, $event)"
+        />
+
         <template v-if="selected.voting">
-          <BudgetMaxVote
-            v-if="selected.voting.type === 'range'"
-            :summary="selected.voting.summary"
-            :mine="selected.voting.mine"
-            :initial="budgetInitial"
-            :scale="budgetScale"
-            :member-count="memberCount"
-            :disabled="!selected.voting.canVote || Boolean(selected.voting.finalised)"
-            @vote="emit('vote', selected.key, $event)"
-          />
-
-          <fieldset
-            v-else
-            class="voting-options"
-            :disabled="!selected.voting.canVote || Boolean(selected.voting.finalised)"
-          >
-            <legend>Your vote</legend>
-            <label
-              v-for="option in selected.voting.options"
-              :key="option.value"
-              class="vote-option"
-              :class="{ 'my-vote': selected.voting.mine === option.value }"
-            >
-              <input
-                type="radio"
-                :name="`vote-${selected.key}`"
-                :value="option.value"
-                :checked="selected.voting.mine === option.value"
-                @change="emit('vote', selected.key, option.value)"
-              />
-              <strong class="option-label">{{ option.label }}</strong>
-              <span class="avatars" :aria-label="`Preferred by ${option.supporters.length}`">
-                <span
-                  v-for="uid in option.supporters"
-                  :key="uid"
-                  class="mini-avatar"
-                  :style="{ background: memberFor(uid)?.color }"
-                  :title="memberFor(uid)?.name"
-                  >{{ memberFor(uid)?.initials }}</span
-                >
-              </span>
-              <span class="option-votes"
-                >{{ option.count }} {{ option.count === 1 ? 'vote' : 'votes' }}</span
-              >
-            </label>
-            <div v-if="selected.voting.flexible.length" class="vote-option is-flexible">
-              <span class="option-label">No preference</span>
-              <span class="avatars">
-                <span
-                  v-for="uid in selected.voting.flexible"
-                  :key="uid"
-                  class="mini-avatar"
-                  :style="{ background: memberFor(uid)?.color }"
-                  :title="memberFor(uid)?.name"
-                  >{{ memberFor(uid)?.initials }}</span
-                >
-              </span>
-            </div>
-          </fieldset>
-
           <div class="finalise-row">
-            <template v-if="selected.voting.finalised">
-              <button type="button" class="btn btn-secondary" @click="emit('reopen', selected.key)">
-                Reopen vote
-              </button>
-            </template>
-            <button
-              v-else
-              type="button"
-              class="btn btn-primary"
-              :disabled="!selected.voting.allVoted || !selected.voting.leader"
-              @click="emit('finalise', selected.key)"
+            <form
+              v-if="selected.voting.finalised && issueOpen"
+              class="issue-form"
+              @submit.prevent="sendIssue"
             >
-              {{ finaliseLabel(selected.voting) }}
+              <label>
+                <span>What's the issue?</span>
+                <textarea v-model="issueMessage" rows="3" maxlength="300" required></textarea>
+              </label>
+              <div class="issue-actions">
+                <button type="button" class="btn btn-secondary" @click="issueOpen = false">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary" :disabled="!issueMessage.trim()">
+                  Raise issue
+                </button>
+              </div>
+            </form>
+            <!-- An open issue: whoever raised it keeps the result or starts a new vote;
+                 everyone else is asked to talk it through. -->
+            <p
+              v-else-if="
+                selected.voting.finalised && hasIssue(selected) && !selected.issue.canDecide
+              "
+              class="discuss-note"
+            >
+              Discuss this with your group.
+            </p>
+            <div v-else-if="selected.voting.finalised && hasIssue(selected)" class="issue-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                @click="emit('resolve-issue', selected.key)"
+              >
+                Resolved
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                @click="emit('start-vote', selected.key)"
+              >
+                Start vote
+              </button>
+            </div>
+            <button
+              v-else-if="selected.voting.finalised"
+              type="button"
+              class="btn btn-secondary"
+              @click="issueOpen = true"
+            >
+              Raise an issue
+            </button>
+            <p
+              v-if="!selected.voting.finalised && selected.voting.confirmAgain"
+              class="confirm-note"
+            >
+              Votes changed since you confirmed. Check the result and confirm again.
+            </p>
+            <button
+              v-if="!selected.voting.finalised"
+              type="button"
+              class="ready-button"
+              :class="{ 'is-ready': selected.voting.readyMine }"
+              :aria-pressed="selected.voting.readyMine"
+              :disabled="!selected.voting.allVoted || !selected.voting.leader"
+              @click="emit('ready', selected.key)"
+            >
+              <span>{{ readyLabel(selected.voting) }}</span>
+              <span v-if="selected.voting.ready.length" class="avatars">
+                <span
+                  v-for="uid in selected.voting.ready"
+                  :key="uid"
+                  class="mini-avatar"
+                  :style="{ background: memberFor(uid)?.color }"
+                  :title="memberFor(uid)?.name"
+                  >{{ memberFor(uid)?.initials }}</span
+                >
+              </span>
+              <span class="ready-count">{{ selected.voting.ready.length }}/{{ memberCount }}</span>
             </button>
           </div>
         </template>
-
-        <ul v-else class="member-list">
-          <li v-for="member in selected.details" :key="member.uid">
-            <span
-              class="mini-avatar"
-              :style="{ background: memberFor(member.uid)?.color }"
-              aria-hidden="true"
-              >{{ memberFor(member.uid)?.initials }}</span
-            >
-            <span class="member-name">{{ member.name }}</span>
-            <span class="member-value">{{ member.value }}</span>
-          </li>
-        </ul>
       </template>
     </dialog>
   </section>
 </template>
 
 <style scoped>
-.voting-options {
-  border: 0;
-  padding: 0;
-  margin: 18px 0 0;
+/* Shown when my confirmation lapsed because the votes changed the result. */
+.confirm-note {
+  width: 100%;
+  margin: 0 0 8px;
+  color: var(--warn, #8a5a00);
+  font-size: 13px;
+  font-weight: 600;
 }
-.voting-options legend {
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-.vote-option {
+/* Like a game's ready button: avatars stack up as members confirm. */
+.ready-button {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px;
-  margin-bottom: 8px;
-  border: 1px solid var(--line);
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--text, #161616);
   border-radius: 10px;
-  cursor: pointer;
+  background: var(--text, #161616);
+  color: #fff;
+  font: inherit;
   font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
 }
-.option-label {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.ready-button.is-ready {
+  border-color: var(--ok, #2e7d5b);
+  background: var(--ok-tint, #e2f3ea);
+  color: var(--ok, #2e7d5b);
+}
+.ready-button:disabled {
+  border-color: var(--line, #ebe8e6);
+  background: var(--soft, #efeeec);
+  color: #8c8883;
+  cursor: default;
+}
+.ready-button .avatars {
+  margin-left: auto;
+}
+.ready-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.ready-button .avatars + .ready-count {
+  margin-left: 0;
+}
+.issue-message {
+  font-size: 15px;
+  font-style: italic;
+}
+.issue-form {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+.issue-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.issue-form textarea {
+  padding: 10px;
+  border: 1px solid var(--line, #ebe8e6);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+.issue-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.discuss-note {
+  margin: 0;
+  color: #6d6863;
+  font-size: 12px;
+}
+.issue-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--warn, #8a5a00);
+  font-size: 12px;
 }
 .avatars {
   display: flex;
@@ -260,72 +373,22 @@ const finaliseLabel = (voting) =>
 .avatars .mini-avatar + .mini-avatar {
   margin-left: -6px;
 }
-.option-votes {
-  min-width: 56px;
-  color: #6d6863;
-  font-size: 12px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.vote-option.my-vote {
-  border-color: var(--text, #161616);
-  background: #f6f5f4;
-}
-.vote-option.is-flexible {
-  border-style: dashed;
-  color: #6d6863;
-  cursor: default;
-}
-.vote-option input {
-  accent-color: var(--text, #161616);
-  width: 16px;
-  height: 16px;
-}
-.vote-option:focus-within {
-  outline: 2px solid var(--text, #161616);
-  outline-offset: 2px;
-}
-.voting-options:disabled .vote-option {
-  cursor: default;
-  opacity: 0.75;
-}
+/* Confirm (or Raise an issue) stays pinned to the popup's bottom, so it's always in reach. */
 .finalise-row {
+  position: sticky;
+  bottom: -24px;
+  z-index: 3;
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin: 16px -24px -24px;
+  padding: 12px 24px 24px;
+  border-top: 1px solid var(--line, #ebe8e6);
+  background: white;
 }
 .finalise-row .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-.member-list {
-  display: grid;
-  gap: 8px;
-  margin: 16px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.member-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #f8f7f6;
-  font-size: 13px;
-}
-.member-list .mini-avatar {
-  border: 0;
-}
-.member-name {
-  width: 64px;
-  flex-shrink: 0;
-  color: #625d58;
-}
-.member-value {
-  min-width: 0;
-  font-weight: 600;
-  overflow-wrap: anywhere;
 }
 h2 {
   margin: 0 0 12px;

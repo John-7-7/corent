@@ -17,6 +17,7 @@ import {
   optionLabel,
   formatCurrency,
   formatMoveInDate,
+  BEDROOM_RANGE,
 } from '../components/profile/preferenceOptions.js'
 import { formatDistance, haversineKm } from './geo.js'
 
@@ -251,7 +252,7 @@ export function buildVoteOptions(key, members) {
   // Members whose own profile prefers this option (shown as avatars on the option).
   const who = (test) => present.filter(({ profile }) => test(profile)).map(({ uid }) => uid)
   if (key === 'budget') {
-    // Budget is voted as a range (see summariseRangeVotes), not as options.
+    // Budget is voted as a range (see summariseBudgetVotes), not as options.
     return []
   }
   if (key === 'commute') {
@@ -266,11 +267,12 @@ export function buildVoteOptions(key, members) {
     )
   }
   if (key === 'region') {
+    // Every listing region, so a vote isn't limited to what members picked.
     return LISTING_REGIONS.map((region) => ({
       value: region,
       label: region,
       supporters: who((p) => regionsOf(p).includes(region)),
-    })).filter((option) => option.supporters.length)
+    }))
   }
   if (key === 'PreferredLocations') {
     return LOCATIONS.map((option) => ({
@@ -283,12 +285,12 @@ export function buildVoteOptions(key, members) {
   }
   if (key === 'bedrooms') {
     const ranges = present.map(({ profile }) => profile).filter((p) => p.BedroomsMin != null)
+    // Counts from the lowest minimum to the highest maximum members picked. If
+    // everyone picked "Any", every count, so a reopened vote always has options.
+    const low = ranges.length ? Math.min(...ranges.map((p) => p.BedroomsMin)) : BEDROOM_RANGE.min
+    const high = ranges.length ? Math.max(...ranges.map((p) => p.BedroomsMax)) : BEDROOM_RANGE.max
     const options = []
-    for (
-      let n = Math.min(...ranges.map((p) => p.BedroomsMin));
-      n <= Math.max(...ranges.map((p) => p.BedroomsMax));
-      n++
-    ) {
+    for (let n = low; n <= high; n++) {
       options.push({
         value: n,
         label: `${n} ${n === 1 ? 'bedroom' : 'bedrooms'}`,
@@ -317,10 +319,13 @@ export function buildVoteOptions(key, members) {
   }
   const row = rowFor(key)
   const valueOf = (p) => (key === 'LeaseDuration' ? normaliseLease(p[key]) : p[key])
+  // Property type offers every type from the profile form, like region, so a vote
+  // isn't limited to what members picked; other factors keep only picked options.
+  const everyOption = key === 'PropertyType'
   return (row?.options || [])
     .filter((option) => !WILDCARDS.includes(option.value))
     .map(({ value, label }) => ({ value, label, supporters: who((p) => valueOf(p) === value) }))
-    .filter((option) => option.supporters.length)
+    .filter((option) => everyOption || option.supporters.length)
 }
 
 // Members whose profile says "Any" / "No preference" for a factor: every option suits them.
@@ -337,17 +342,82 @@ export function flexibleMembers(key, members) {
 }
 
 /**
- * Budget votes: each member votes the MAXIMUM they will pay per person
- * (votes is { uid: amount }). Everyone accepts any rent up to the lowest vote,
- * so that is the group's maximum. Only counts are returned, never names, so a
- * member with a private budget doesn't reveal it by voting.
+ * The group's budget per person from shared budgets only (as the profile form
+ * promises, a private budget is never used in the group's budget).
+ * Budgets either overlap, and the overlap is the group budget, or a maximum is
+ * below another minimum: that gap is a conflict the group votes on
+ * (summariseBudgetVotes). Returns { min, max } (null without shared budgets)
+ * and gap: { from, to } (the lowest maximum and the highest minimum) or null.
+ * Members are never named, so the gap doesn't single anyone out.
  */
-export function summariseMaxVotes(votes) {
-  const amounts = Object.values(votes).filter((amount) => Number.isFinite(amount) && amount > 0)
+export function resolveBudget(members) {
+  const ranges = members
+    .map(({ profile: p }) => p)
+    .filter((p) => p?.IsBudgetPrivate === false && validRange(p.BudgetMin, p.BudgetMax))
+  if (!ranges.length) return { min: null, max: null, gap: null }
+  const highestMin = Math.max(...ranges.map((p) => p.BudgetMin))
+  const lowestMax = Math.min(...ranges.map((p) => p.BudgetMax))
+  return highestMin <= lowestMax
+    ? { min: highestMin, max: lowestMax, gap: null }
+    : { min: null, max: null, gap: { from: lowestMax, to: highestMin } }
+}
+
+/**
+ * The ideal range when shared budgets conflict: go with the lowest maximum. A
+ * maximum is a hard limit and a minimum is flexible, so the range ends at the
+ * lowest maximum (the most everyone can afford) and starts at the highest
+ * minimum that still fits under it, asking as little as possible of anyone's
+ * minimum. Returns { min, max } or null when budgets don't conflict.
+ */
+export function budgetSuggestion(members) {
+  const { gap } = resolveBudget(members)
+  if (!gap) return null
+  const minimums = members
+    .map(({ profile: p }) => p)
+    .filter((p) => p?.IsBudgetPrivate === false && validRange(p.BudgetMin, p.BudgetMax))
+    .map((p) => p.BudgetMin)
+    .filter((min) => min <= gap.from)
+  return { min: minimums.length ? Math.max(...minimums) : gap.from, max: gap.from }
+}
+
+/**
+ * Budget votes. Each member votes a range ({ min, max, round }): the ideal, a
+ * range someone suggested, or their own. Starting a vote from an issue begins a
+ * new round, and only this round's ranges count.
+ *   votes      { uid: { min, max, round } }
+ *   ranges     this round's ranges, grouped: [{ min, max, count, mine }]
+ *   submitted  how many members submitted this round
+ *   overlap    { min, max } shared by every submitted range (may be one amount), or null
+ *   result     the overlap once every member submitted, else null
+ *   flagged    true when every member submitted and the ranges don't overlap
+ */
+export function summariseBudgetVotes(members, votes = {}, round = 0, myUid = null) {
+  const validVote = (vote) => vote && validRange(vote.min, vote.max) && (vote.round ?? 0) <= round
+  const inRound = (r) =>
+    members
+      .filter(({ uid }) => validVote(votes[uid]) && (votes[uid].round ?? 0) === r)
+      .map(({ uid }) => ({ ...votes[uid], uid }))
+  const group = (list) =>
+    Object.values(
+      list.reduce((groups, { uid, min, max }) => {
+        const key = `${min}-${max}`
+        groups[key] ??= { min, max, count: 0, mine: false }
+        groups[key].count += 1
+        groups[key].mine ||= uid === myUid
+        return groups
+      }, {}),
+    ).sort((a, b) => a.min - b.min || a.max - b.max) // by amount, so voting never reorders
+  const current = inRound(round)
+  const low = current.length ? Math.max(...current.map((vote) => vote.min)) : null
+  const high = current.length ? Math.min(...current.map((vote) => vote.max)) : null
+  const overlap = current.length && low <= high ? { min: low, max: high } : null
+  const everyone = current.length === members.length
   return {
-    total: amounts.length,
-    lowest: amounts.length ? Math.min(...amounts) : null,
-    highest: amounts.length ? Math.max(...amounts) : null,
+    ranges: group(current),
+    submitted: current.length,
+    overlap,
+    result: everyone ? overlap : null,
+    flagged: everyone && !overlap,
   }
 }
 
@@ -427,52 +497,24 @@ export function analyseGroup(members) {
   // Every "group" is a single member: nobody overlaps with anybody, so it is not a tie.
   const isTie = (groups) => groups.length > 1 && groups[0].length > 1
 
-  // Budget: only budgets members chose to share.
-  const sharedBudgets = members.filter(
-    ({ profile: p }) => p?.IsBudgetPrivate === false && validRange(p.BudgetMin, p.BudgetMax),
-  )
-  if (sharedBudgets.length < 2) {
-    unavailable('budget', 'Budget', 'Not assessed: at least two valid shared budgets are needed.')
-  } else {
-    const min = Math.max(...sharedBudgets.map(({ profile: p }) => p.BudgetMin))
-    const max = Math.min(...sharedBudgets.map(({ profile: p }) => p.BudgetMax))
-    const groups = bestOverlaps(
-      sharedBudgets.map(({ uid, profile: p }) => ({ uid, min: p.BudgetMin, max: p.BudgetMax })),
-    )
-    const best = groups[0]
-    const fits = Object.fromEntries(sharedBudgets.map(({ uid }) => [uid, best.includes(uid)]))
-    const conflict = min > max
-    const highlights = {}
-    if (conflict) {
-      sharedBudgets.forEach(({ uid, profile: p }) => {
-        const labels = [
-          p.BudgetMin === min && 'Highest minimum',
-          p.BudgetMax === max && 'Lowest maximum',
-        ].filter(Boolean)
-        if (labels.length) highlights[uid] = labels.join(' · ')
-      })
-    }
+  // Budget: shared budgets either overlap or leave a gap between a maximum and a
+  // higher minimum (resolveBudget). Only a gap needs a vote; nobody is named.
+  const budget = resolveBudget(members)
+  if (budget.gap) {
     add('budget', {
       label: 'Budget',
       title: 'Budget per person',
-      status: conflict ? 'conflict' : 'shared',
-      value: conflict ? 'No shared option' : formatRange(min, max, formatCurrency),
-      note: conflict
-        ? `No overlapping budget. Based on ${sharedBudgets.length} shared budgets.`
-        : `${sharedBudgets.length} shared budgets`,
-      cause: conflict
-        ? `The highest minimum (${formatCurrency(min)}) exceeds the lowest maximum (${formatCurrency(max)}). There is no shared budget range.`
-        : null,
-      suggestion: !conflict
-        ? null
-        : best.length === 1
-          ? 'No two shared budgets overlap.'
-          : isTie(groups)
-            ? tiedGroupsLine(groups, 'have overlapping budgets', sharedBudgets.length)
-            : `The budgets of ${joinNames(best)} overlap (${fitsLine(best.length, sharedBudgets.length)} with a shared budget).`,
-      tie: conflict && isTie(groups),
-      highlights,
-      fits,
+      status: 'conflict',
+      value: "Budgets don't overlap",
+      cause: `One member can pay up to ${formatCurrency(budget.gap.from)}, another needs at least ${formatCurrency(budget.gap.to)}.`,
+    })
+  } else {
+    add('budget', {
+      label: 'Budget',
+      title: 'Budget per person',
+      status: 'shared',
+      value:
+        budget.max == null ? 'No limit set' : formatRange(budget.min, budget.max, formatCurrency),
     })
   }
 
@@ -912,28 +954,6 @@ export function analyseGroup(members) {
   return results
 }
 
-/**
- * Weighted average of each scored factor's support, as a whole percentage.
- * Priority factors are weighted by the group's ranking; other factors weigh 1.
- * Returns null when nothing could be assessed.
- */
-export function compatibilityScore(factors, priorities) {
-  const weightOf = (key) => priorityWeight(key, priorities)
-  const scored = factors.filter((factor) => factor.scored && factor.support !== null)
-  if (!scored.length) return null
-  const total = scored.reduce((sum, factor) => sum + weightOf(factor.key), 0)
-  const weighted = scored.reduce((sum, factor) => sum + weightOf(factor.key) * factor.support, 0)
-  return {
-    score: Math.round((weighted / total) * 100),
-    assessed: scored.length,
-    notAssessed: factors
-      .filter((factor) => factor.scored && factor.support === null)
-      .map((factor) => factor.label),
-    conflicts: factors.filter((factor) => factor.status === 'conflict').length,
-    discussions: factors.filter((factor) => factor.status === 'discussion').length,
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Me vs one member. Used by the member comparison and the pentagon chart, so
 // each person sees how every other member's own preferences compare with theirs.
@@ -1044,7 +1064,8 @@ export function compareWithMember(
   const me = myProfile
   const them = theirProfile
 
-  // Budget: how much of MY range the two budgets share (overlap ÷ my range).
+  // Budget: the overlap as a share of the narrower range, so the score is the same
+  // whichever of the two members is looking.
   if (!myBudget || !validRange(myBudget.BudgetMin, myBudget.BudgetMax)) {
     add('budget', 'Budget', null, 'Your budget is missing.', 'Missing')
   } else if (them.IsBudgetPrivate !== false) {
@@ -1054,15 +1075,18 @@ export function compareWithMember(
   } else {
     const low = Math.max(myBudget.BudgetMin, them.BudgetMin)
     const high = Math.min(myBudget.BudgetMax, them.BudgetMax)
-    const myWidth = myBudget.BudgetMax - myBudget.BudgetMin
+    const narrower = Math.min(
+      myBudget.BudgetMax - myBudget.BudgetMin,
+      them.BudgetMax - them.BudgetMin,
+    )
     add(
       'budget',
       'Budget',
-      low > high ? 0 : myWidth > 0 ? clampScore(((high - low) / myWidth) * 100) : 100,
+      low > high ? 0 : narrower > 0 ? clampScore(((high - low) / narrower) * 100) : 100,
       low === high
         ? `Your budgets only meet at ${formatCurrency(low)}.`
         : low < high
-          ? `You overlap at ${formatRange(low, high, formatCurrency)}, ${formatCurrency(high - low)} of your ${formatCurrency(myWidth)} range.`
+          ? `You overlap at ${formatRange(low, high, formatCurrency)}, ${formatCurrency(high - low)} of the narrower ${formatCurrency(narrower)} range.`
           : `No overlap: a ${formatCurrency(low - high)} gap.`,
       low > high
         ? `${formatCurrency(low - high)} gap`
@@ -1319,16 +1343,14 @@ export function buildGroupPreference({
     return null
   }
 
-  // Budget: the agreed maximum per person. Without a vote, everyone who shares a
-  // budget accepts up to the lowest of their maximums.
-  const budgetMax = settle(
+  // Budget per person: the shared overlap, or the overlap of the ranges the group
+  // voted. Older finalised votes may hold a plain number (a maximum).
+  const budget = settle(
     'budget',
-    (amount) => amount,
+    (decided) => (typeof decided === 'object' ? decided : { min: null, max: decided }),
     () => {
-      const shared = profiles.filter(
-        (p) => p.IsBudgetPrivate === false && validRange(p.BudgetMin, p.BudgetMax),
-      )
-      return shared.length ? Math.min(...shared.map((p) => p.BudgetMax)) : null
+      const { min, max } = resolveBudget(members)
+      return { min, max }
     },
   )
   // Empty list = any region.
@@ -1364,8 +1386,9 @@ export function buildGroupPreference({
   return {
     GroupID: groupId,
     HouseholdSize: members.length,
-    BudgetPerPersonMax: budgetMax,
-    MonthlyRentMax: budgetMax == null ? null : budgetMax * members.length,
+    BudgetPerPersonMin: budget?.min ?? null,
+    BudgetPerPersonMax: budget?.max ?? null,
+    MonthlyRentMax: budget?.max == null ? null : budget.max * members.length,
     PreferredRegions: regions,
     PropertyType: propertyType,
     BedroomsMin: bedrooms?.min ?? null,

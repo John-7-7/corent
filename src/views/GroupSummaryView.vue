@@ -4,14 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import GroupPreferencesCard from '../components/groups/GroupPreferencesCard.vue'
 import MemberRadarChart from '../components/groups/MemberRadarChart.vue'
 import PriorityRanking from '../components/groups/PriorityRanking.vue'
-import {
-  mockGroup,
-  mockUsers,
-  mockProfiles,
-  mockViewer,
-  mockVotes,
-} from '../mock/groupSummaryMock.js'
-import { BUDGET_RANGE, formatCurrency } from '../components/profile/preferenceOptions.js'
+import { formatCurrency } from '../components/profile/preferenceOptions.js'
 import {
   PREFERENCE_SECTIONS as preferenceSections,
   PREFERENCE_ROWS,
@@ -21,40 +14,46 @@ import {
   SEARCH_FACTORS,
   analyseGroup,
   buildGroupPreference,
+  buildVoteOptions,
   compareWithMember,
   flexibleMembers,
   groupMatchScore,
   matchScore,
-  summariseMaxVotes,
+  resolveBudget,
+  summariseBudgetVotes,
+  budgetSuggestion,
+  formatRange,
   displayPreference as formatPreference,
 } from '../services/groupAggregation.js'
 import { saveGroupPreference, watchGroupPreference } from '../services/groupPreferencesService.js'
 import {
-  getMembers,
+  getMemberProfiles,
   getMyPrivateBudget,
+  saveReady,
   saveVote,
   watchGroup,
   watchVotes,
 } from '../services/groupSummaryService.js'
 import { getCurrentUser } from '../services/authService.js'
+import { getUserGroups } from '../services/groupService.js'
 
-// /group-summary shows the demo group from groupSummaryMock.js and saves nothing.
-// /group-summary/:groupId loads that group from Firestore and saves votes,
-// finalised results and priorities for every member to see.
+// /group-summary?groupId=<id> (the Group Details "View Group Summary" link) loads
+// that group from Firestore and saves votes, finalised results and priorities
+// for every member to see. Without a group ID (the sidebar link) it opens your
+// only group, or lets you pick one.
 const route = useRoute()
-const groupId = computed(() => route.params.groupId || null)
-const isDemo = computed(() => !groupId.value)
-// loading | ready | signed-out | not-found | not-member | error
+const groupId = computed(() => route.query.groupId || null)
+// loading | ready | signed-out | no-group | choose-group | not-found | not-member | error
 const loadState = ref('loading')
+const userGroups = ref([])
 const group = ref(null)
 const users = ref([])
 const profiles = ref([])
 const viewer = ref({ uid: null, privateBudget: null })
 
 // Ballots per factor, separate from profiles: votes[groupId][factorKey][uid].
-// Budget ballots are a maximum amount per person; every other ballot is an option value.
-// finalised[groupId][factorKey] holds the locked-in result. Both come from
-// Firestore for a real group; in the demo they reset on reload.
+// Budget ballots are a range per person ({ min, max, round }); others are { value, round }.
+// finalised[groupId][factorKey] holds the locked-in result. Both come from Firestore.
 const votes = ref({})
 const finalised = ref({})
 const ballotsFor = (key) => votes.value[group.value?.GroupID]?.[key] || {}
@@ -66,81 +65,238 @@ const viewerIsMember = computed(() =>
 function castVote(key, value) {
   const groupId = group.value?.GroupID
   if (!groupId || !viewerIsMember.value || finalFor(key) !== null) return
+  // Only a factor that is being voted on takes votes: a conflict, or a shared
+  // match whose issue started a vote.
+  const voting = groupPreferenceRows.value.find((row) => row.key === key)?.voting
+  if (voting?.mode !== 'vote') return
   if (key === 'budget') {
-    if (!(Number.isFinite(value) && value > 0)) return
+    // A budget vote is a range for this round.
+    if (!(value?.min > 0 && value.max >= value.min)) return
+    value = { min: value.min, max: value.max, round: rounds.value.budget || 0 }
   } else {
-    const factor = preferenceAnalysis.value.find((item) => item.key === key)
-    if (!factor?.voteOptions?.some((option) => option.value === value)) return
+    // An option vote is for this round too, so a new vote starts from no votes.
+    if (!voting.options.some((option) => option.value === value)) return
+    value = { value, round: rounds.value[key] || 0 }
   }
   votes.value[groupId] ??= {}
   votes.value[groupId][key] ??= {}
   votes.value[groupId][key][viewer.value.uid] = value
-  if (!isDemo.value) {
-    saveVote(groupId, viewer.value.uid, key, value).catch((error) => {
-      console.error('Could not save vote:', error)
-      saveState.value = 'error'
-    })
-  }
+  saveVote(groupId, viewer.value.uid, key, value).catch((error) => {
+    console.error('Could not save vote:', error)
+    saveState.value = 'error'
+  })
 }
-// Any member can finalise once everyone has voted and one option leads.
-function finalise(key) {
+// A result is finalised only when every member has clicked Confirm on it, like a
+// ready button in games. A ready mark holds the result and round it was given
+// for, so it lapses if the result changes or an issue reopens the vote.
+const ready = ref({}) // { factorKey: { uid: { result, round } } }
+const confirmAgain = ref({}) // { factorKey: round } after my ready mark lapsed in that round
+// Both the votes and the saved record have arrived. Until then the page can't tell
+// what is already finalised, so it never auto-finalises, clears marks or saves.
+const loaded = ref({ votes: false, saved: false })
+const synced = computed(() => loaded.value.votes && loaded.value.saved)
+const resultKey = (leader) => JSON.stringify(leader?.value ?? null)
+const readyFor = (key, leader) =>
+  members.value
+    .map(({ uid }) => uid)
+    .filter((uid) => {
+      const mark = ready.value[key]?.[uid]
+      return leader && mark?.result === resultKey(leader) && mark.round === (rounds.value[key] || 0)
+    })
+function toggleReady(key) {
+  const groupId = group.value?.GroupID
   const row = groupPreferenceRows.value.find((item) => item.key === key)
   const leader = row?.voting?.allVoted && row.voting.leader
-  if (!leader || !viewerIsMember.value) return
-  finalised.value[group.value.GroupID] ??= {}
-  finalised.value[group.value.GroupID][key] = { value: leader.value, label: leader.label }
-  saveNow()
+  if (!groupId || !leader || !viewerIsMember.value || finalFor(key) !== null) return
+  const mark = row.voting.readyMine
+    ? null
+    : { result: resultKey(leader), round: rounds.value[key] || 0 }
+  delete confirmAgain.value[key]
+  ready.value[key] ??= {}
+  if (mark) ready.value[key][viewer.value.uid] = mark
+  else delete ready.value[key][viewer.value.uid]
+  saveReady(groupId, viewer.value.uid, key, mark).catch((error) => {
+    console.error('Could not save ready:', error)
+    saveState.value = 'error'
+  })
 }
-function reopen(key) {
+function finalise(key, leader) {
+  const final = { value: leader.value, label: leader.label }
+  finalised.value[group.value.GroupID] ??= {}
+  finalised.value[group.value.GroupID][key] = final
+  delete issues.value[key]
+  saveNow({ Finalised: { [key]: final }, Issues: { [key]: null } })
+}
+// Anyone unhappy with a finalised result raises an issue with a message. The
+// result stays finalised while the issue is open; only the member who raised it
+// then resolves it (the result stands) or starts a vote, which reopens the vote in
+// a new round so everyone votes and confirms again. Who raised it is stored
+// only to allow that and is never shown.
+const issues = ref({}) // { factorKey: { message, open, by } }
+const canDecide = (issue) => !issue.by || issue.by === viewer.value.uid
+const rounds = ref({}) // { factorKey: round number }
+function raiseIssue(key, message) {
   if (!viewerIsMember.value) return
+  const issue = {
+    message: String(message || '')
+      .trim()
+      .slice(0, 300),
+    open: true,
+    by: viewer.value.uid,
+  }
+  issues.value[key] = issue
+  saveNow({ Issues: { [key]: issue } })
+}
+function resolveIssue(key) {
+  if (!viewerIsMember.value || !issues.value[key] || !canDecide(issues.value[key])) return
+  delete issues.value[key]
+  saveNow({ Issues: { [key]: null } })
+}
+function startVote(key) {
+  if (!viewerIsMember.value || !issues.value[key] || !canDecide(issues.value[key])) return
   delete finalised.value[group.value?.GroupID]?.[key]
-  saveNow()
+  issues.value[key] = { ...issues.value[key], open: false }
+  rounds.value[key] = (rounds.value[key] || 0) + 1
+  saveNow({
+    Finalised: { [key]: null },
+    Issues: { [key]: issues.value[key] },
+    Rounds: { [key]: rounds.value[key] },
+  })
 }
 
-function votingFor(factor) {
+// mode 'vote': members vote (a conflict, or a shared match reopened by an issue).
+// mode 'shared': a shared match is settled as it is, so it can take an issue.
+function votingFor(factor, mode = 'vote') {
   const ballots = ballotsFor(factor.key)
-  const voters = members.value.filter((member) => ballots[member.uid] != null)
+  // Votes only count in the round they were cast, so Start vote begins with none.
+  // An option ballot is { value, round }; an older plain value counts in round 0.
+  const round = rounds.value[factor.key] || 0
+  const choiceOf = (ballot) =>
+    ballot && typeof ballot === 'object'
+      ? ballot.round === round
+        ? ballot.value
+        : null
+      : round === 0
+        ? (ballot ?? null)
+        : null
+  const choices = Object.fromEntries(
+    members.value.map(({ uid }) => [
+      uid,
+      factor.key === 'budget' ? ballots[uid] : choiceOf(ballots[uid]),
+    ]),
+  )
+  const voters = members.value.filter((member) => choices[member.uid] != null)
   const base = {
     total: voters.length,
     allVoted: voters.length === members.value.length,
     canVote: viewerIsMember.value,
-    finalised: finalFor(factor.key),
+    // A shared match counts as settled without being stored (settledShared); a
+    // voted result wins.
+    finalised:
+      finalFor(factor.key) ??
+      (mode === 'shared' ? { value: { shared: factor.value }, label: factor.value } : null),
+    settledShared: mode === 'shared' && finalFor(factor.key) === null,
+    mode,
   }
-  if (factor.key === 'budget') {
-    // Everyone accepts up to the lowest maximum voted, so that is the result.
-    const summary = summariseMaxVotes(ballots)
-    const leader =
-      summary.lowest == null
-        ? null
-        : { value: summary.lowest, label: `Up to ${formatCurrency(summary.lowest)}` }
+  // A ready mark only counts for the result it was given for. If a changed vote
+  // changes the result, the mark lapses: my page clears it (so it can't come back
+  // if the votes swing back) and asks me to confirm again. A changed vote that
+  // keeps the same result leaves everyone ready.
+  const withReady = (voting) => {
+    const readyIds = voting.allVoted ? readyFor(factor.key, voting.leader) : []
+    const myMark = ready.value[factor.key]?.[viewer.value.uid]
+    const readyMine = readyIds.includes(viewer.value.uid)
+    // Everyone voted and there's a result: it now only needs everyone to confirm.
+    const confirming = Boolean(voting.allVoted && voting.leader && !voting.finalised)
     return {
-      ...base,
-      type: 'range',
-      summary,
-      mine: ballots[viewer.value.uid] ?? null,
-      leader,
-      leading: leader ? `${leader.label} so far` : null,
+      ...voting,
+      confirming,
+      countLabel: confirming
+        ? `${readyIds.length}/${members.value.length} confirmed`
+        : voting.countLabel,
+      leading: confirming ? voting.leader.label : voting.leading,
+      ready: readyIds,
+      readyMine,
+      readyLapsed: Boolean(
+        myMark && myMark.round === (rounds.value[factor.key] || 0) && !readyMine,
+      ),
+      confirmAgain: confirmAgain.value[factor.key] === round && !readyMine,
     }
   }
-  const options = factor.voteOptions.map((option) => ({
-    ...option,
-    count: voters.filter((member) => ballots[member.uid] === option.value).length,
-  }))
+  if (mode === 'shared') {
+    return {
+      ...base,
+      type: factor.key === 'budget' ? 'range' : 'options',
+      allVoted: true,
+      options: [],
+      flexible: [],
+      mine: null,
+      leader: null,
+      ready: [],
+      readyMine: false,
+    }
+  }
+  if (factor.key === 'budget') {
+    // Everyone votes a range (the suggestion or their own); the result is the
+    // overlap of all of them. Only votes members actually cast count.
+    const inRound = (vote) =>
+      Number.isFinite(vote?.min) && Number.isFinite(vote?.max) && (vote.round ?? 0) === round
+    // The ideal when budgets conflict; the shared range when an issue reopened it.
+    const shared = resolveBudget(members.value)
+    const suggestion =
+      budgetSuggestion(members.value) ??
+      (shared.max == null ? null : { min: shared.min, max: shared.max })
+    const summary = summariseBudgetVotes(members.value, ballots, round, viewer.value.uid)
+    const mine = ballots[viewer.value.uid]
+    const label = (range) => formatRange(range.min, range.max, formatCurrency)
+    return withReady({
+      ...base,
+      suggestion,
+      myRange: myBudgetRange.value,
+      type: 'range',
+      total: summary.submitted,
+      allVoted: summary.submitted === members.value.length,
+      countLabel: `${summary.submitted}/${members.value.length} voted`,
+      flagged: summary.flagged,
+      summary,
+      // Older ballots were a single amount; only this round's ranges count as mine.
+      mine: inRound(mine) ? { min: mine.min, max: mine.max } : null,
+      leader: summary.result ? { value: summary.result, label: label(summary.result) } : null,
+      leading: summary.flagged
+        ? 'No overlap · discuss together'
+        : summary.overlap
+          ? `${label(summary.overlap)} so far`
+          : summary.submitted
+            ? 'No overlap so far'
+            : null,
+    })
+  }
+  const options = (factor.voteOptions ?? buildVoteOptions(factor.key, members.value)).map(
+    (option) => ({
+      ...option,
+      count: voters.filter((member) => choices[member.uid] === option.value).length,
+    }),
+  )
   const highest = Math.max(0, ...options.map((option) => option.count))
   const leaders = options.filter((option) => highest > 0 && option.count === highest)
-  return {
+  return withReady({
     ...base,
     type: 'options',
+    countLabel: `${voters.length}/${members.value.length} voted`,
     options,
     flexible: flexibleMembers(factor.key, members.value),
-    mine: ballots[viewer.value.uid] ?? null,
+    mine: choices[viewer.value.uid] ?? null,
     leader: leaders.length === 1 ? leaders[0] : null,
+    // Until everyone votes it's only a lead or a tie; once everyone has voted a tie
+    // needs a changed vote (a clear result shows as decided, see withReady).
     leading: !voters.length
       ? null
-      : leaders.length === 1
-        ? `${leaders[0].label} leading`
-        : 'Tie · Needs discussion',
-  }
+      : leaders.length !== 1
+        ? base.allVoted
+          ? 'Tied · change a vote'
+          : 'Vote tied'
+        : `${leaders[0].label} leading`,
+  })
 }
 // The group's priority ranking, most important first. Loaded from and saved to
 // Group_Preferences with the rest of the group preference.
@@ -238,8 +394,8 @@ const detailRows = PREFERENCE_ROWS.filter((row) => !overviewKeys.includes(row.ke
 // Lifestyle preferences stay in the member comparison.
 const cardKeys = SEARCH_FACTORS
 const attentionStatuses = ['conflict', 'discussion']
-// Budget is always voted: each member states their maximum, which may be private.
-const needsVote = (factor) => factor.key === 'budget' || attentionStatuses.includes(factor.status)
+// Budget is only voted when shared budgets don't overlap or some are private.
+const needsVote = (factor) => attentionStatuses.includes(factor.status)
 
 // Analyse public profiles only. The viewer's private budget is never used here.
 const preferenceAnalysis = computed(() => analyseGroup(members.value))
@@ -253,9 +409,25 @@ const groupPreferenceRows = computed(() => {
         needsAttention: needsVote(factor),
         details: factor.details.map((detail) => ({ ...detail })),
       }
-      if (item.needsAttention && (factor.key === 'budget' || factor.voteOptions?.length)) {
-        item.voting = votingFor(factor)
-        if (item.voting.finalised) item.value = item.voting.finalised.label
+      // Older issues were saved as true or a name and had already reopened the vote.
+      // Older open issues have no raiser, so any member may decide them.
+      const issue = issues.value[factor.key]
+      item.issue = issue
+        ? { message: issue.message || '', open: issue.open === true, canDecide: canDecide(issue) }
+        : null
+      // Everyone's shared budget as a bar; private budgets stay out of the group view.
+      if (factor.key === 'budget') item.budget = budgetBars.value
+      // A conflict is voted on. A shared match is settled as it is, unless an issue
+      // on it started a vote (the issue stays, closed, until the vote is finalised).
+      const voteMode =
+        (item.needsAttention && (factor.key === 'budget' || factor.voteOptions?.length)) ||
+        (factor.status === 'shared' && issue && !issue.open && finalFor(factor.key) === null)
+      if (voteMode || factor.status === 'shared') {
+        item.voting = votingFor(factor, voteMode ? 'vote' : 'shared')
+        // An undecided issue: the status says Issue raised. Once a vote starts, the
+        // card shows the vote again.
+        if (item.issue?.open) item.value = ''
+        else if (item.voting.finalised) item.value = item.voting.finalised.label
         else if (item.voting.leading) item.value = item.voting.leading
       }
       return item
@@ -265,27 +437,35 @@ const groupPreferenceRows = computed(() => {
   return rows.sort((a, b) => rank(a) - rank(b))
 })
 
-// Budget slider scale: from $0 to the highest member maximum (per person).
-// My own maximum counts even if private, since only I see this slider.
-const myBudgetMax = computed(() => {
+// My own budget range, even if private, since only I see how options compare to it.
+const myBudgetRange = computed(() => {
   const me = members.value.find((member) => member.uid === viewer.value.uid)?.profile
   const budget = me?.IsBudgetPrivate ? viewer.value.privateBudget : me
-  return Number.isFinite(budget?.BudgetMax) ? budget.BudgetMax : null
+  return Number.isFinite(budget?.BudgetMin) && Number.isFinite(budget?.BudgetMax)
+    ? { min: budget.BudgetMin, max: budget.BudgetMax }
+    : null
 })
-const budgetScale = computed(() => {
-  const maxima = [
-    ...members.value
-      .filter(({ profile }) => profile?.IsBudgetPrivate === false)
-      .map(({ profile }) => profile.BudgetMax),
-    myBudgetMax.value,
-    ...Object.values(ballotsFor('budget')),
-  ].filter(Number.isFinite)
-  const step = BUDGET_RANGE.step
-  const high = maxima.length ? Math.max(...maxima) : BUDGET_RANGE.max
-  return { min: 0, max: Math.ceil(high / step) * step, step }
+
+// The budget panel: one bar per shared budget, the shared range, and how many
+// members keep theirs private (they are left out, never shown).
+const budgetBars = computed(() => {
+  const shared = members.value.filter(
+    ({ profile: p }) =>
+      p?.IsBudgetPrivate === false && Number.isFinite(p.BudgetMin) && Number.isFinite(p.BudgetMax),
+  )
+  const resolved = resolveBudget(members.value)
+  return {
+    members: shared.map(({ uid, name, profile: p }) => ({
+      uid,
+      name,
+      color: memberColor(uid),
+      min: p.BudgetMin,
+      max: p.BudgetMax,
+    })),
+    hidden: members.value.filter(({ profile: p }) => p?.IsBudgetPrivate).length,
+    shared: resolved.max == null ? null : { min: resolved.min, max: resolved.max },
+  }
 })
-// My starting vote is my own maximum.
-const budgetInitial = myBudgetMax
 
 // Overall compatibility: the average match of every pair of members (public data only).
 const compatibility = computed(() => {
@@ -369,17 +549,17 @@ const groupPreference = computed(() =>
 // member finalises, reopens or re-ranks, so listing search never reads a stale
 // record (a reopened vote saves IsComplete false).
 const router = useRouter()
-const saveState = ref('idle') // idle | saving | saved | error | demo
+const saveState = ref('idle') // idle | saving | saved | error
 let saveTimer = null
-async function saveNow() {
+// Saves the group preference summary plus only the decisions that changed
+// (see saveGroupPreference). Nothing is saved until the page has loaded the saved
+// record and the votes, so a half-loaded page can't write over them.
+async function saveNow(changes = {}) {
   clearTimeout(saveTimer)
-  if (isDemo.value) return true
+  if (!synced.value) return false
   saveState.value = 'saving'
   try {
-    await saveGroupPreference(
-      { ...groupPreference.value, Finalised: finalised.value[group.value.GroupID] || {} },
-      viewer.value.uid,
-    )
+    await saveGroupPreference(groupPreference.value, viewer.value.uid, changes)
     saveState.value = 'saved'
     return true
   } catch (error) {
@@ -388,16 +568,48 @@ async function saveNow() {
     return false
   }
 }
+// My lapsed ready marks are cleared, with a note to confirm the new result.
+watch(
+  () =>
+    !synced.value
+      ? []
+      : groupPreferenceRows.value
+          .filter(({ voting }) => voting?.readyLapsed && !voting.finalised)
+          .map(({ key }) => key),
+  (keys) =>
+    keys.forEach((key) => {
+      confirmAgain.value[key] = rounds.value[key] || 0
+      delete ready.value[key]?.[viewer.value.uid]
+      saveReady(group.value.GroupID, viewer.value.uid, key, null).catch((error) =>
+        console.error('Could not clear ready:', error),
+      )
+    }),
+)
+// Once every member is ready on the same result, it is finalised. Every open page
+// sees this, so it doesn't depend on who clicked last.
+watch(
+  () =>
+    !synced.value
+      ? []
+      : groupPreferenceRows.value
+          .filter(({ voting }) => voting && !voting.finalised && voting.leader)
+          .filter(({ voting }) => voting.ready.length === members.value.length)
+          .map(({ key, voting }) => ({ key, leader: voting.leader })),
+  (complete) => complete.forEach(({ key, leader }) => finalise(key, leader)),
+)
+
 // Re-ranking saves after a short pause, so dragging doesn't write every step.
 function savePrioritiesSoon() {
-  if (isDemo.value) return
   clearTimeout(saveTimer)
   saveTimer = setTimeout(saveNow, 800)
 }
 
 // Applies the saved record from Firestore: finalised votes and the ranking.
 function applySavedPreference(id, saved) {
+  loaded.value.saved = true
   finalised.value = { [id]: saved?.Finalised || {} }
+  issues.value = saved?.Issues || {}
+  rounds.value = saved?.Rounds || {}
   const ranked = PRIORITY_FACTORS.filter(({ field }) => saved?.Priorities?.[field] > 0)
     .sort((a, b) => saved.Priorities[a.field] - saved.Priorities[b.field])
     .map(({ key }) => key)
@@ -411,23 +623,34 @@ function stopWatching() {
   stopListeners.forEach((stop) => stop())
   stopListeners = []
 }
-function loadDemo() {
-  group.value = mockGroup
-  users.value = mockUsers
-  profiles.value = mockProfiles
-  viewer.value = mockViewer
-  votes.value = { [mockGroup.GroupID]: structuredClone(mockVotes) }
-  saveState.value = 'demo'
-  loadState.value = 'ready'
+// No group ID: open the user's only group, or list them to pick from.
+async function pickGroup(user) {
+  try {
+    userGroups.value = await getUserGroups(user.uid)
+  } catch (error) {
+    console.error('Could not load your groups:', error)
+    loadState.value = 'error'
+    return
+  }
+  if (groupId.value) return // a group was picked meanwhile
+  if (userGroups.value.length === 1) {
+    router.replace({ query: { groupId: userGroups.value[0].id } })
+  } else {
+    loadState.value = userGroups.value.length ? 'choose-group' : 'no-group'
+  }
 }
 async function loadGroup(id) {
   stopWatching()
   group.value = null
   votes.value = {}
+  ready.value = {}
   finalised.value = {}
+  issues.value = {}
+  rounds.value = {}
   priorities.value = [...DEFAULT_PRIORITY_ORDER]
+  confirmAgain.value = {}
+  loaded.value = { votes: false, saved: false }
   saveState.value = 'idle'
-  if (!id) return loadDemo()
 
   loadState.value = 'loading'
   const user = await getCurrentUser()
@@ -436,6 +659,7 @@ async function loadGroup(id) {
     loadState.value = 'signed-out'
     return
   }
+  if (!id) return pickGroup(user)
   viewer.value = { uid: user.uid, privateBudget: null }
   getMyPrivateBudget(user.uid)
     .then((budget) => (viewer.value = { ...viewer.value, privateBudget: budget }))
@@ -456,19 +680,27 @@ async function loadGroup(id) {
         if (memberIds.join() !== memberKey) {
           memberKey = memberIds.join()
           try {
-            const loaded = await getMembers(memberIds)
-            profiles.value = loaded.profiles
-            users.value = loaded.users
+            profiles.value = await getMemberProfiles(memberIds)
           } catch (error) {
             return fail(error)
           }
         }
+        // Names come with the group, so a rename shows straight away.
+        users.value = data.users
         group.value = data
         loadState.value = 'ready'
       },
       fail,
     ),
-    watchVotes(id, (ballots) => (votes.value = { [id]: ballots }), fail),
+    watchVotes(
+      id,
+      (ballots, readyMarks) => {
+        votes.value = { [id]: ballots }
+        ready.value = readyMarks
+        loaded.value.votes = true
+      },
+      fail,
+    ),
     watchGroupPreference(id, (saved) => applySavedPreference(id, saved), fail),
   )
 }
@@ -479,7 +711,19 @@ onBeforeUnmount(() => {
 })
 const loadMessages = {
   loading: { title: 'Loading group…' },
-  'signed-out': { title: 'Sign in to see this group', link: '/login', action: 'Sign in' },
+  // Login sends you back here afterwards.
+  'signed-out': {
+    title: 'Sign in to see your group',
+    link: { path: '/login', query: { redirect: route.fullPath } },
+    action: 'Sign in',
+  },
+  'no-group': {
+    title: 'No group yet',
+    text: 'Create or join a group from Home to compare preferences.',
+    link: '/home',
+    action: 'Go to Home',
+  },
+  'choose-group': { title: 'Choose a group' },
   'not-found': { title: 'Group not found', link: '/home', action: 'Go to Home' },
   'not-member': {
     title: "You're not in this group",
@@ -500,7 +744,6 @@ async function searchListings() {
 const saveMessage = computed(
   () =>
     ({
-      demo: 'Demo data · not saved',
       saving: 'Saving…',
       saved: '✓ Saved for the group',
       error: "Couldn't save. Try again.",
@@ -527,9 +770,16 @@ const saveMessage = computed(
             class="btn btn-primary"
             >{{ loadMessages[loadState].action }}</RouterLink
           >
+          <ul v-if="loadState === 'choose-group'" class="group-choices">
+            <li v-for="choice in userGroups" :key="choice.id">
+              <RouterLink :to="{ query: { groupId: choice.id } }" class="btn btn-secondary">
+                {{ choice.name }}
+              </RouterLink>
+            </li>
+          </ul>
         </section>
         <template v-else-if="group">
-          <section v-if="!isDemo && !viewerHasProfile" class="card profile-prompt">
+          <section v-if="!viewerHasProfile" class="card profile-prompt">
             <h2>Create your profile to compare</h2>
             <p class="table-description">Your matches and votes need your own preferences first.</p>
             <RouterLink to="/profile" class="btn btn-primary">Set up profile</RouterLink>
@@ -619,11 +869,11 @@ const saveMessage = computed(
                 :member-count="members.length"
                 :rows="groupPreferenceRows"
                 :members="avatarMembers"
-                :budget-scale="budgetScale"
-                :budget-initial="budgetInitial"
                 @vote="castVote"
-                @finalise="finalise"
-                @reopen="reopen"
+                @ready="toggleReady"
+                @raise-issue="raiseIssue"
+                @resolve-issue="resolveIssue"
+                @start-vote="startVote"
               />
             </div>
 
@@ -660,12 +910,7 @@ const saveMessage = computed(
             <button v-else type="button" class="btn btn-primary btn-block" disabled>
               Finalise {{ groupPreference.PendingPreferences.length }} more to search listings
             </button>
-            <p
-              v-if="saveMessage && (groupPreference.IsComplete || saveState !== 'demo')"
-              class="save-status"
-              :class="`is-${saveState}`"
-              role="status"
-            >
+            <p v-if="saveMessage" class="save-status" :class="`is-${saveState}`" role="status">
               {{ saveMessage }}
             </p>
           </footer>
@@ -980,6 +1225,14 @@ const saveMessage = computed(
 }
 .profile-prompt {
   margin-bottom: 20px;
+}
+.group-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
 }
 .save-status {
   margin: 8px 0 0;
