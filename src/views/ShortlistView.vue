@@ -21,6 +21,11 @@ import {
 const { listingIds, storageError } = useShortlist()
 const listings = ref([])
 
+// Controls which tab is currently displayed.
+const activeTab = ref('shortlist')
+// Controls the view inside Property Comparison.
+const comparisonView = ref('chart')
+
 // Rough Singapore bounds, used to place real coordinates on the overview map.
 const SG = { north: 1.47, south: 1.22, west: 103.6, east: 104.05 }
 const clampPct = (n) => `${Math.min(95, Math.max(5, n * 100)).toFixed(1)}%`
@@ -52,9 +57,11 @@ function toShortlistItem(l) {
     title: l.Title,
     price: l.MonthlyRent,
     area: l.Neighbourhood,
+    areaSqm: l.AreaSqm, // Floor area in square metres
     beds: l.Bedrooms,
     available: l.IsAvailable,
     tone: ['', 'alt', 'cool'][n],
+
     // null until F-REQ-015 can compute a real score.
     match: null,
     mapPosition: l.Coordinates && {
@@ -172,6 +179,35 @@ function getVoteCount(listingId) {
     (vote) => vote.listingId === listingId,
   ).length
 }
+
+// Data used by the Property Comparison chart and table.
+const comparisonListings = computed(() => {
+  return savedListings.value.map((listing) => ({
+    ...listing,
+    votes: getVoteCount(listing.id),
+    rentPerSqm:
+      listing.areaSqm > 0
+        ? listing.price / listing.areaSqm
+        : null,
+  }))
+})
+
+// Scale the rent and vote values into chart positions.
+const chartData = computed(() => {
+  const items = comparisonListings.value
+
+  if (!items.length) return []
+
+  const maxRent = Math.max(...items.map((l) => l.price), 1)
+  const maxVotes = Math.max(...items.map((l) => l.votes), 1)
+
+  return items.map((listing, index) => ({
+    ...listing,
+    x: 80 + index * (560 / Math.max(items.length, 1)),
+    barHeight: (listing.price / maxRent) * 180,
+    voteY: 220 - (listing.votes / maxVotes) * 180,
+  }))
+})
 
 function hasUserVoted(listingId) {
   return groupVotes.value.some(
@@ -298,20 +334,47 @@ async function confirmEnquiry() {
 <template>
   <div>
     <header class="page-head">
-      <h1>Shortlist</h1>
-      <p>{{ savedListings.length }} {{ savedListings.length === 1 ? 'listing' : 'listings' }} shortlisted</p>
+      <h1>{{ activeTab === 'shortlist' ? 'Shortlist' : 'Analytics' }}</h1>
+
+      <p v-if="activeTab === 'shortlist'">
+        {{ savedListings.length }}
+        {{ savedListings.length === 1 ? 'listing' : 'listings' }}
+        shortlisted
+      </p>
+
+      <p v-else>
+        Compare your group's shortlisted properties.
+      </p>
     </header>
 
-    <main class="content">
+    <!-- Tab navigation -->
+    <nav class="shortlist-tabs" aria-label="Shortlist sections">
+      <button
+        type="button"
+        :class="{ 'shortlist-tab--active': activeTab === 'shortlist' }"
+        @click="activeTab = 'shortlist'"
+      >
+        <AppIcon name="bookmark" :size="14" />
+        Shortlist
+      </button>
+
+      <button
+        type="button"
+        :class="{ 'shortlist-tab--active': activeTab === 'analytics' }"
+        @click="activeTab = 'analytics'"
+      >
+        <AppIcon name="chart" :size="14" />
+        Analytics
+      </button>
+    </nav>
+
+    <main v-if="activeTab === 'shortlist'" class="content">
       <section class="shortlist-layout">
         <aside
           v-if="savedListings.length"
           class="consensus-banner"
           aria-label="Group shortlist status"
         >
-          <span class="consensus-icon">
-            <AppIcon name="check" :size="16" />
-          </span>
           <span>
             <strong>Group shortlist</strong>
             <small>Votes are shared with all group members.</small>
@@ -476,6 +539,182 @@ async function confirmEnquiry() {
           <p>Save listings from Browse to see them here.</p>
           <RouterLink class="btn btn-primary" to="/listings">Browse listings</RouterLink>
         </section>
+      </section>
+    </main>
+
+    <!-- Analytics tab -->
+    <main v-else class="content">
+      <section class="analytics-layout">
+
+        <div class="analytics-heading">
+          <h2>Property Comparison</h2>
+          <p>
+            Compare shortlisted properties based on rental price,
+            group votes and property size.
+          </p>
+        </div>
+
+        <!-- Switch between chart and table -->
+        <div class="comparison-switcher">
+          <button
+            type="button"
+            :class="{ 'comparison-switcher--active': comparisonView === 'chart' }"
+            @click="comparisonView = 'chart'"
+          >
+            Chart View
+          </button>
+
+          <button
+            type="button"
+            :class="{ 'comparison-switcher--active': comparisonView === 'table' }"
+            @click="comparisonView = 'table'"
+          >
+            Table View
+          </button>
+        </div>
+
+        <!-- Chart View -->
+        <div
+          v-if="comparisonView === 'chart' && comparisonListings.length"
+          class="comparison-chart-wrapper"
+        >
+          <div class="chart-legend">
+            <span><i class="legend-bar"></i> Monthly Rent</span>
+            <span><i class="legend-line"></i> Group Votes</span>
+          </div>
+
+          <div class="comparison-chart-scroll">
+            <svg
+              viewBox="0 0 680 280"
+              class="comparison-chart"
+              role="img"
+              aria-label="Bar chart comparing monthly rent and group votes for shortlisted properties"
+            >
+              <!-- Chart baseline -->
+              <line
+                x1="55" y1="220"
+                x2="640" y2="220"
+                stroke="#ddd"
+              />
+
+              <!-- Rent bars -->
+              <g v-for="item in chartData" :key="item.id">
+                <rect
+                  :x="item.x - 18"
+                  :y="220 - item.barHeight"
+                  width="36"
+                  :height="item.barHeight"
+                  rx="4"
+                  fill="#c75b55"
+                />
+
+                <text
+                  :x="item.x"
+                  :y="210 - item.barHeight"
+                  text-anchor="middle"
+                  font-size="10"
+                  fill="currentColor"
+                >
+                  {{ Math.round(item.price / 100) / 10 }}k
+                </text>
+
+                <text
+                  :x="item.x"
+                  y="238"
+                  text-anchor="middle"
+                  font-size="9"
+                  fill="currentColor"
+                >
+                  {{ item.title.length > 14 ? `${item.title.slice(0, 12)}...` : item.title }}
+                </text>
+              </g>
+
+              <!-- Vote line -->
+              <polyline
+                v-if="chartData.length > 1"
+                :points="chartData.map(item => `${item.x},${item.voteY}`).join(' ')"
+                fill="none"
+                stroke="#397c91"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <!-- Vote dots -->
+              <g v-for="item in chartData" :key="`vote-${item.id}`">
+                <circle
+                  :cx="item.x"
+                  :cy="item.voteY"
+                  r="5"
+                  fill="#397c91"
+                />
+                <text
+                  :x="item.x"
+                  :y="item.voteY - 10"
+                  text-anchor="middle"
+                  font-size="10"
+                  fill="#397c91"
+                >
+                  {{ item.votes }}
+                </text>
+              </g>
+            </svg>
+          </div>
+
+          <p class="chart-note">
+            Higher bars indicate higher monthly rent. The line indicates group votes.
+          </p>
+        </div>
+        <!-- Table View -->
+        <div
+          v-if="comparisonView === 'table' && comparisonListings.length"
+          class="comparison-table-wrapper"
+        >
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Monthly Rent</th>
+                <th>Group Votes</th>
+                <th>Floor Area</th>
+                <th>Rent / sqm</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                v-for="listing in comparisonListings"
+                :key="listing.id"
+              >
+                <td>{{ listing.title }}</td>
+                <td>{{ formatRent(listing.price) }}</td>
+                <td>{{ listing.votes }}</td>
+                <td>
+                  {{ listing.areaSqm ? `${listing.areaSqm} sqm` : 'N/A' }}
+                </td>
+                <td>
+                  {{
+                    listing.rentPerSqm !== null
+                      ? `$${listing.rentPerSqm.toFixed(2)}`
+                      : 'N/A'
+                  }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div
+          v-if="!comparisonListings.length"
+          class="analytics-placeholder"
+        >
+          <h3>No properties to compare yet</h3>
+          <p>
+            Add properties to your group shortlist to start comparing them.
+          </p>
+        </div>
+
       </section>
     </main>
 
@@ -1201,6 +1440,200 @@ async function confirmEnquiry() {
   color: #287a3e;
   font-size: 11px;
   font-weight: 600;
+}
+
+/* Shortlist and Analytics tabs */
+.shortlist-tabs {
+  display: flex;
+  width: min(100% - 32px, 720px);
+  gap: 8px;
+  margin: 0 auto 20px;
+  padding: 5px;
+  border: 1px solid #e7e5e2;
+  border-radius: 12px;
+  background: #f7f6f4;
+}
+
+.shortlist-tabs button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #777;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shortlist-tabs button.shortlist-tab--active {
+  background: #fff;
+  color: var(--red);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
+}
+
+/* Analytics layout */
+.analytics-layout {
+  display: grid;
+  width: min(100%, 720px);
+  gap: 16px;
+  margin: 0 auto;
+}
+
+.analytics-heading h2 {
+  margin-bottom: 5px;
+  font-size: 16px;
+}
+
+.analytics-heading p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.analytics-placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 40px 20px;
+  border: 1px dashed var(--chip-line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--muted);
+  text-align: center;
+}
+
+.analytics-placeholder h3 {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.analytics-placeholder p {
+  font-size: 12px;
+}
+
+/* Chart and table view switcher */
+.comparison-switcher {
+  display: flex;
+  gap: 8px;
+  padding: 5px;
+  border-radius: 10px;
+  background: #f7f6f4;
+}
+
+.comparison-switcher button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comparison-switcher button.comparison-switcher--active {
+  background: white;
+  color: var(--red);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
+}
+
+/* Comparison table */
+.comparison-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--chip-line);
+  border-radius: 12px;
+  background: white;
+}
+
+.comparison-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--chip-line);
+}
+
+.comparison-table th {
+  background: #f7f6f4;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.comparison-table td {
+  color: var(--text);
+}
+
+.comparison-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Property comparison chart */
+.comparison-chart-wrapper {
+  padding: 18px;
+  border: 1px solid var(--chip-line);
+  border-radius: 12px;
+  background: white;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-bar {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #c75b55;
+}
+
+.legend-line {
+  width: 18px;
+  height: 3px;
+  border-radius: 3px;
+  background: #397c91;
+}
+
+.comparison-chart-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.comparison-chart {
+  display: block;
+  width: 100%;
+  min-width: 580px;
+  overflow: visible;
+}
+
+.chart-note {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 </style>
