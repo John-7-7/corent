@@ -809,6 +809,32 @@ function confirmEnquiry() {
   font-size: 10px;
 }
 
+/* Default state: member has not voted */
+.vote-button {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.vote-button:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+/* Active state: member has voted */
+.vote-button--active {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  font-weight: 700;
+}
+
+.vote-button--active:hover:not(:disabled) {
+  background: #bbf7d0;
+  border-color: #4ade80;
+}
+
 .vote-button:disabled {
   cursor: not-allowed;
 }
