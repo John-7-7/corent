@@ -4,34 +4,29 @@ import RangeSlider from '../profile/RangeSlider.vue'
 import { BUDGET_RANGE, formatCurrency } from '../profile/preferenceOptions.js'
 import { formatRange } from '../../services/groupAggregation.js'
 import OptionInfo from './OptionInfo.vue'
+import { TONE_ICONS } from './sweetSpot.js'
 import './sweetSpot.css'
 
-// The group's budget sweet spot. Every shared budget is a bar on one scale
-// (private budgets stay out) and a dashed band marks the range the group lands
-// on: the shared range, or when budgets don't overlap, the ideal range (up to
-// the lowest maximum) or a range a member suggested. Hovering a bar or the band
-// shows its range, and each option's info button shows who it works for.
+// Budget panel: a bar per shared budget on one scale, and a band for the shared,
+// ideal or leading range. Private budgets stay out.
 const props = defineProps({
-  // { members: [{ uid, name, color, min, max }], hidden, shared: { min, max } | null }
   bars: { type: Object, required: true },
-  // votingFor's budget voting, only while budgets don't overlap.
   voting: { type: Object, default: null },
   disabled: { type: Boolean, default: false },
+  issueOpen: { type: Boolean, default: false },
 })
 const emit = defineEmits(['vote'])
 
 const label = (range) => formatRange(range.min, range.max, formatCurrency)
 const same = (a, b) => a && b && a.min === b.min && a.max === b.max
 const keyOf = (range) => `${range.min}-${range.max}`
-// A voted (stored) result. A shared match is settled too, but shows as the match.
 const voteMode = computed(() => props.voting?.mode === 'vote')
 const finalised = computed(() =>
   props.voting?.settledShared ? null : (props.voting?.finalised?.value ?? null),
 )
 const summary = computed(() => props.voting?.summary ?? { ranges: [], overlap: null })
 
-// Options when budgets don't overlap: the ideal and every range members suggested
-// this round, most votes first. Ties keep the ideal first, then amount order.
+// Ties keep the ideal first, then amount order.
 const options = computed(() => {
   if (!voteMode.value || finalised.value) return []
   const ideal = props.voting.suggestion
@@ -43,20 +38,16 @@ const options = computed(() => {
       .map((pick) => ({ min: pick.min, max: pick.max, count: pick.count })),
   ].sort((a, b) => b.count - a.count)
 })
-// The leading option (most votes, no tie) shows green.
 const leaderKey = computed(() => {
   const most = Math.max(0, ...options.value.map((option) => option.count))
   const leaders = options.value.filter((option) => most > 0 && option.count === most)
   return leaders.length === 1 ? keyOf(leaders[0]) : null
 })
 
-// My own range on the slider, previewed on the bars while open.
 const ownOpen = ref(false)
 const step = BUDGET_RANGE.step
 const own = ref([0, 0])
 
-// The band: my own range while I pick it, else the agreed or shared range, else
-// the leading option, else the ideal.
 const band = computed(() => {
   if (ownOpen.value) return { min: own.value[0], max: own.value[1] }
   if (finalised.value) return finalised.value
@@ -67,7 +58,6 @@ const band = computed(() => {
   return props.bars.shared
 })
 
-// One scale for every bar, option and the band, padded to the slider's step.
 const scale = computed(() => {
   const amounts = [
     ...props.bars.members.flatMap((bar) => [bar.min, bar.max]),
@@ -101,11 +91,9 @@ function voteOwn() {
   ownOpen.value = false
 }
 
-// A member's budget works when the band's top is affordable for them and reaches
-// their minimum (a maximum is a hard limit, a minimum is flexible).
+// Works when the band's top is affordable and reaches their minimum.
 const worksFor = (range, bar) => range.max <= bar.max && range.max >= bar.min
 const works = (bar) => Boolean(band.value && worksFor(band.value, bar))
-// Who an option works for, for its info card (shared budgets only).
 const infoRows = (range) =>
   props.bars.members.map((bar) => ({
     uid: bar.uid,
@@ -123,7 +111,6 @@ const infoSummary = (range) => {
   const hidden = props.bars.hidden ? ` · ${props.bars.hidden} private, not counted` : ''
   return `Works for ${fits} of ${props.bars.members.length} shared budgets${hidden}`
 }
-// How an option compares with my own budget, shown only to me.
 const delta = (range) => {
   const my = props.voting?.myRange
   if (!my || !range) return ''
@@ -143,7 +130,6 @@ const heading = computed(
         title: 'You have a match!',
         text: 'Based on everyone’s ranges, this monthly budget works for the whole house.',
       },
-      // An issue can reopen a shared range as a vote.
       conflict: props.bars.shared
         ? {
             title: 'Vote on the budget',
@@ -156,6 +142,16 @@ const heading = computed(
       empty: { title: 'No shared budgets yet', text: 'Nobody has shared a budget range yet.' },
     })[state.value],
 )
+// An open issue outranks the result until it's resolved or reopened as a vote.
+const tone = computed(() => (props.issueOpen ? 'issue' : state.value))
+const shown = computed(() =>
+  tone.value === 'issue'
+    ? {
+        title: 'Issue raised',
+        text: 'A member raised an issue with this result. Talk it through, then resolve it or start a new vote.',
+      }
+    : heading.value,
+)
 const boxLabel = computed(() =>
   ownOpen.value
     ? 'Preview'
@@ -167,15 +163,15 @@ const boxLabel = computed(() =>
 </script>
 
 <template>
-  <div class="sweet-spot" :class="`is-${state}`">
+  <div class="sweet-spot" :class="`is-${tone}`">
     <header class="spot-head">
-      <span class="spot-icon" aria-hidden="true">✦</span>
+      <span class="spot-icon" aria-hidden="true">{{ TONE_ICONS[tone] }}</span>
       <span>
-        <span class="eyebrow">Group sweet spot</span>
-        <strong class="spot-title">{{ heading.title }}</strong>
+        <span class="eyebrow">Group decision</span>
+        <strong class="spot-title">{{ shown.title }}</strong>
       </span>
     </header>
-    <p class="spot-text">{{ heading.text }}</p>
+    <p class="spot-text">{{ shown.text }}</p>
 
     <div v-if="band" class="range-box">
       <span class="eyebrow">{{ boxLabel }}</span>
@@ -208,7 +204,6 @@ const boxLabel = computed(() =>
             works(bar) ? '✓' : ''
           }}</span>
         </div>
-        <!-- The band crosses every row, like a window on the scale. -->
         <div v-if="band" class="band-layer">
           <span class="band" :style="span(band)" :data-tip="label(band)"></span>
         </div>
@@ -221,7 +216,6 @@ const boxLabel = computed(() =>
 
     <fieldset v-if="options.length" class="options">
       <legend class="eyebrow">Vote for a range</legend>
-      <!-- Options slide into their new place when the vote order changes. -->
       <TransitionGroup tag="div" name="option" class="option-list">
         <div
           v-for="option in options"

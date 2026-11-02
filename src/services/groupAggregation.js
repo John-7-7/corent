@@ -1,8 +1,5 @@
-// Group preference aggregation (F-REQ-010 to 013: aggregate preferences, identify
-// conflicts, support and priorities, group-level summary).
-// Pure functions only: no Vue, no Firebase.
-// Input is the group's members as { uid, name, profile }, where profile is the
-// public User_Preferences document. Private budgets are never read here.
+// Group preference aggregation (F-REQ-010 to 013). Pure functions over members
+// as { uid, name, profile }; private budgets are never read here.
 import {
   AMENITIES,
   LOCATIONS,
@@ -21,8 +18,6 @@ import {
 } from '../components/profile/preferenceOptions.js'
 import { formatDistance, haversineKm } from './geo.js'
 
-// Each row describes a preference. The comparison table uses v-for to display it
-// for every member. These option lists also power the team's existing profile form.
 export const PREFERENCE_SECTIONS = [
   {
     title: 'Rental preferences',
@@ -52,8 +47,6 @@ export const PREFERENCE_SECTIONS = [
   },
 ]
 export const PREFERENCE_ROWS = PREFERENCE_SECTIONS.flatMap((section) => section.rows)
-// Commute combines two profile fields into one group factor; region is derived
-// from preferred areas. Neither is a stored profile field.
 const COMMUTE_ROW = { key: 'commute', label: 'Commute' }
 const REGION_ROW = { key: 'region', label: 'Region' }
 const rowFor = (key) =>
@@ -63,8 +56,7 @@ const rowFor = (key) =>
       ? REGION_ROW
       : PREFERENCE_ROWS.find((row) => row.key === key)
 
-// Listing search filters by Housing_Listing.Region, so each profile area maps to
-// the region it sits in. The strings match the listings' Region values exactly.
+// Profile areas mapped to the Region values used by Housing_Listing.
 export const LISTING_REGIONS = [
   'Central Region',
   'East Region',
@@ -86,44 +78,36 @@ export const REGION_FOR_AREA = {
   novena: 'Central Region',
   serangoon: 'North-East Region',
 }
-// A member's regions, in LISTING_REGIONS order. No areas picked means any region.
 export const regionsOf = (profile) =>
   LISTING_REGIONS.filter((region) =>
     (profile?.PreferredLocations || []).some((area) => REGION_FOR_AREA[area] === region),
   )
 
-// Factors the group ranks by priority: the four listing-search filters.
-// `field` is the Group_Preferences key.
+// The four listing-search filters the group ranks; `field` is the saved key.
 export const PRIORITY_FACTORS = [
   { key: 'budget', label: 'Budget', field: 'Budget' },
   { key: 'region', label: 'Region', field: 'Region' },
   { key: 'PropertyType', label: 'Property type', field: 'PropertyType' },
   { key: 'bedrooms', label: 'Bedrooms', field: 'Bedrooms' },
 ]
-// Member comparisons have no region row; areas stand in for it.
 const PRIORITY_ALIASES = { PreferredLocations: 'region' }
-// The group's ranking, most important first. Starts in PRIORITY_FACTORS order.
 export const DEFAULT_PRIORITY_ORDER = PRIORITY_FACTORS.map((factor) => factor.key)
-// Rank 1 of 4 weighs 4, rank 4 weighs 1. Every other scored factor weighs 1,
-// the same as the lowest-ranked filter.
+// Rank 1 of 4 weighs 4, rank 4 weighs 1; every other scored factor weighs 1.
 const priorityWeight = (key, order = DEFAULT_PRIORITY_ORDER) => {
   const index = order.indexOf(PRIORITY_ALIASES[key] || key)
   return index === -1 ? 1 : PRIORITY_FACTORS.length - index
 }
-// Corners of the "match with each member" chart, kept apart from the priorities.
 export const RADAR_FACTORS = [
   { key: 'budget', label: 'Budget' },
-  { key: 'commute', label: 'Commute' },
   { key: 'bedrooms', label: 'Bedrooms' },
+  { key: 'PropertyType', label: 'Property' },
   { key: 'PreferredLocations', label: 'Location' },
   { key: 'Amenities', label: 'Amenities' },
 ]
 
-// Straight-line km a member can travel per minute of commute. A rough door-to-door
-// public transport estimate for Singapore (30 min ≈ 9 km); not a routing result.
-export const COMMUTE_KM_PER_MINUTE = 0.3
-// Move-in dates within this many days of each other count as compatible.
-export const MOVE_IN_WINDOW_DAYS = 30
+// Rough door-to-door public transport reach in Singapore (30 min ≈ 9 km).
+const COMMUTE_KM_PER_MINUTE = 0.3
+const MOVE_IN_WINDOW_DAYS = 30
 
 export function formatRange(min, max, format = String) {
   if (min == null && max == null) return 'Not provided'
@@ -132,8 +116,7 @@ export function formatRange(min, max, format = String) {
   return min === max ? format(min) : `${format(min)} – ${format(max)}`
 }
 
-// Format values for display only; never change the original saved preferences.
-// In the group view (no viewer) every private budget shows as "Private".
+// Display only. Without a viewer, every private budget shows as "Private".
 export function displayPreference(profile, row, viewer = null) {
   if (!profile) return 'Preferences unavailable'
 
@@ -172,7 +155,6 @@ export function displayPreference(profile, row, viewer = null) {
   if (row.key === 'MaxCommuteTime') return `${value} minutes`
   if (row.key === 'CommuteDestination') return value.Address || 'Not provided'
   if (row.key === 'PreferredMoveInDate') return formatMoveInDate(value)
-  // Accept the schema's strings as well as the profile form's numeric lease values.
   if (row.key === 'LeaseDuration') return optionLabel(LEASE_DURATIONS, normaliseLease(value))
   return row.options ? optionLabel(row.options, value) : String(value)
 }
@@ -188,8 +170,7 @@ const validDate = (date) =>
   new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date
 const validPlace = (place) => Number.isFinite(place?.Lat) && Number.isFinite(place?.Lng)
 
-// The largest member groups among the candidates. More than one means a tie
-// (e.g. a 2-vs-2 split), and every tied group is returned so both sides are named.
+// The largest member groups; more than one means a tie.
 function largestGroups(groups) {
   const size = Math.max(0, ...groups.map((group) => group.length))
   const unique = new Map()
@@ -199,8 +180,7 @@ function largestGroups(groups) {
   return [...unique.values()]
 }
 
-// Largest sets of [min, max] ranges that share a common value. The best value
-// is always some range's minimum, so checking each minimum is enough.
+// The best common value is always some range's minimum.
 function bestOverlaps(ranges) {
   return largestGroups(
     ranges.map(({ min }) =>
@@ -209,8 +189,7 @@ function bestOverlaps(ranges) {
   )
 }
 
-// Largest sets of commute circles that share a point. The deepest point is a
-// circle centre or where two circle edges cross, so those are the candidates.
+// The deepest overlap is a circle centre or where two circle edges cross.
 function bestCommuteOverlaps(circles) {
   const origin = circles[0]
   const kmPerLng = 111.32 * Math.cos((origin.lat * Math.PI) / 180)
@@ -243,16 +222,13 @@ function bestCommuteOverlaps(circles) {
   )
 }
 
-// Choices the group can vote between when a factor needs attention. Options come
-// from what members actually picked; wildcards like "Any" are not options.
+// Vote options for a factor that needs attention.
 const WILDCARDS = ['Any', 'Flexible', 'NoPreference']
 export function buildVoteOptions(key, members) {
   const present = members.filter(({ profile }) => profile)
   const unique = (options) => [...new Map(options.map((option) => [option.value, option])).values()]
-  // Members whose own profile prefers this option (shown as avatars on the option).
   const who = (test) => present.filter(({ profile }) => test(profile)).map(({ uid }) => uid)
   if (key === 'budget') {
-    // Budget is voted as a range (see summariseBudgetVotes), not as options.
     return []
   }
   if (key === 'commute') {
@@ -267,7 +243,6 @@ export function buildVoteOptions(key, members) {
     )
   }
   if (key === 'region') {
-    // Every listing region, so a vote isn't limited to what members picked.
     return LISTING_REGIONS.map((region) => ({
       value: region,
       label: region,
@@ -285,8 +260,7 @@ export function buildVoteOptions(key, members) {
   }
   if (key === 'bedrooms') {
     const ranges = present.map(({ profile }) => profile).filter((p) => p.BedroomsMin != null)
-    // Counts from the lowest minimum to the highest maximum members picked. If
-    // everyone picked "Any", every count, so a reopened vote always has options.
+    // From the lowest minimum to the highest maximum picked; every count if all chose Any.
     const low = ranges.length ? Math.min(...ranges.map((p) => p.BedroomsMin)) : BEDROOM_RANGE.min
     const high = ranges.length ? Math.max(...ranges.map((p) => p.BedroomsMax)) : BEDROOM_RANGE.max
     const options = []
@@ -319,8 +293,6 @@ export function buildVoteOptions(key, members) {
   }
   const row = rowFor(key)
   const valueOf = (p) => (key === 'LeaseDuration' ? normaliseLease(p[key]) : p[key])
-  // Property type offers every type from the profile form, like region, so a vote
-  // isn't limited to what members picked; other factors keep only picked options.
   const everyOption = key === 'PropertyType'
   return (row?.options || [])
     .filter((option) => !WILDCARDS.includes(option.value))
@@ -328,7 +300,6 @@ export function buildVoteOptions(key, members) {
     .filter((option) => everyOption || option.supporters.length)
 }
 
-// Members whose profile says "Any" / "No preference" for a factor: every option suits them.
 export function flexibleMembers(key, members) {
   const flexible = {
     PreferredLocations: (p) => Array.isArray(p.PreferredLocations) && !p.PreferredLocations.length,
@@ -341,15 +312,8 @@ export function flexibleMembers(key, members) {
   return members.filter(({ profile }) => profile && test(profile)).map(({ uid }) => uid)
 }
 
-/**
- * The group's budget per person from shared budgets only (as the profile form
- * promises, a private budget is never used in the group's budget).
- * Budgets either overlap, and the overlap is the group budget, or a maximum is
- * below another minimum: that gap is a conflict the group votes on
- * (summariseBudgetVotes). Returns { min, max } (null without shared budgets)
- * and gap: { from, to } (the lowest maximum and the highest minimum) or null.
- * Members are never named, so the gap doesn't single anyone out.
- */
+// Overlap of shared budgets, or the gap between the lowest maximum and the
+// highest minimum. Private budgets are never used.
 export function resolveBudget(members) {
   const ranges = members
     .map(({ profile: p }) => p)
@@ -362,13 +326,8 @@ export function resolveBudget(members) {
     : { min: null, max: null, gap: { from: lowestMax, to: highestMin } }
 }
 
-/**
- * The ideal range when shared budgets conflict: go with the lowest maximum. A
- * maximum is a hard limit and a minimum is flexible, so the range ends at the
- * lowest maximum (the most everyone can afford) and starts at the highest
- * minimum that still fits under it, asking as little as possible of anyone's
- * minimum. Returns { min, max } or null when budgets don't conflict.
- */
+// When budgets conflict: end at the lowest maximum (a hard limit) and start at
+// the highest minimum that still fits under it.
 export function budgetSuggestion(members) {
   const { gap } = resolveBudget(members)
   if (!gap) return null
@@ -380,17 +339,8 @@ export function budgetSuggestion(members) {
   return { min: minimums.length ? Math.max(...minimums) : gap.from, max: gap.from }
 }
 
-/**
- * Budget votes. Each member votes a range ({ min, max, round }): the ideal, a
- * range someone suggested, or their own. Starting a vote from an issue begins a
- * new round, and only this round's ranges count.
- *   votes      { uid: { min, max, round } }
- *   ranges     this round's ranges, grouped: [{ min, max, count, mine }]
- *   submitted  how many members submitted this round
- *   overlap    { min, max } shared by every submitted range (may be one amount), or null
- *   result     the overlap once every member submitted, else null
- *   flagged    true when every member submitted and the ranges don't overlap
- */
+// Budget ballots are { min, max, round }; only this round counts. The result is
+// the overlap once everyone has voted, and flagged when there is none.
 export function summariseBudgetVotes(members, votes = {}, round = 0, myUid = null) {
   const validVote = (vote) => vote && validRange(vote.min, vote.max) && (vote.round ?? 0) <= round
   const inRound = (r) =>
@@ -423,18 +373,8 @@ export function summariseBudgetVotes(members, votes = {}, round = 0, myUid = nul
 
 const daysBetween = (a, b) => (Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 864e5
 
-/**
- * Analyses a group's public preferences. Returns one result per factor:
- *   status    shared | discussion | conflict | unavailable | info
- *   value     short summary for the group card; note adds context
- *   cause     why a conflict or discussion happens; highlights mark members
- *   suggestion  the option that fits the most members, when not everyone fits;
- *               on a tie (tie: true) it names every equally popular option
- *   details   each member's displayed value and fit (true, false, or null = unknown)
- *   support   share of assessed members who fit the best option (null if not assessed)
- *   scored    whether the factor counts towards the compatibility score
- * Results recalculate whenever membership or saved profile values change.
- */
+// One result per factor: status (shared | discussion | conflict | unavailable |
+// info), value, cause, suggestion, details (each member's fit), support, scored.
 export function analyseGroup(members) {
   if (members.length < 2) return []
   const results = []
@@ -459,7 +399,6 @@ export function analyseGroup(members) {
       note: result.note || null,
       cause: result.cause || null,
       suggestion: result.suggestion || null,
-      // True when two or more options are equally popular, e.g. a 2-vs-2 split.
       tie: result.tie || false,
       additional: result.additional || null,
       scored: result.scored ?? true,
@@ -468,7 +407,6 @@ export function analyseGroup(members) {
         result.status === 'unavailable' || !assessed.length
           ? null
           : assessed.filter((detail) => detail.fit).length / assessed.length,
-      // Every conflict or discussion is settled by a group vote.
       voteOptions: ['conflict', 'discussion'].includes(result.status)
         ? buildVoteOptions(key, members)
         : null,
@@ -486,19 +424,15 @@ export function analyseGroup(members) {
       .map(({ name }) => name)
       .join(', ')
   const fitsLine = (count, total = members.length) => `${count} of ${total} members`
-  // "Alice", "Alice and Ben", "Alice, Ben and Chris", in member order.
   const joinNames = (uids) => {
     const names = members.filter(({ uid }) => uids.includes(uid)).map(({ name }) => name)
     return names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0]
   }
-  // Names every tied group, e.g. "Alice and Ben, or Chris and Diana, <verb> (2 of 4 members each)."
   const tiedGroupsLine = (groups, verb, total = members.length) =>
     `${groups.map(joinNames).join(', or ')}, ${verb} (${fitsLine(groups[0].length, total)} each).`
-  // Every "group" is a single member: nobody overlaps with anybody, so it is not a tie.
   const isTie = (groups) => groups.length > 1 && groups[0].length > 1
 
-  // Budget: shared budgets either overlap or leave a gap between a maximum and a
-  // higher minimum (resolveBudget). Only a gap needs a vote; nobody is named.
+  // Budget: only a gap between shared budgets needs a vote.
   const budget = resolveBudget(members)
   if (budget.gap) {
     add('budget', {
@@ -518,7 +452,7 @@ export function analyseGroup(members) {
     })
   }
 
-  // Commute: is there anywhere every member could reach within their maximum time?
+  // Commute: can every member reach one place within their maximum time?
   if (
     members.some(
       ({ profile: p }) =>
@@ -542,7 +476,6 @@ export function analyseGroup(members) {
     const highlights = {}
     let cause = null
     if (conflict) {
-      // Name the pair whose commute areas miss each other by the most.
       let worst = null
       circles.forEach((a, i) =>
         circles.slice(i + 1).forEach((b) => {
@@ -641,8 +574,7 @@ export function analyseGroup(members) {
     })
   }
 
-  // Region: the listing regions members' preferred areas fall in. "Any" (no
-  // areas) suits every region; a region everyone shares is a match.
+  // Region: "Any" suits every region.
   if (
     members.some(
       ({ profile: p }) =>
@@ -695,7 +627,6 @@ export function analyseGroup(members) {
     const min = Math.max(...ranges.map((r) => r.min))
     const max = Math.min(...ranges.map((r) => r.max))
     const conflict = ranges.length > 0 && min > max
-    // Members with "Any" fit every option, so they join each tied group.
     const anyIds = members.filter(({ profile: p }) => p.BedroomsMin === null).map(({ uid }) => uid)
     const groups = bestOverlaps(ranges).map((group) => [...anyIds, ...group])
     const fitIds = groups[0] || anyIds
@@ -740,7 +671,6 @@ export function analyseGroup(members) {
     const first = sorted[0]
     const last = sorted[sorted.length - 1]
     const same = first === last
-    // Find the 30-day windows that cover the most members (several on a tie).
     const windows = [...new Set(sorted)].map((start) => ({
       start,
       ids: members
@@ -784,8 +714,7 @@ export function analyseGroup(members) {
     })
   }
 
-  // Single-choice factors. Wildcards ("Any", "No preference") fit every option;
-  // opposing pairs are a conflict, any other difference needs discussion.
+  // Single-choice factors: opposing pairs conflict, other differences need discussion.
   const choiceFactors = [
     { key: 'PropertyType', label: 'Property type', options: PROPERTY_TYPES, wildcard: 'Any' },
     {
@@ -866,8 +795,7 @@ export function analyseGroup(members) {
     })
   }
 
-  // Requirement factors: the strictest choice suits everyone, so they never
-  // conflict and are left out of the score.
+  // Requirements: the strictest choice suits everyone, so they never conflict.
   for (const [key, label, options, order] of [
     ['CookingAccess', 'Cooking access', COOKING_ACCESS, ['Required', 'NoPreference', 'NotNeeded']],
     [
@@ -894,7 +822,6 @@ export function analyseGroup(members) {
     })
   }
 
-  // Co-tenants: each member counts the people they expect to live with.
   if (members.some(({ profile: p }) => !Number.isInteger(p?.CoTenants))) {
     unavailable('CoTenants', 'Co-tenants')
   } else {
@@ -916,8 +843,7 @@ export function analyseGroup(members) {
     })
   }
 
-  // Amenities: shared requests plus extras. A member fits when at least half of
-  // their requests are on the group list (amenities picked by at least half).
+  // Amenities: a member fits when at least half their requests are on the group list.
   if (
     members.some(
       ({ profile: p }) =>
@@ -954,22 +880,15 @@ export function analyseGroup(members) {
   return results
 }
 
-// ---------------------------------------------------------------------------
-// Me vs one member. Used by the member comparison and the pentagon chart, so
-// each person sees how every other member's own preferences compare with theirs.
-// Every preference gets a 0–100 score; the state follows from the score:
-//   compatible  score ≥ 60    discuss  1–59    conflict  0    unknown  no data
-// When one choice completely covers the other it scores 100: "Any" / "No
-// preference" covers every option, and a range or list inside the other's does too.
-// ---------------------------------------------------------------------------
-export const COMPATIBLE_FROM = 60
+// Me vs one member: every preference scores 0–100 (compatible ≥ 60, discuss
+// 1–59, conflict 0, unknown without data). "Any" or a range inside the other's
+// scores 100.
+const COMPATIBLE_FROM = 60
 const WILDCARD_SCORE = 100
-// Dates within this many days count as the same plan; beyond it the score falls
-// to 0 over DATE_FADE_DAYS.
 const DATE_SAME_DAYS = 14
 const DATE_FADE_DAYS = 60
 
-export const stateForScore = (score) =>
+const stateForScore = (score) =>
   score == null
     ? 'unknown'
     : score >= COMPATIBLE_FROM
@@ -997,13 +916,11 @@ const PAIR_CHOICES = [
   { key: 'StudyEnvironment', label: 'Study environment', wildcard: 'NoPreference' },
   { key: 'GuestPolicy', label: 'Guests', opposites: ['Welcome', 'NoGuests'] },
 ]
-// Shared by both members' profiles: the strictest choice suits both of you.
 const PAIR_REQUIREMENTS = [
   { key: 'CookingAccess', label: 'Cooking access' },
   { key: 'AirconCoverage', label: 'Air conditioning' },
 ]
 
-// Share of the narrower range that both ranges cover (0–100).
 function rangeOverlapScore(a, b, inclusive = false) {
   const extra = inclusive ? 1 : 0
   const overlap = Math.min(a.max, b.max) - Math.max(a.min, b.min) + extra
@@ -1011,23 +928,16 @@ function rangeOverlapScore(a, b, inclusive = false) {
   const narrower = Math.max(Math.min(a.max - a.min, b.max - b.min) + extra, 1)
   return clampScore((overlap / narrower) * 100)
 }
-// Share of the shorter list that both lists contain (0–100).
 const listOverlapScore = (a, b) =>
   clampScore((a.filter((item) => b.includes(item)).length / Math.min(a.length, b.length)) * 100)
 
-/**
- * Compares my preferences with one other member's. myBudget is my own budget
- * (it may be private, since only I see this). Their budget is used only when
- * they share it. Returns one row per preference: { key, label, score, state,
- * reason, mine, theirs }.
- */
+// My budget is used even if private (only I see this); theirs only if shared.
 export function compareWithMember(
   myProfile,
   theirProfile,
   { myBudget = null, name = 'They' } = {},
 ) {
   const rows = []
-  // reason is a full sentence (tooltips); brief is a few words for compact views.
   const add = (key, label, score, reason, brief) => {
     const row = rowFor(key)
     rows.push({
@@ -1064,8 +974,7 @@ export function compareWithMember(
   const me = myProfile
   const them = theirProfile
 
-  // Budget: the overlap as a share of the narrower range, so the score is the same
-  // whichever of the two members is looking.
+  // Budget: overlap as a share of the narrower range, the same from either side.
   if (!myBudget || !validRange(myBudget.BudgetMin, myBudget.BudgetMax)) {
     add('budget', 'Budget', null, 'Your budget is missing.', 'Missing')
   } else if (them.IsBudgetPrivate !== false) {
@@ -1096,7 +1005,7 @@ export function compareWithMember(
     )
   }
 
-  // Commute: how much spare reach is left once the destinations' distance is used up.
+  // Commute: spare reach once the distance between destinations is used up.
   const validCommute = (p) =>
     Number.isFinite(p.MaxCommuteTime) && p.MaxCommuteTime > 0 && validPlace(p.CommuteDestination)
   if (!validCommute(me) || !validCommute(them)) {
@@ -1120,7 +1029,6 @@ export function compareWithMember(
     )
   }
 
-  // Location: share of the shorter list of areas you both picked.
   const validAreas = (p) =>
     Array.isArray(p.PreferredLocations) &&
     p.PreferredLocations.every((value) => isOption(LOCATIONS, value))
@@ -1132,7 +1040,6 @@ export function compareWithMember(
       'Location',
       WILDCARD_SCORE,
       'One of you is open to any area.',
-      // Show the limiting side: the areas of whoever picked some.
       [...me.PreferredLocations, ...them.PreferredLocations]
         .map((area) => optionLabel(LOCATIONS, area))
         .join(', ') || 'Open to any',
@@ -1152,7 +1059,6 @@ export function compareWithMember(
     )
   }
 
-  // Bedrooms: share of the narrower range of bedroom counts you both accept.
   const anyRooms = (p) => p.BedroomsMin === null && p.BedroomsMax === null
   const validRooms = (p) => anyRooms(p) || validRange(p.BedroomsMin, p.BedroomsMax)
   if (!validRooms(me) || !validRooms(them)) {
@@ -1183,7 +1089,7 @@ export function compareWithMember(
     )
   }
 
-  // Move-in date: full marks within two weeks, then fading to 0 over 60 days.
+  // Move-in date: full marks within two weeks, fading to 0 over 60 days.
   if (!validDate(me.PreferredMoveInDate) || !validDate(them.PreferredMoveInDate)) {
     add('PreferredMoveInDate', 'Move-in date', null, 'A move-in date is missing.', 'Missing')
   } else {
@@ -1197,7 +1103,6 @@ export function compareWithMember(
     )
   }
 
-  // Single-choice preferences.
   for (const { key, label, wildcard, opposites, normalise = (v) => v } of PAIR_CHOICES) {
     const options = rowFor(key).options
     const mine = normalise(me[key])
@@ -1221,7 +1126,6 @@ export function compareWithMember(
     }
   }
 
-  // Requirements: a home meeting the stricter choice suits both.
   for (const { key, label } of PAIR_REQUIREMENTS) {
     const options = rowFor(key).options
     if (!isOption(options, me[key]) || !isOption(options, them[key])) {
@@ -1231,7 +1135,6 @@ export function compareWithMember(
     }
   }
 
-  // Co-tenants: the household size each of you expects (co-tenants + yourself).
   if (!Number.isInteger(me.CoTenants) || !Number.isInteger(them.CoTenants)) {
     add('CoTenants', 'Co-tenants', null, 'A co-tenant count is missing.', 'Missing')
   } else {
@@ -1249,7 +1152,6 @@ export function compareWithMember(
     )
   }
 
-  // Amenities: share of the shorter wish list you both picked.
   const validAmenities = (p) =>
     Array.isArray(p.Amenities) && p.Amenities.every((value) => isOption(AMENITIES, value))
   if (!validAmenities(me) || !validAmenities(them)) {
@@ -1282,7 +1184,7 @@ export function compareWithMember(
   return rows
 }
 
-/** Weighted "match with you" percentage; rows without data are left out. */
+// Priority-weighted match; rows without data are left out.
 export function matchScore(rows, priorities) {
   const weightOf = (key) => priorityWeight(key, priorities)
   const known = rows.filter((row) => row.score != null)
@@ -1292,47 +1194,39 @@ export function matchScore(rows, priorities) {
   return Math.round(weighted / total)
 }
 
-/**
- * Group compatibility: the average match of every pair of members, using only
- * what members share publicly, so everyone in the group sees the same number.
- */
-export function groupMatchScore(members, priorities) {
+// A member's ranking is saved as { Budget: 1, ... }, 1 = most important.
+export const priorityMap = (order) =>
+  Object.fromEntries(PRIORITY_FACTORS.map(({ key, field }) => [field, order.indexOf(key) + 1]))
+export const priorityOrder = (map) => {
+  const ranked = PRIORITY_FACTORS.filter(({ field }) => map?.[field] > 0)
+    .sort((a, b) => map[a.field] - map[b.field])
+    .map(({ key }) => key)
+  return ranked.length === PRIORITY_FACTORS.length ? ranked : null
+}
+
+// Average match of every pair, each pair weighed by both members' own rankings.
+export function groupMatchScore(members, prioritiesOf = () => DEFAULT_PRIORITY_ORDER) {
   const scores = []
   members.forEach((a, i) =>
     members.slice(i + 1).forEach((b) => {
       const budget = a.profile?.IsBudgetPrivate === false ? a.profile : null
-      const score = matchScore(
-        compareWithMember(a.profile, b.profile, { myBudget: budget, name: b.name }),
-        priorities,
-      )
-      if (score != null) scores.push(score)
+      const rows = compareWithMember(a.profile, b.profile, { myBudget: budget, name: b.name })
+      const pair = [a, b]
+        .map((member) => matchScore(rows, prioritiesOf(member.uid)))
+        .filter((score) => score != null)
+      if (pair.length) scores.push(pair.reduce((sum, score) => sum + score, 0) / pair.length)
     }),
   )
   if (!scores.length) return null
   return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
 }
 
-// ---------------------------------------------------------------------------
-// Group preference: the four listing-search filters the group agreed on.
-// Saved as Group_Preferences/{GroupID} (groupPreferencesService). Budgets are per person
-// (as in profiles); MonthlyRentMax multiplies the agreed maximum by the group size
-// so it can be compared with Housing_Listing.MonthlyRent directly.
-// Lifestyle preferences stay in the member comparison and are not part of search.
-// ---------------------------------------------------------------------------
+// The agreed listing-search filters, saved as Group_Preferences/{GroupID}.
+// MonthlyRentMax is the per-person maximum times the household size.
 export const SEARCH_FACTORS = ['budget', 'region', 'PropertyType', 'bedrooms']
 
-/**
- * decisions holds finalised votes: { factorKey: value } (budget: a maximum amount).
- * A factor is settled when everyone already agrees or the group finalised a vote;
- * anything else is listed in PendingPreferences and left null.
- */
-export function buildGroupPreference({
-  groupId,
-  members,
-  analysis,
-  decisions = {},
-  priorities = DEFAULT_PRIORITY_ORDER,
-}) {
+// decisions holds finalised votes; anything unsettled goes in PendingPreferences.
+export function buildGroupPreference({ groupId, members, analysis, decisions = {} }) {
   const profiles = members.map(({ profile }) => profile).filter(Boolean)
   const statusOf = (key) => analysis.find((factor) => factor.key === key)?.status
   const pending = []
@@ -1343,8 +1237,7 @@ export function buildGroupPreference({
     return null
   }
 
-  // Budget per person: the shared overlap, or the overlap of the ranges the group
-  // voted. Older finalised votes may hold a plain number (a maximum).
+  // Older finalised budget votes may hold a plain number (a maximum).
   const budget = settle(
     'budget',
     (decided) => (typeof decided === 'object' ? decided : { min: null, max: decided }),
@@ -1353,7 +1246,6 @@ export function buildGroupPreference({
       return { min, max }
     },
   )
-  // Empty list = any region.
   const regions = settle(
     'region',
     (region) => [region],
@@ -1393,12 +1285,6 @@ export function buildGroupPreference({
     PropertyType: propertyType,
     BedroomsMin: bedrooms?.min ?? null,
     BedroomsMax: bedrooms?.max ?? null,
-    // The group's ranking of each filter, 1 = most important, for the listings
-    // owner to weight a match score if they want. Our own scores weigh rank 1 as 4
-    // down to rank 4 as 1.
-    Priorities: Object.fromEntries(
-      PRIORITY_FACTORS.map(({ key, field }) => [field, priorities.indexOf(key) + 1]),
-    ),
     PendingPreferences: pending,
     IsComplete: !pending.length,
   }

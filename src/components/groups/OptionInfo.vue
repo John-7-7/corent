@@ -1,12 +1,10 @@
 <script setup>
 import { onBeforeUnmount, ref, watch } from 'vue'
 
-// A small info button on a vote option. Clicking it opens a card that shows who
-// the option works for, each member with a tick or a cross and why.
+// Info button on a vote option: opens a card showing who the option works for.
 defineProps({
   title: { type: String, required: true },
   summary: { type: String, default: '' },
-  // [{ uid, name, ok, note }]
   rows: { type: Array, default: () => [] },
 })
 

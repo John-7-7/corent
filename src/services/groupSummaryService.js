@@ -9,23 +9,10 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
-// Firestore reads and writes for the group summary page (F-REQ-010 to 013).
-//
-// Collections this page uses:
-// - groups/{groupId}: { name, inviteCode, memberIds: [uid], members: [{ id, name, email }] }
-//   Created and joined through groupService.js (Home / Group Details). Read only here.
-// - User_Preferences/{UserID}: each member's public profile (profile feature).
-// - groups/{groupId}/votes/{UserID}: { UserID, Votes: { factorKey: ballot },
-//   Ready: { factorKey: { result, round } }, UpdatedAt }
-//   A ballot is { min, max, round } for budget and { value, round } otherwise;
-//   only the factor's current round counts.
-//   Written here: one doc per member with their ballot on each search filter and
-//   which results they are ready to finalise.
+// Firestore access for the group summary page (F-REQ-010 to 013).
+// groups/{groupId} is read only; each member's ballots and confirmations live in
+// groups/{groupId}/votes/{uid} as { Votes: { key: ballot }, Ready: { key: { result, round } } }.
 
-/**
- * Calls back with the group whenever it changes (null if it doesn't exist), in
- * the shape this page uses: { GroupID, GroupName, Members: [uid], users: [{ UserID, Username }] }.
- */
 export function watchGroup(groupId, callback, onError) {
   return onSnapshot(
     doc(db, 'groups', groupId),
@@ -46,7 +33,6 @@ export function watchGroup(groupId, callback, onError) {
   )
 }
 
-/** Public profiles of the given members. A member without a profile is left out. */
 export async function getMemberProfiles(uids) {
   const snaps = await Promise.all(
     uids.map((uid) => getDoc(doc(db, 'User_Preferences', uid)).catch(() => null)),
@@ -54,10 +40,7 @@ export async function getMemberProfiles(uids) {
   return snaps.filter((snap) => snap?.exists()).map((snap) => ({ UserID: snap.id, ...snap.data() }))
 }
 
-/**
- * The signed-in user's own budget from User_Preferences/{uid}/Private/Budget.
- * Only the owner can read it, and it is only shown back to them.
- */
+// The signed-in user's private budget; only the owner can read it.
 export async function getMyPrivateBudget(uid) {
   const snap = await getDoc(doc(db, 'User_Preferences', uid, 'Private', 'Budget'))
   if (!snap.exists()) return null
@@ -65,10 +48,6 @@ export async function getMyPrivateBudget(uid) {
   return { BudgetMin, BudgetMax }
 }
 
-/**
- * Calls back with every ballot and ready mark in the group, each as
- * { factorKey: { uid: value } }.
- */
 export function watchVotes(groupId, callback, onError) {
   return onSnapshot(
     collection(db, 'groups', groupId, 'votes'),
@@ -90,7 +69,6 @@ export function watchVotes(groupId, callback, onError) {
   )
 }
 
-/** Saves the signed-in member's ballot on one factor, keeping their other ballots. */
 export function saveVote(groupId, uid, key, value) {
   return setDoc(
     doc(db, 'groups', groupId, 'votes', uid),
@@ -99,7 +77,6 @@ export function saveVote(groupId, uid, key, value) {
   )
 }
 
-/** Marks the signed-in member ready to finalise one result, or clears it (null). */
 export function saveReady(groupId, uid, key, value) {
   return setDoc(
     doc(db, 'groups', groupId, 'votes', uid),

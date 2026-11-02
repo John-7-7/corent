@@ -1,9 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 
-// Drag to rank the group's search priorities, 1 = most important. Works with a
-// mouse, a finger on the grip, or the up/down buttons for keyboard users.
-// v-model is the ordered list of factor keys.
+// Drag (or use the up/down buttons) to rank priorities; v-model is the ordered keys.
 const order = defineModel({ type: Array, required: true })
 const props = defineProps({
   factors: { type: Array, required: true }, // [{ key, label }]
@@ -24,8 +22,6 @@ function move(from, to) {
   announcement.value = `${label} moved to rank ${to + 1}`
 }
 
-// Pointer dragging: the row follows the pointer and the list reorders as it
-// crosses the middle of another row.
 const listEl = ref(null)
 const dragKey = ref(null)
 function startDrag(event, key) {
@@ -54,7 +50,7 @@ function endDrag() {
 
 <template>
   <div class="ranking">
-    <ol ref="listEl" class="rank-list" aria-label="Group priorities, most important first">
+    <ol ref="listEl" class="rank-list" aria-label="Your priorities, most important first">
       <li
         v-for="(item, index) in items"
         :key="item.key"

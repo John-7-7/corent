@@ -6,7 +6,6 @@ import OptionVote from './OptionVote.vue'
 const props = defineProps({
   memberCount: { type: Number, default: 0 },
   rows: { type: Array, default: () => [] },
-  // { uid, name, initials, color } for avatars on vote options.
   members: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['vote', 'ready', 'raise-issue', 'resolve-issue', 'start-vote'])
@@ -37,7 +36,6 @@ watch([selected, () => props.memberCount], ([row, count]) => {
 
 // An open issue sits on a finalised result until someone resolves it or starts a vote.
 const hasIssue = (item) => Boolean(item.issue && (item.issue.open || !item.voting?.finalised))
-// "Issue raised" only while the issue is undecided; a vote it started shows as a vote.
 const statusLabel = (item) =>
   item.issue?.open
     ? 'Issue raised'
@@ -58,7 +56,6 @@ const statusLabel = (item) =>
                 : item.status === 'shared'
                   ? '✓ Shared match'
                   : null
-// Raise an issue: a short message for the group, sent without a name.
 const issueOpen = ref(false)
 const issueMessage = ref('')
 watch(selectedKey, () => {
@@ -71,7 +68,6 @@ function sendIssue() {
   issueMessage.value = ''
 }
 
-// Confirm button: everyone clicks it to finalise; each click adds that member's avatar.
 const readyLabel = (voting) =>
   !voting.allVoted
     ? `Waiting for ${props.memberCount - voting.total} more ${
@@ -137,7 +133,6 @@ const readyLabel = (voting) =>
             ×
           </button>
         </div>
-        <!-- Every preference shows its sweet-spot panel; this box is only for an issue. -->
         <div
           v-if="hasIssue(selected)"
           class="popup-summary"
@@ -149,7 +144,6 @@ const readyLabel = (voting) =>
           }"
         >
           <span v-if="statusLabel(selected)" class="status-label">{{ statusLabel(selected) }}</span>
-          <!-- An open issue shows its message instead of the result. -->
           <template v-if="hasIssue(selected)">
             <strong class="summary-value issue-message">{{
               selected.issue.message ? `“${selected.issue.message}”` : 'No message'
@@ -168,6 +162,7 @@ const readyLabel = (voting) =>
           v-if="selected.budget"
           :bars="selected.budget"
           :voting="selected.voting"
+          :issue-open="!!selected.issue?.open"
           :disabled="!selected.voting?.canVote || selected.voting?.readyMine"
           @vote="emit('vote', selected.key, $event)"
         />
@@ -198,8 +193,6 @@ const readyLabel = (voting) =>
                 </button>
               </div>
             </form>
-            <!-- An open issue: whoever raised it keeps the result or starts a new vote;
-                 everyone else is asked to talk it through. -->
             <p
               v-else-if="
                 selected.voting.finalised && hasIssue(selected) && !selected.issue.canDecide
@@ -276,7 +269,6 @@ const readyLabel = (voting) =>
   font-size: 13px;
   font-weight: 600;
 }
-/* Like a game's ready button: avatars stack up as members confirm. */
 .ready-button {
   display: flex;
   align-items: center;

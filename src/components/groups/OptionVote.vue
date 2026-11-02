@@ -1,21 +1,17 @@
 <script setup>
 import { computed } from 'vue'
 import OptionInfo from './OptionInfo.vue'
+import { TONE_ICONS } from './sweetSpot.js'
 import './sweetSpot.css'
 
-// The sweet-spot panel for a preference picked from options (region, bedrooms,
-// property type), in the same format as BudgetVote: the result box, a row per
-// member with a tick when the result works for them, and the options to vote
-// for, most votes first. Each option's info button shows who it works for.
+// Panel for preferences picked from options (region, bedrooms, property type).
 const props = defineProps({
-  // A group preference row: { label, value, status, note, details, voting }
   item: { type: Object, required: true },
   disabled: { type: Boolean, default: false },
 })
 const emit = defineEmits(['vote'])
 
 const voting = computed(() => props.item.voting ?? null)
-// A voted (stored) result. A shared match is settled too, but shows as the match.
 const voteMode = computed(() => voting.value?.mode === 'vote')
 const finalised = computed(() =>
   voting.value?.settledShared ? null : (voting.value?.finalised ?? null),
@@ -23,7 +19,6 @@ const finalised = computed(() =>
 const flexible = computed(() => voting.value?.flexible ?? [])
 const total = computed(() => props.item.details.length)
 
-// Most votes first; ties keep the order the options came in.
 const options = computed(() =>
   voteMode.value && !finalised.value
     ? [...voting.value.options].sort((a, b) => b.count - a.count)
@@ -32,8 +27,6 @@ const options = computed(() =>
 const leader = computed(() => voting.value?.leader ?? null)
 const optionFor = (value) => voting.value?.options.find((option) => option.value === value)
 
-// What the box and the ticks show: the agreed or leading option, else the option
-// most members prefer.
 const focus = computed(() => {
   if (finalised.value) return optionFor(finalised.value.value) ?? finalised.value
   if (leader.value) return optionFor(leader.value.value) ?? leader.value
@@ -46,7 +39,6 @@ const works = (detail) =>
   focus.value?.supporters
     ? Boolean(focus.value.supporters.includes(detail.uid) || flexible.value.includes(detail.uid))
     : detail.fit !== false
-// Who an option works for, for its info card.
 const fitsOption = (option, detail) =>
   option.supporters.includes(detail.uid) || flexible.value.includes(detail.uid)
 const infoRows = (option) =>
@@ -70,6 +62,17 @@ const state = computed(() =>
         : 'empty',
 )
 const noun = computed(() => props.item.label.toLowerCase())
+// An open issue outranks the result until it's resolved or reopened as a vote.
+const tone = computed(() => (props.item.issue?.open ? 'issue' : state.value))
+const shown = computed(() =>
+  tone.value === 'issue'
+    ? {
+        title: 'Issue raised',
+        text: 'A member raised an issue with this result. Talk it through, then resolve it or start a new vote.',
+      }
+    : heading.value,
+)
+
 const heading = computed(
   () =>
     ({
@@ -81,7 +84,6 @@ const heading = computed(
         title: 'You have a match!',
         text: 'Based on everyone’s preferences, this works for the whole house.',
       },
-      // An issue can reopen a shared match as a vote.
       conflict:
         props.item.status === 'shared'
           ? {
@@ -122,15 +124,15 @@ const boxUnit = computed(() =>
 </script>
 
 <template>
-  <div class="sweet-spot" :class="`is-${state}`">
+  <div class="sweet-spot" :class="`is-${tone}`">
     <header class="spot-head">
-      <span class="spot-icon" aria-hidden="true">✦</span>
+      <span class="spot-icon" aria-hidden="true">{{ TONE_ICONS[tone] }}</span>
       <span>
-        <span class="eyebrow">Group sweet spot</span>
-        <strong class="spot-title">{{ heading.title }}</strong>
+        <span class="eyebrow">Group decision</span>
+        <strong class="spot-title">{{ shown.title }}</strong>
       </span>
     </header>
-    <p class="spot-text">{{ heading.text }}</p>
+    <p class="spot-text">{{ shown.text }}</p>
 
     <div v-if="boxLabel && boxValue" class="range-box">
       <span class="eyebrow">{{ boxLabel }}</span>
@@ -156,7 +158,6 @@ const boxUnit = computed(() =>
 
     <fieldset v-if="options.length" class="options">
       <legend class="eyebrow">Vote for an option</legend>
-      <!-- Options slide into their new place when the vote order changes. -->
       <TransitionGroup tag="div" name="option" class="option-list">
         <div
           v-for="option in options"
