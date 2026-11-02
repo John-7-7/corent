@@ -162,6 +162,25 @@ function hasUserVoted(listingId) {
   )
 }
 
+// Rank shortlisted properties by vote count.
+// If vote counts tie, use the higher group-match percentage.
+const rankedListings = computed(() => {
+  return [...savedListings.value].sort((a, b) => {
+    // First: higher vote count comes first.
+    const voteDifference = getVoteCount(b.id) - getVoteCount(a.id)
+
+    if (voteDifference !== 0) {
+      return voteDifference
+    }
+    // Second: higher match percentage comes first.
+    // Only compare match scores when both are available.
+    if (typeof a.match === 'number' && typeof b.match === 'number') {
+      return b.match - a.match
+    }
+    return 0
+  })
+})
+
 const enquiryListing = computed(
   () =>
     savedListings.value.find((listing) => listing.id === selectedListingId.value) ??
@@ -231,11 +250,17 @@ function confirmEnquiry() {
 
     <main class="content">
       <section class="shortlist-layout">
-        <aside v-if="savedListings.length" class="consensus-banner" aria-label="Sample group consensus">
-          <span class="consensus-icon"><AppIcon name="check" :size="16" /></span>
+        <aside
+          v-if="savedListings.length"
+          class="consensus-banner"
+          aria-label="Group shortlist status"
+        >
+          <span class="consensus-icon">
+            <AppIcon name="check" :size="16" />
+          </span>
           <span>
-            <strong>Group consensus reached</strong>
-            <small>3 out of 4 members agreed on these listings.</small>
+            <strong>Group shortlist</strong>
+            <small>Votes are shared with all group members.</small>
           </span>
         </aside>
 
@@ -277,7 +302,7 @@ function confirmEnquiry() {
 
         <div v-if="savedListings.length" class="listing-list">
           <article
-            v-for="listing in savedListings"
+            v-for="listing in rankedListings"
             :id="`shortlist-${listing.id}`"
             :key="listing.id"
             class="listing-card"
