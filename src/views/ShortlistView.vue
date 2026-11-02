@@ -1,17 +1,44 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import { formatRent } from '@/services/listingsService'
 import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
+import { getCurrentUser } from '@/services/authService'
+import { getUserGroups } from '@/services/groupService'
 
-const { listingIds, storageError, removeFromShortlist } = useShortlist()
+import {
+  addGroupShortlist,
+  removeGroupShortlist,
+  subscribeToGroupShortlist,
+  voteForListing,
+  removeListingVote,
+  subscribeToGroupVotes,
+} from '@/services/groupShortlistService'
+
+const { listingIds, storageError } = useShortlist()
 const listings = ref([])
 
 // Rough Singapore bounds, used to place real coordinates on the overview map.
 const SG = { north: 1.47, south: 1.22, west: 103.6, east: 104.05 }
 const clampPct = (n) => `${Math.min(95, Math.max(5, n * 100)).toFixed(1)}%`
+
+// The current user's information
+const currentUserId = ref('')
+const groupId = ref('')
+
+// Properties shared by everyone in the group
+const groupListingIds = ref([])
+
+// Votes shared by everyone in the group
+const groupVotes = ref([])
+
+// Store the Firestore listeners so we can stop them later
+let unsubscribeShortlist = null
+let unsubscribeVotes = null
+
+const groupError = ref('')
 
 // Map a Housing_Listing record onto the shape this page renders.
 function toShortlistItem(l) {
@@ -37,9 +64,76 @@ function toShortlistItem(l) {
 
 onMounted(async () => {
   try {
-    listings.value = (await getListings()).map(toShortlistItem)
+    // 1. Get the currently logged-in user
+    const user = await getCurrentUser()
+
+    if (!user) {
+      groupError.value = 'Please log in to view your group shortlist.'
+      return
+    }
+
+    currentUserId.value = user.uid
+
+    // 2. Find the group this user belongs to
+    const groups = await getUserGroups(user.uid)
+
+    if (groups.length === 0) {
+      groupError.value = 'You are not currently in a group.'
+      return
+    }
+
+    groupId.value = groups[0].id
+    // Add any properties from the old local shortlist
+    // into the group's shared shortlist.
+    for (const listingId of listingIds.value) {
+      try {
+        await addGroupShortlist(
+          groupId.value,
+          listingId,
+          currentUserId.value,
+        )
+      } catch (error) {
+        console.error('Error adding property to group shortlist:', error)
+      }
+    }
+
+    // 3. Load all available property listings
+    const all = await getListings()
+    listings.value = all.map(toShortlistItem)
+
+    // 4. Listen for shared shortlist changes
+    unsubscribeShortlist = subscribeToGroupShortlist(
+      groupId.value,
+      (items) => {
+        groupListingIds.value = items.map((item) => item.listingId)
+      },
+      (error) => {
+        groupError.value = error.message
+      },
+    )
+
+    // 5. Listen for shared voting changes
+    unsubscribeVotes = subscribeToGroupVotes(
+      groupId.value,
+      (votes) => {
+        groupVotes.value = votes
+      },
+      (error) => {
+        groupError.value = error.message
+      },
+    )
   } catch (error) {
-    storageError.value = error instanceof Error ? error.message : 'Unable to load listings.'
+    console.error('Error loading group shortlist:', error)
+    groupError.value = 'Unable to load your group shortlist.'
+  }
+})
+onUnmounted(() => {
+  if (unsubscribeShortlist) {
+    unsubscribeShortlist()
+  }
+
+  if (unsubscribeVotes) {
+    unsubscribeVotes()
   }
 })
 const selectedListingId = ref('')
@@ -48,9 +142,26 @@ const enquiryDialogOpen = ref(false)
 const enquirySent = ref(false)
 const enquiryError = ref('')
 
-const savedListings = computed(() =>
-  listingIds.value.map((id) => listings.value.find((listing) => listing.id === id)).filter(Boolean),
-)
+const savedListings = computed(() => {
+  return listings.value.filter((l) =>
+    groupListingIds.value.includes(l.id),
+  )
+})
+
+function getVoteCount(listingId) {
+  return groupVotes.value.filter(
+    (vote) => vote.listingId === listingId,
+  ).length
+}
+
+function hasUserVoted(listingId) {
+  return groupVotes.value.some(
+    (vote) =>
+      vote.listingId === listingId &&
+      vote.userId === currentUserId.value,
+  )
+}
+
 const enquiryListing = computed(
   () =>
     savedListings.value.find((listing) => listing.id === selectedListingId.value) ??
@@ -66,13 +177,38 @@ function selectMapPin(listing) {
   })
 }
 
-function removeListing(id) {
+async function removeListing(id) {
   try {
-    removeFromShortlist(id)
-    if (selectedListingId.value === id) selectedListingId.value = ''
+    await removeGroupShortlist(groupId.value, id)
   } catch (error) {
-    storageError.value =
-      error instanceof Error ? error.message : 'Unable to update your shortlist.'
+    console.error('Error removing property:', error)
+    groupError.value = 'Unable to remove this property.'
+  }
+}
+
+async function voteForProperty(listingId) {
+  try {
+    await voteForListing(
+      groupId.value,
+      listingId,
+      currentUserId.value,
+    )
+  } catch (error) {
+    console.error('Error voting for property:', error)
+    groupError.value = 'Unable to submit your vote.'
+  }
+}
+
+async function unvoteForProperty(listingId) {
+  try {
+    await removeListingVote(
+      groupId.value,
+      listingId,
+      currentUserId.value,
+    )
+  } catch (error) {
+    console.error('Error removing vote:', error)
+    groupError.value = 'Unable to remove your vote.'
   }
 }
 
@@ -100,7 +236,6 @@ function confirmEnquiry() {
           <span>
             <strong>Group consensus reached</strong>
             <small>3 out of 4 members agreed on these listings.</small>
-            <small class="sample-notice">Sample votes only — voting is not connected or shared yet.</small>
           </span>
         </aside>
 
@@ -182,11 +317,21 @@ function confirmEnquiry() {
                       {{ member }}
                     </span>
                   </div>
-                  <button class="vote-button" type="button" disabled :aria-label="`${listing.sampleVotes} sample votes`">
+                  <button
+                    class="vote-button"
+                    type="button"
+                    :class="{ 'vote-button--active': hasUserVoted(listing.id) }"
+                    :aria-label="hasUserVoted(listing.id)
+                      ? `Remove your vote from ${listing.title}`
+                      : `Vote for ${listing.title}`"
+                    @click="hasUserVoted(listing.id)
+                      ? unvoteForProperty(listing.id)
+                      : voteForProperty(listing.id)"
+                  >
                     <AppIcon name="thumbs-up" :size="12" />
-                    Vote ({{ listing.sampleVotes }})
+                    {{ hasUserVoted(listing.id) ? 'Voted' : 'Vote' }}
+                    ({{ getVoteCount(listing.id) }})
                   </button>
-                  <span class="sample-tag">Sample</span>
                 </div>
               </div>
             </div>
