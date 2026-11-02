@@ -7,6 +7,7 @@ import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
 import { getCurrentUser } from '@/services/authService'
 import { getUserGroups } from '@/services/groupService'
+import { submitEnquiry } from '@/services/enquiryService'
 
 import {
   addGroupShortlist,
@@ -141,6 +142,7 @@ const expandedCommentsId = ref('')
 const enquiryDialogOpen = ref(false)
 const enquirySent = ref(false)
 const enquiryError = ref('')
+const agentContactDialogOpen = ref(false)
 
 const savedListings = computed(() => {
   return listings.value.filter((l) =>
@@ -183,9 +185,9 @@ const rankedListings = computed(() => {
 
 const enquiryListing = computed(
   () =>
-    savedListings.value.find((listing) => listing.id === selectedListingId.value) ??
-    savedListings.value[0] ??
-    null,
+    savedListings.value.find(
+      (listing) => listing.id === selectedListingId.value,
+    ) ?? null,
 )
 
 function selectMapPin(listing) {
@@ -231,13 +233,36 @@ async function unvoteForProperty(listingId) {
   }
 }
 
-function confirmEnquiry() {
+async function confirmEnquiry() {
   if (!enquiryListing.value) {
     enquiryError.value = 'Add a listing to your shortlist before submitting an enquiry.'
     return
   }
-  enquirySent.value = true
-  enquiryDialogOpen.value = false
+
+  if (!groupId.value || !currentUserId.value) {
+    enquiryError.value = 'Unable to identify your group or user.'
+    return
+  }
+
+  try {
+    enquiryError.value = ''
+
+    await submitEnquiry(
+      groupId.value,
+      currentUserId.value,
+      {
+        ListingID: enquiryListing.value.id,
+        Title: enquiryListing.value.title,
+      },
+    )
+
+    enquirySent.value = true
+    enquiryDialogOpen.value = false
+    agentContactDialogOpen.value = true
+  } catch (error) {
+    console.error('Error submitting enquiry:', error)
+    enquiryError.value = 'Unable to submit your enquiry. Please try again.'
+  }
 }
 </script>
 
@@ -310,6 +335,7 @@ function confirmEnquiry() {
               'listing-card--selected': selectedListingId === listing.id,
               'listing-card--unavailable': !listing.available,
             }"
+            @click="selectedListingId = listing.id"
           >
             <div class="listing-main">
               <div class="listing-photo" :class="`listing-photo--${listing.tone || 'warm'}`">
@@ -427,6 +453,58 @@ function confirmEnquiry() {
           </button>
           <button class="enquiry-cancel" type="button" @click="enquiryDialogOpen = false">
             Cancel
+          </button>
+        </section>
+      </div>
+    </Teleport>
+    <Teleport to="body">
+      <div
+        v-if="agentContactDialogOpen"
+        class="enquiry-backdrop"
+        @click.self="agentContactDialogOpen = false"
+      >
+        <section class="enquiry-dialog">
+          <h2>Enquiry Submitted!</h2>
+
+          <p>
+            Your enquiry for
+            <strong>{{ enquiryListing?.title }}</strong>
+            has been submitted successfully.
+          </p>
+
+          <div class="agent-contact">
+            <h3>Property Agent Contact</h3>
+
+            <span class="sample-agent-label">
+              SAMPLE CONTACT DETAILS
+            </span>
+
+            <div class="agent-detail">
+              <AppIcon name="user" :size="16" />
+              <span>Property Agent: Jane</span>
+            </div>
+
+            <div class="agent-detail">
+              <AppIcon name="phone" :size="16" />
+              <span>+65 6000 0000</span>
+            </div>
+
+            <div class="agent-detail">
+              <AppIcon name="mail" :size="16" />
+              <span>jane@gmail.com</span>
+            </div>
+          </div>
+
+          <p class="agent-disclaimer">
+            These are placeholder contact details.
+          </p>
+
+          <button
+            class="enquiry-button"
+            type="button"
+            @click="agentContactDialogOpen = false"
+          >
+            Close
           </button>
         </section>
       </div>
@@ -1022,21 +1100,37 @@ function confirmEnquiry() {
   font-size: 13px;
 }
 
-@media (max-width: 560px) {
-  .listing-photo {
-    flex-basis: 82px;
-  }
-
-  .listing-info {
-    padding: 8px;
-  }
-
-  .social-row {
-    gap: 4px;
-  }
-
-  .sample-tag {
-    display: none;
-  }
+.agent-contact {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e7e5e2;
+  border-radius: 12px;
+  background: #faf9f8;
 }
+
+.agent-contact h3 {
+  font-size: 14px;
+}
+
+.sample-agent-label {
+  color: #b7791f;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.agent-detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #555;
+  font-size: 12px;
+}
+
+.agent-disclaimer {
+  color: #999 !important;
+  font-size: 10px !important;
+}
+
 </style>
