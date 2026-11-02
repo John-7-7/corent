@@ -7,7 +7,7 @@ import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
 import { getCurrentUser } from '@/services/authService'
 import { getUserGroups } from '@/services/groupService'
-import { submitEnquiry } from '@/services/enquiryService'
+import { submitEnquiry, subscribeToGroupEnquiries, } from '@/services/enquiryService'
 
 import {
   addGroupShortlist,
@@ -38,7 +38,10 @@ const groupVotes = ref([])
 // Store the Firestore listeners so we can stop them later
 let unsubscribeShortlist = null
 let unsubscribeVotes = null
+let unsubscribeEnquiries = null
 
+// Enquiries shared by everyone in the group
+const groupEnquiries = ref([])
 const groupError = ref('')
 
 // Map a Housing_Listing record onto the shape this page renders.
@@ -123,11 +126,23 @@ onMounted(async () => {
         groupError.value = error.message
       },
     )
+
+    // 6. Listen for enquiries submitted by the group
+    unsubscribeEnquiries = subscribeToGroupEnquiries(
+      groupId.value,
+      (items) => {
+        groupEnquiries.value = items
+      },
+      (error) => {
+        console.error('Error loading group enquiries:', error)
+      },
+    )
   } catch (error) {
     console.error('Error loading group shortlist:', error)
     groupError.value = 'Unable to load your group shortlist.'
   }
 })
+
 onUnmounted(() => {
   if (unsubscribeShortlist) {
     unsubscribeShortlist()
@@ -136,11 +151,13 @@ onUnmounted(() => {
   if (unsubscribeVotes) {
     unsubscribeVotes()
   }
+
+  if (unsubscribeEnquiries) unsubscribeEnquiries()
 })
 const selectedListingId = ref('')
 const expandedCommentsId = ref('')
 const enquiryDialogOpen = ref(false)
-const enquirySent = ref(false)
+const emailReceipt = ref(false)
 const enquiryError = ref('')
 const agentContactDialogOpen = ref(false)
 
@@ -198,6 +215,12 @@ function selectMapPin(listing) {
   })
 }
 
+function hasEnquiryBeenSent(listingId) {
+  return groupEnquiries.value.some(
+    (enquiry) => enquiry.listingId === listingId,
+  )
+}
+
 async function removeListing(id) {
   try {
     await removeGroupShortlist(groupId.value, id)
@@ -239,6 +262,11 @@ async function confirmEnquiry() {
     return
   }
 
+  if (hasEnquiryBeenSent(enquiryListing.value.id)) {
+    enquiryError.value = 'Your group has already submitted an enquiry for this listing.'
+    return
+  }
+
   if (!groupId.value || !currentUserId.value) {
     enquiryError.value = 'Unable to identify your group or user.'
     return
@@ -254,9 +282,10 @@ async function confirmEnquiry() {
         ListingID: enquiryListing.value.id,
         Title: enquiryListing.value.title,
       },
+      emailReceipt.value,
     )
 
-    enquirySent.value = true
+    emailReceipt.value = false
     enquiryDialogOpen.value = false
     agentContactDialogOpen.value = true
   } catch (error) {
@@ -344,6 +373,13 @@ async function confirmEnquiry() {
               <div class="listing-info">
                 <div class="listing-title-row">
                   <h3>{{ listing.title }}</h3>
+                  <span
+                    v-if="hasEnquiryBeenSent(listing.id)"
+                    class="enquiry-sent-badge"
+                  >
+                    <AppIcon name="check" :size="12" />
+                    Enquiry sent
+                  </span>
                   <div class="listing-title-actions">
                     <span v-if="listing.match !== null" class="match-pill">{{ listing.match }}%</span>
                     <button
@@ -402,20 +438,35 @@ async function confirmEnquiry() {
           </article>
 
           <div class="enquiry-area">
-            <div v-if="enquirySent" class="enquiry-success" role="status">
-              <span class="enquiry-success-icon"><AppIcon name="check" :size="17" /></span>
-              <strong>Enquiry sent!</strong>
-            </div>
             <button
-              v-else
               class="enquiry-button"
               type="button"
+              :disabled="
+                !enquiryListing ||
+                hasEnquiryBeenSent(enquiryListing.id)
+              "
               @click="enquiryError = ''; enquiryDialogOpen = true"
             >
-              Submit Enquiry
+              {{
+                !enquiryListing
+                  ? 'Select a listing first'
+                  : hasEnquiryBeenSent(enquiryListing.id)
+                    ? 'Enquiry already sent'
+                    : 'Submit Enquiry'
+              }}
             </button>
-            <p class="enquiry-note">Notifies all group members and assigns a property agent.</p>
-            <p v-if="enquiryError" class="enquiry-message" role="alert">{{ enquiryError }}</p>
+
+            <p class="enquiry-note">
+              Notifies all group members and assigns a property agent.
+            </p>
+
+            <p
+              v-if="enquiryError"
+              class="enquiry-message"
+              role="alert"
+            >
+              {{ enquiryError }}
+            </p>
           </div>
         </div>
 
@@ -448,6 +499,13 @@ async function confirmEnquiry() {
             <strong>{{ enquiryListing?.title }}</strong>
             to the property agent. This action cannot be undone.
           </p>
+          <label class="email-receipt-option">
+            <input
+              v-model="emailReceipt"
+              type="checkbox"
+            />
+            <span>Email me a receipt of this enquiry</span>
+          </label>
           <button class="enquiry-button" type="button" @click="confirmEnquiry">
             Yes, Submit Enquiry
           </button>
@@ -1131,6 +1189,18 @@ async function confirmEnquiry() {
 .agent-disclaimer {
   color: #999 !important;
   font-size: 10px !important;
+}
+
+.enquiry-sent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #e8f5e9;
+  color: #287a3e;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 </style>
