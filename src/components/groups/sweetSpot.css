@@ -1,0 +1,469 @@
+/* Shared by BudgetVote and OptionVote; everything is scoped under .sweet-spot. */
+.sweet-spot {
+  --spot-bg: #efecf9;
+  --spot-line: #dcd6f0;
+  --spot-ink: #3b3350;
+  --spot-muted: #77708a;
+  --spot-accent: #6a5bb5;
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 24px;
+  border: 1px solid var(--spot-line);
+  border-radius: 20px;
+  background: var(--spot-bg);
+  color: var(--spot-ink);
+}
+.sweet-spot.is-match,
+.sweet-spot.is-agreed {
+  --spot-bg: #e9f5ee;
+  --spot-line: #cbe6d6;
+  --spot-accent: #2e7d5b;
+}
+/* Needs attention: the app's amber, as on the preference cards. */
+.sweet-spot.is-conflict,
+.sweet-spot.is-issue {
+  --spot-bg: var(--warn-tint, #fdf1d6);
+  --spot-line: #ecd29a;
+  --spot-ink: #4a3300;
+  --spot-muted: #7a5a1c;
+  --spot-accent: var(--warn, #8a5a00);
+}
+.sweet-spot .spot-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.sweet-spot .spot-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--spot-accent) 16%, transparent);
+  color: color-mix(in srgb, var(--spot-accent) 80%, black);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+.sweet-spot .eyebrow {
+  display: block;
+  color: var(--spot-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.sweet-spot .spot-title {
+  display: block;
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.sweet-spot .spot-text {
+  margin: 0;
+  color: var(--spot-muted);
+  font-size: 14px;
+}
+.sweet-spot .range-box {
+  display: grid;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid var(--spot-line);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 60%);
+}
+.sweet-spot .range-value {
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.sweet-spot .range-unit {
+  color: var(--spot-muted);
+  font-size: 12px;
+}
+
+.sweet-spot .bars {
+  --name-w: 64px;
+  --tick-w: 16px;
+  --col-gap: 12px;
+  display: grid;
+  gap: 6px;
+}
+.sweet-spot .bar-rows {
+  position: relative;
+  display: grid;
+  gap: 4px;
+}
+.sweet-spot .bar-row {
+  display: grid;
+  grid-template-columns: var(--name-w) 1fr var(--tick-w);
+  gap: var(--col-gap);
+  align-items: center;
+  min-height: 28px;
+}
+.sweet-spot .scale-row {
+  min-height: 0;
+}
+.sweet-spot .scale-ends {
+  display: flex;
+  justify-content: space-between;
+  color: var(--spot-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.sweet-spot .bar-name {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sweet-spot .track {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 80%);
+}
+.sweet-spot .bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  min-width: 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bar) 55%, white);
+  cursor: default;
+}
+.sweet-spot .bar::before {
+  position: absolute;
+  inset: -8px 0;
+  content: '';
+}
+.sweet-spot .member-value {
+  overflow: hidden;
+  color: var(--spot-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sweet-spot .tick {
+  color: var(--spot-accent);
+  font-weight: 700;
+}
+.sweet-spot .band-layer {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: calc(var(--name-w) + var(--col-gap));
+  right: calc(var(--tick-w) + var(--col-gap));
+  pointer-events: none;
+}
+.sweet-spot .band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 4px;
+  border-right: 1.5px dashed var(--spot-accent);
+  border-left: 1.5px dashed var(--spot-accent);
+  background: color-mix(in srgb, var(--spot-accent) 12%, transparent);
+  pointer-events: auto;
+  transition:
+    left 0.2s ease,
+    width 0.2s ease;
+}
+.sweet-spot [data-tip]:hover::after,
+.sweet-spot [data-tip]:focus-visible::after {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 5;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: #1f1b2b;
+  color: #fff;
+  content: attr(data-tip);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.sweet-spot .private-note {
+  margin: 0;
+  color: var(--spot-muted);
+  font-size: 12px;
+}
+
+.sweet-spot .options {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.sweet-spot .option-list {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+.sweet-spot .option-move {
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sweet-spot .option-enter-active,
+.sweet-spot .option-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.sweet-spot .option-enter-from,
+.sweet-spot .option-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+/* A leaving option steps out of the flow so the rest can slide up. */
+.sweet-spot .option-leave-active {
+  position: absolute;
+  width: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sweet-spot .option-move,
+  .sweet-spot .option-enter-active,
+  .sweet-spot .option-leave-active {
+    transition: none;
+  }
+}
+.sweet-spot .options legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.sweet-spot .option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--spot-line);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 60%);
+  font-size: 14px;
+}
+.sweet-spot .option-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+}
+.sweet-spot .option-main:has(input:disabled) {
+  cursor: default;
+}
+.sweet-spot .option-info {
+  position: relative;
+  flex: none;
+}
+.sweet-spot .info-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1.5px solid var(--spot-muted);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--spot-muted);
+  font:
+    700 12px/1 Georgia,
+    serif;
+  font-style: italic;
+  cursor: pointer;
+}
+.sweet-spot .info-button:hover,
+.sweet-spot .info-button.is-open {
+  border-color: var(--spot-ink);
+  color: var(--spot-ink);
+}
+/* Its tooltip opens leftwards so it stays inside the popup. */
+.sweet-spot .info-button[data-tip]:hover::after {
+  font-family: var(--font);
+  font-style: normal;
+  right: -6px;
+  left: auto;
+  transform: none;
+}
+.sweet-spot .info-button.is-open[data-tip]:hover::after {
+  display: none;
+}
+.sweet-spot .info-card {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: -6px;
+  z-index: 6;
+  display: grid;
+  gap: 8px;
+  width: min(280px, 72vw);
+  padding: 14px;
+  border: 1px solid var(--spot-line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgb(31 27 43 / 18%);
+  color: var(--spot-ink);
+  font-size: 13px;
+  cursor: default;
+}
+.sweet-spot .info-title {
+  font-size: 14px;
+}
+.sweet-spot .info-summary {
+  margin-top: -4px;
+  color: var(--spot-muted);
+  font-size: 12px;
+}
+.sweet-spot .info-row {
+  display: grid;
+  grid-template-columns: 16px auto 1fr;
+  gap: 8px;
+  align-items: baseline;
+}
+.sweet-spot .info-mark {
+  font-weight: 700;
+}
+.sweet-spot .info-mark.is-ok {
+  color: var(--ok, #2e7d5b);
+}
+.sweet-spot .info-mark.is-no {
+  color: #b4433a;
+}
+.sweet-spot .info-name {
+  font-weight: 600;
+}
+.sweet-spot .info-note {
+  overflow: hidden;
+  color: var(--spot-muted);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sweet-spot .option.is-mine {
+  border-color: var(--spot-ink);
+  box-shadow: inset 0 0 0 1px var(--spot-ink);
+}
+/* The leading range stays green even when it is also my vote (the radio shows that). */
+.sweet-spot .option.is-leading {
+  border-color: var(--ok, #2e7d5b);
+  background: var(--ok-tint, #e2f3ea);
+}
+.sweet-spot .option.is-leading.is-mine {
+  box-shadow: inset 0 0 0 1px var(--ok, #2e7d5b);
+}
+.sweet-spot .option-text {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+}
+.sweet-spot .option-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sweet-spot .delta {
+  color: var(--spot-muted);
+  font-size: 12px;
+}
+.sweet-spot .mini-track {
+  position: relative;
+  height: 6px;
+  margin-top: 4px;
+  border-radius: 3px;
+  background: var(--spot-line);
+}
+.sweet-spot .mini-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 4px;
+  border-radius: 3px;
+  background: var(--spot-accent);
+}
+.sweet-spot .option.is-leading .mini-band {
+  background: var(--ok, #2e7d5b);
+}
+.sweet-spot .tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--spot-accent) 18%, white);
+  color: var(--spot-accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+/* A fixed width keeps every option's mini track on the same scale. */
+.sweet-spot .count {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 52px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--spot-accent) 14%, white);
+  color: var(--spot-ink);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sweet-spot .count-number {
+  font-size: 20px;
+  font-weight: 800;
+}
+.sweet-spot .count-unit {
+  margin-top: 3px;
+  color: var(--spot-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sweet-spot .count.is-empty {
+  background: rgb(255 255 255 / 70%);
+  color: var(--spot-muted);
+}
+.sweet-spot .option.is-leading .count {
+  background: var(--ok, #2e7d5b);
+  color: #fff;
+}
+.sweet-spot .option.is-leading .count-unit {
+  color: rgb(255 255 255 / 85%);
+}
+.sweet-spot .own {
+  display: grid;
+  gap: 14px;
+  cursor: default;
+}
+.sweet-spot .own-toggle {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--spot-ink);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sweet-spot .own-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+@media (max-width: 480px) {
+  .sweet-spot {
+    padding: 18px;
+  }
+  .sweet-spot .range-value {
+    font-size: 26px;
+  }
+}

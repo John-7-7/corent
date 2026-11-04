@@ -118,12 +118,6 @@ const breakdown = computed(() => {
       <div class="stack-wide">
         <section class="card" aria-label="Filters">
           <div class="between wrap">
-            <div class="segmented" role="group" aria-label="Browse as">
-              <button type="button" class="on" aria-pressed="true">Just me</button>
-              <button type="button" aria-pressed="false" disabled title="Needs a group (F-REQ-008)">
-                My group
-              </button>
-            </div>
             <RouterLink class="link" to="/shortlist">Shortlist ({{ listingIds.length }})</RouterLink>
           </div>
 
