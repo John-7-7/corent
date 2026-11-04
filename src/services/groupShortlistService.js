@@ -13,9 +13,9 @@ function getShortlistCollection(groupId) {
   return collection(db, 'groups', groupId, 'shortlistedListings')
 }
 
-// Get the votes collection for a particular group.
+// Listing votes are separate from group preference votes.
 function getVotesCollection(groupId) {
-  return collection(db, 'groups', groupId, 'votes')
+  return collection(db, 'groups', groupId, 'listingVotes')
 }
 
 // Add a listing to the group's shared shortlist.
