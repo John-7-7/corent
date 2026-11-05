@@ -10,7 +10,10 @@ import { onAuthChange } from '@/services/authService'
 import { submitEnquiry, subscribeToGroupEnquiries, } from '@/services/enquiryService'
 import { getMemberProfiles } from '@/services/groupSummaryService'
 import { watchGroupPreference } from '@/services/groupPreferencesService'
-import { scoreListings } from '@/services/listingScoring'
+import { rankShortlist, scoreListings } from '@/services/listingScoring'
+import { commuteMatrix, hasEstimates } from '@/services/routingService'
+import CommuteChart from '@/components/listings/CommuteChart.vue'
+import ScoreBreakdown from '@/components/listings/ScoreBreakdown.vue'
 
 import {
   voteForListing,
@@ -47,6 +50,15 @@ const groupError = ref('')
 // Group preferences and member profiles, for the group-match % (F-REQ-015)
 const groupPreference = ref(null)
 const memberProfiles = ref([])
+
+// Door-to-door commute time per listing per member (F-REQ-017.5). Only the
+// shortlist is measured: one OneMap request per listing per member is fine for
+// a handful of listings and is not for the whole corpus.
+const commutes = ref(new Map())
+const commuteLoading = ref(false)
+
+// Which shortlist card has its score breakdown open.
+const expandedScoreId = ref('')
 
 // Store the Firestore listeners so we can stop them later
 let unsubscribeVotes = null
@@ -148,17 +160,66 @@ const scoringMembers = computed(() =>
   })),
 )
 
-// Group-match % per shortlisted listing; null means insufficient data (AC4).
-const scoreById = computed(() => {
+// The shortlisted Housing_Listing records, in corpus order.
+const shortlistedListings = computed(() =>
+  rawListings.value.filter((l) => listingIds.value.includes(l.ListingID)),
+)
+
+// Members in the shape routingService expects. Only those who set a commute
+// destination can be measured; the rest simply have no commute row.
+const commuteMembers = computed(() =>
+  scoringMembers.value
+    .filter((member) => member.profile?.CommuteDestination?.Lat)
+    .map((member) => ({
+      id: member.uid,
+      name: member.name,
+      destination: member.profile.CommuteDestination,
+      maxCommuteTime: member.profile.MaxCommuteTime ?? null,
+    })),
+)
+
+// Recomputed when the shortlist or the members change. routingService caches
+// results, so re-runs after the first are effectively free.
+watch(
+  () => [listingIds.value.join('|'), commuteMembers.value.map((m) => m.id).join('|')].join('//'),
+  async () => {
+    if (!shortlistedListings.value.length || !commuteMembers.value.length) {
+      commutes.value = new Map()
+      return
+    }
+    commuteLoading.value = true
+    try {
+      commutes.value = await commuteMatrix(shortlistedListings.value, commuteMembers.value)
+    } catch {
+      commutes.value = new Map()
+    } finally {
+      commuteLoading.value = false
+    }
+  },
+  { immediate: true },
+)
+
+// Full scoring result per listing, commute included (F-REQ-015).
+const scoredById = computed(() => {
   if (!isGroupMode.value) return new Map()
-  const shortlisted = rawListings.value.filter((l) => listingIds.value.includes(l.ListingID))
   return new Map(
-    scoreListings(shortlisted, groupPreference.value, scoringMembers.value).map((entry) => [
-      entry.listingId,
-      entry.score,
-    ]),
+    scoreListings(
+      shortlistedListings.value,
+      groupPreference.value,
+      scoringMembers.value,
+      commutes.value,
+    ).map((entry) => [entry.listingId, entry]),
   )
 })
+
+// Group-match % per shortlisted listing; null means insufficient data (AC4).
+const scoreById = computed(
+  () => new Map([...scoredById.value].map(([id, entry]) => [id, entry.score])),
+)
+
+// True when any commute shown came from a straight-line estimate rather than
+// OneMap, so the page can say so instead of implying it was measured.
+const commutesEstimated = computed(() => hasEstimates(commutes.value))
 
 // Map a Housing_Listing record onto the shape this page renders.
 function toShortlistItem(l) {
@@ -233,6 +294,19 @@ const chartData = computed(() => {
   }))
 })
 
+// Votes on their own scale. Kept separate from chartData on purpose: one plot
+// with two scales makes unrelated quantities look comparable.
+const voteChartData = computed(() => {
+  const items = comparisonListings.value
+  if (!items.length) return []
+  const maxVotes = Math.max(...items.map((l) => l.votes), 1)
+  return items.map((listing, index) => ({
+    ...listing,
+    x: 80 + index * (560 / Math.max(items.length, 1)),
+    voteHeight: (listing.votes / maxVotes) * 80,
+  }))
+})
+
 function hasUserVoted(listingId) {
   return groupVotes.value.some(
     (vote) =>
@@ -241,23 +315,22 @@ function hasUserVoted(listingId) {
   )
 }
 
-// Rank shortlisted properties by vote count.
-// If vote counts tie, use the higher group-match percentage.
+// Most votes first, group-match % breaking ties (F-REQ-018.7 and .9). The sort
+// itself lives in listingScoring.rankShortlist so the Shortlist page and
+// anything else that ranks cannot drift apart; this only maps the order back
+// onto the records the template renders.
 const rankedListings = computed(() => {
-  return [...savedListings.value].sort((a, b) => {
-    // First: higher vote count comes first.
-    const voteDifference = getVoteCount(b.id) - getVoteCount(a.id)
-
-    if (voteDifference !== 0) {
-      return voteDifference
-    }
-    // Second: higher match percentage comes first.
-    // Only compare match scores when both are available.
-    if (typeof a.match === 'number' && typeof b.match === 'number') {
-      return b.match - a.match
-    }
-    return 0
-  })
+  const tally = Object.fromEntries(savedListings.value.map((l) => [l.id, getVoteCount(l.id)]))
+  const byId = new Map(savedListings.value.map((l) => [l.id, l]))
+  return rankShortlist(
+    savedListings.value.map((l) => ({
+      listingId: l.id,
+      score: typeof l.match === 'number' ? l.match : null,
+    })),
+    tally,
+  )
+    .map((entry) => byId.get(entry.listingId))
+    .filter(Boolean)
 })
 
 const enquiryListing = computed(
@@ -528,6 +601,33 @@ async function confirmEnquiry() {
             </div>
 
             <button
+              v-if="scoredById.get(listing.id)"
+              class="comments-toggle"
+              type="button"
+              :aria-expanded="expandedScoreId === listing.id"
+              @click.stop="expandedScoreId = expandedScoreId === listing.id ? '' : listing.id"
+            >
+              <span>
+                <AppIcon name="chart" :size="13" />
+                {{ expandedScoreId === listing.id ? 'Hide' : 'Why' }} this score
+              </span>
+              <AppIcon
+                class="comments-chevron"
+                :class="{ 'comments-chevron--open': expandedScoreId === listing.id }"
+                name="chevron"
+                :size="14"
+              />
+            </button>
+
+            <div v-if="expandedScoreId === listing.id" class="score-panel" @click.stop>
+              <ScoreBreakdown
+                :result="scoredById.get(listing.id)"
+                :rank="rankedListings.findIndex((l) => l.id === listing.id) + 1"
+                :votes="getVoteCount(listing.id)"
+              />
+            </div>
+
+            <button
               class="comments-toggle"
               type="button"
               :aria-expanded="expandedCommentsId === listing.id"
@@ -619,17 +719,17 @@ async function confirmEnquiry() {
           v-if="comparisonView === 'chart' && comparisonListings.length"
           class="comparison-chart-wrapper"
         >
-          <div class="chart-legend">
-            <span><i class="legend-bar"></i> Monthly Rent</span>
-            <span><i class="legend-line"></i> Group Votes</span>
-          </div>
+          <p class="chart-note">
+            Rent and votes are shown on separate axes. Plotting them together
+            would invite comparing two scales that have nothing in common.
+          </p>
 
           <div class="comparison-chart-scroll">
             <svg
               viewBox="0 0 680 280"
               class="comparison-chart"
               role="img"
-              aria-label="Bar chart comparing monthly rent and group votes for shortlisted properties"
+              aria-label="Monthly rent of each shortlisted property"
             >
               <!-- Chart baseline -->
               <line
@@ -670,42 +770,73 @@ async function confirmEnquiry() {
                 </text>
               </g>
 
-              <!-- Vote line -->
-              <polyline
-                v-if="chartData.length > 1"
-                :points="chartData.map(item => `${item.x},${item.voteY}`).join(' ')"
-                fill="none"
-                stroke="#397c91"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-
-              <!-- Vote dots -->
-              <g v-for="item in chartData" :key="`vote-${item.id}`">
-                <circle
-                  :cx="item.x"
-                  :cy="item.voteY"
-                  r="5"
-                  fill="#397c91"
-                />
-                <text
-                  :x="item.x"
-                  :y="item.voteY - 10"
-                  text-anchor="middle"
-                  font-size="10"
-                  fill="#397c91"
-                >
-                  {{ item.votes }}
-                </text>
-              </g>
-            </svg>
+</svg>
           </div>
 
           <p class="chart-note">
             Higher bars indicate higher monthly rent. The line indicates group votes.
           </p>
         </div>
+        <!-- Group votes: its own chart, because votes and dollars do not
+             share a scale (F-REQ-018.6). -->
+        <div
+          v-if="comparisonView === 'chart' && comparisonListings.length"
+          class="comparison-chart-wrapper"
+        >
+          <h3 class="chart-subhead">Group votes</h3>
+          <div class="comparison-chart-scroll">
+            <svg
+              viewBox="0 0 680 150"
+              class="comparison-chart"
+              role="img"
+              aria-label="Number of group votes for each shortlisted property"
+            >
+              <line x1="55" y1="110" x2="640" y2="110" stroke="#ddd" />
+              <g v-for="item in voteChartData" :key="`v-${item.id}`">
+                <rect
+                  :x="item.x - 18"
+                  :y="110 - item.voteHeight"
+                  width="36"
+                  :height="item.voteHeight"
+                  rx="4"
+                  fill="#397c91"
+                />
+                <text
+                  :x="item.x"
+                  :y="102 - item.voteHeight"
+                  text-anchor="middle"
+                  font-size="10"
+                  fill="currentColor"
+                >
+                  {{ item.votes }}
+                </text>
+                <text :x="item.x" y="128" text-anchor="middle" font-size="9" fill="currentColor">
+                  {{ item.title.length > 14 ? `${item.title.slice(0, 12)}...` : item.title }}
+                </text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Commute per member (F-REQ-017.5) -->
+        <div v-if="isGroupMode" class="comparison-chart-wrapper">
+          <p v-if="commuteLoading" class="muted">Working out commute times…</p>
+          <p v-else-if="!commuteMembers.length" class="muted">
+            No commute destinations set yet. Members can add one in their profile.
+          </p>
+          <template v-else>
+            <CommuteChart
+              :listings="shortlistedListings"
+              :members="scoringMembers"
+              :matrix="commutes"
+            />
+            <p v-if="commutesEstimated" class="chart-note">
+              Some times are straight-line estimates because OneMap routing was
+              unavailable. Estimates are shown but do not count towards the match %.
+            </p>
+          </template>
+        </div>
+
         <!-- Table View -->
         <div
           v-if="comparisonView === 'table' && comparisonListings.length"
@@ -1260,6 +1391,11 @@ async function confirmEnquiry() {
   font-size: 9px;
 }
 
+.score-panel {
+  padding: 0.9rem 1rem 1rem;
+  border-top: 1px solid var(--line);
+}
+
 .comments-toggle {
   display: flex;
   align-items: center;
@@ -1630,35 +1766,6 @@ async function confirmEnquiry() {
   background: white;
 }
 
-.chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  margin-bottom: 16px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.chart-legend span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.legend-bar {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  background: #c75b55;
-}
-
-.legend-line {
-  width: 18px;
-  height: 3px;
-  border-radius: 3px;
-  background: #397c91;
-}
-
 .comparison-chart-scroll {
   width: 100%;
   overflow-x: auto;
@@ -1672,9 +1779,16 @@ async function confirmEnquiry() {
 }
 
 .chart-note {
-  margin-top: 12px;
+  margin: 12px 0;
+  max-width: 62ch;
   color: var(--muted);
   font-size: 11px;
+}
+
+.chart-subhead {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 </style>

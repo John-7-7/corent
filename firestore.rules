@@ -1,7 +1,8 @@
 rules_version = '2';
 
-// Covers User_Preferences (F-REQ-005/006/007) and groups + the shared group
-// shortlist (F-REQ-008/009/016).
+// Covers User_Preferences (F-REQ-005/006/007), groups and the shared shortlist
+// (F-REQ-008/009/016), the group's agreed preferences and preference ballots
+// (F-REQ-010 to 013), listing votes (F-REQ-018) and enquiries (F-REQ-019).
 // NOTE: any collection without a match block below is denied by default. Add a
 // block when you add a collection rather than relaxing the rules globally.
 service cloud.firestore {
@@ -50,6 +51,24 @@ service cloud.firestore {
         allow update: if false;
       }
 
+      // groups/{groupId}/votes/{uid} — one ballot per member, holding their
+      // preference votes and ready flags (groupSummaryService.js). Not the same
+      // thing as listingVotes below: these settle the group's search filters,
+      // not which property to enquire about.
+      match /votes/{uid} {
+        allow read: if isMember();
+
+        // A member writes only their own ballot. The document id is their uid,
+        // so there is no way to file one under somebody else's name.
+        // saveVote and saveReady both merge-write, so create and update are
+        // allowed together.
+        allow create, update: if isMember()
+          && request.auth.uid == uid
+          && request.resource.data.UserID == uid;
+
+        allow delete: if isMember() && request.auth.uid == uid;
+      }
+
       // groups/{groupId}/listingVotes/{uid}_{listingId} — one vote per member
       // per listing (groupShortlistService.js).
       match /listingVotes/{voteId} {
@@ -61,6 +80,27 @@ service cloud.firestore {
         allow delete: if isMember() && resource.data.userId == request.auth.uid;
         allow update: if false;
       }
+    }
+
+    // Group_Preferences/{groupId} — the group's agreed search filters plus each
+    // member's priority ranking (groupPreferencesService.js, F-REQ-013). The
+    // document id is the group id, so membership is checked against it directly.
+    match /Group_Preferences/{groupId} {
+      function isMember() {
+        return request.auth != null
+          && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.memberIds;
+      }
+
+      allow read: if isMember();
+
+      // Any member may settle the group's preferences, but the document must
+      // name the group it lives under and record who wrote it.
+      allow create, update: if isMember()
+        && request.resource.data.GroupID == groupId
+        && request.resource.data.UpdatedBy == request.auth.uid;
+
+      // The agreed preferences live as long as the group does.
+      allow delete: if false;
     }
 
     // enquiries/{groupId}_{listingId} — one enquiry per group per listing
