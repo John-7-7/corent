@@ -21,6 +21,13 @@ const pendingValue = ref(null)
 const usedFallback = ref(false)
 let latestRequestId = 0
 
+// The campus buttons cover students, but the report's second user group
+// commutes to a workplace, so any Singapore address, postal code or building
+// name can be searched too. OneMap's search endpoint needs no token.
+const query = ref('')
+const searching = ref(false)
+const searchError = ref('')
+
 const options = computed(() =>
   props.destinations.map((d) => ({ value: d.value, label: d.label, icon: 'graduation-cap' })),
 )
@@ -61,8 +68,40 @@ async function choose(value) {
 
   pendingValue.value = null
   usedFallback.value = fallback
+  searchError.value = ''
   emit('busy', false)
   emit('update:modelValue', result)
+}
+
+/** Resolves a typed address through OneMap and stores it as the destination. */
+async function searchCustom() {
+  const term = query.value.trim()
+  if (!term) return
+
+  const requestId = ++latestRequestId
+  searching.value = true
+  searchError.value = ''
+  emit('busy', true)
+
+  try {
+    const result = await searchAddress(term)
+    if (requestId !== latestRequestId) return
+    pendingValue.value = null
+    usedFallback.value = false
+    query.value = ''
+    emit('update:modelValue', result)
+  } catch (error) {
+    if (requestId !== latestRequestId) return
+    searchError.value =
+      error instanceof Error && /No OneMap result/.test(error.message)
+        ? `No match for "${term}". Try a postal code or a building name.`
+        : "Couldn't reach OneMap. Check your connection and try again."
+  } finally {
+    if (requestId === latestRequestId) {
+      searching.value = false
+      emit('busy', false)
+    }
+  }
 }
 </script>
 
@@ -77,10 +116,37 @@ async function choose(value) {
       deselectable
       @update:model-value="choose"
     />
+    <div class="destination__search">
+      <label class="destination__hint" for="commute-search">
+        Somewhere else? Enter an address, postal code or building name
+      </label>
+      <div class="destination__row">
+        <input
+          id="commute-search"
+          v-model="query"
+          class="destination__input"
+          type="search"
+          placeholder="e.g. 018956, or Mapletree Business City"
+          :disabled="searching"
+          @keyup.enter="searchCustom"
+        />
+        <button
+          type="button"
+          class="destination__go"
+          :disabled="searching || !query.trim()"
+          @click="searchCustom"
+        >
+          {{ searching ? 'Searching…' : 'Find' }}
+        </button>
+      </div>
+    </div>
+
+    <FieldMessage v-if="searchError" type="warning">{{ searchError }}</FieldMessage>
+
     <p v-if="modelValue && !pendingValue" class="destination__address">
       <BaseIcon name="map-pin" :size="13" />
       <span>
-        <strong>{{ selectedDestination?.name ?? 'Selected destination' }}</strong>
+        <strong>{{ selectedDestination?.name ?? 'Custom destination' }}</strong>
         <span class="destination__line">{{ formatAddress(modelValue.Address) }}</span>
       </span>
     </p>
@@ -101,6 +167,50 @@ async function choose(value) {
   font-weight: 500;
   color: var(--cr-muted);
 }
+.destination__search {
+  margin-top: 12px;
+}
+.destination__hint {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11.5px;
+  color: var(--cr-muted);
+}
+.destination__row {
+  display: flex;
+  gap: 8px;
+}
+.destination__input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--cr-line, #d9d9e3);
+  border-radius: var(--cr-radius-control);
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--cr-text);
+  background: #fff;
+}
+.destination__input:disabled {
+  opacity: 0.6;
+}
+.destination__go {
+  flex: none;
+  padding: 7px 14px;
+  border: 1px solid var(--cr-accent);
+  border-radius: var(--cr-radius-control);
+  background: var(--cr-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.destination__go:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .destination__address {
   display: flex;
   align-items: flex-start;

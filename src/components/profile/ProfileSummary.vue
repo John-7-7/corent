@@ -3,12 +3,13 @@ import { computed } from 'vue'
 import BaseIcon from './BaseIcon.vue'
 import {
   AMENITIES,
-  formatCurrency,
-  formatMoveInDate,
   LEASE_DURATIONS,
   LOCATIONS,
-  optionLabel,
   PROPERTY_TYPES,
+  formatAddress,
+  formatCurrency,
+  formatMoveInDate,
+  optionLabel,
   universityForDestination,
 } from './preferenceOptions'
 import './theme.css'
@@ -41,7 +42,11 @@ const rows = computed(() => {
       key: 'commute',
       label: 'Commute',
       value: `up to ${p.MaxCommuteTime} min`,
-      hint: destination ? `to ${destination.label}` : '',
+      hint: destination
+        ? `to ${destination.label}`
+        : p.CommuteDestination?.Address
+          ? `to ${formatAddress(p.CommuteDestination.Address)}`
+          : '',
     },
     { key: 'bedrooms', label: 'Bedrooms', value: bedrooms },
     { key: 'moveIn', label: 'Move-in', value: formatMoveInDate(p.PreferredMoveInDate) },
