@@ -11,7 +11,7 @@ import { submitEnquiry, subscribeToGroupEnquiries, } from '@/services/enquirySer
 import { getMemberProfiles } from '@/services/groupSummaryService'
 import { watchGroupPreference } from '@/services/groupPreferencesService'
 import { rankShortlist, scoreListings } from '@/services/listingScoring'
-import { commuteMatrix, hasEstimates } from '@/services/routingService'
+import { commuteKey, commuteMatrix, hasEstimates } from '@/services/routingService'
 import CommuteChart from '@/components/listings/CommuteChart.vue'
 import ScoreBreakdown from '@/components/listings/ScoreBreakdown.vue'
 
@@ -267,14 +267,24 @@ function getVoteCount(listingId) {
 
 // Data used by the Property Comparison chart and table.
 const comparisonListings = computed(() => {
-  return savedListings.value.map((listing) => ({
-    ...listing,
-    votes: getVoteCount(listing.id),
-    rentPerSqm:
-      listing.areaSqm > 0
-        ? listing.price / listing.areaSqm
-        : null,
-  }))
+  const byId = new Map(rawListings.value.map((l) => [l.ListingID, l]))
+  return savedListings.value.map((listing) => {
+    // Commute is per member, so the table carries the binding constraint: the
+    // longest journey, and how many members it actually works for.
+    const rows = commuteMembers.value
+      .map((m) => commutes.value.get(commuteKey(listing.id, m.id)))
+      .filter(Boolean)
+    const measured = rows.filter((r) => r.source === 'onemap')
+    return {
+      ...listing,
+      votes: getVoteCount(listing.id),
+      region: byId.get(listing.id)?.Region ?? null,
+      rentPerSqm: listing.areaSqm > 0 ? listing.price / listing.areaSqm : null,
+      worstCommute: measured.length ? Math.max(...measured.map((r) => r.minutes)) : null,
+      commuteOk: rows.length ? rows.filter((r) => r.withinLimit === true).length : null,
+      commuteOf: rows.length,
+    }
+  })
 })
 
 // Scale the rent and vote values into chart positions.
@@ -846,8 +856,13 @@ async function confirmEnquiry() {
             <thead>
               <tr>
                 <th>Property</th>
+                <th>Group fit</th>
                 <th>Monthly Rent</th>
+                <th>Per person</th>
                 <th>Group Votes</th>
+                <th>Longest commute</th>
+                <th>Bedrooms</th>
+                <th>Region</th>
                 <th>Floor Area</th>
                 <th>Rent / sqm</th>
               </tr>
@@ -859,8 +874,25 @@ async function confirmEnquiry() {
                 :key="listing.id"
               >
                 <td>{{ listing.title }}</td>
+                <td>{{ listing.match !== null ? `${listing.match}%` : 'No data' }}</td>
                 <td>{{ formatRent(listing.price) }}</td>
+                <td>
+                  {{
+                    groupPreference?.HouseholdSize
+                      ? formatRent(Math.round(listing.price / groupPreference.HouseholdSize))
+                      : '—'
+                  }}
+                </td>
                 <td>{{ listing.votes }}</td>
+                <td>
+                  <template v-if="listing.worstCommute !== null">
+                    {{ listing.worstCommute }} min
+                    <span class="muted">({{ listing.commuteOk }}/{{ listing.commuteOf }} within limit)</span>
+                  </template>
+                  <template v-else>No data</template>
+                </td>
+                <td>{{ listing.beds ?? 'Not listed' }}</td>
+                <td>{{ listing.region ?? '—' }}</td>
                 <td>
                   {{ listing.areaSqm ? `${listing.areaSqm} sqm` : 'N/A' }}
                 </td>

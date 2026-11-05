@@ -1,11 +1,17 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import ListingCard from '@/components/listings/ListingCard.vue'
 import ListingMap from '@/components/listings/ListingMap.vue'
+import ScoreBreakdown from '@/components/listings/ScoreBreakdown.vue'
 import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
+import { activeGroup, activeGroupId } from '@/services/activeGroup'
+import { watchGroupPreference } from '@/services/groupPreferencesService'
+import { getMemberProfiles } from '@/services/groupSummaryService'
+import { scoreListings } from '@/services/listingScoring'
+import { cachedCommuteMatrix } from '@/services/routingService'
 
 const listings = ref([])
 const loading = ref(true)
@@ -20,6 +26,70 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+/* ---------- group preferences, for the match % (F-REQ-015) ---------- */
+const groupPreference = ref(null)
+const memberProfiles = ref([])
+let unsubscribePreference = null
+
+// Follows the group picked on Home, the same as Browse's shortlist does.
+watch(
+  activeGroupId,
+  async (id) => {
+    unsubscribePreference?.()
+    unsubscribePreference = null
+    groupPreference.value = null
+    memberProfiles.value = []
+    if (!id) return
+    unsubscribePreference = watchGroupPreference(
+      id,
+      (preference) => (groupPreference.value = preference),
+      () => (groupPreference.value = null),
+    )
+    try {
+      memberProfiles.value = await getMemberProfiles(activeGroup.value?.memberIds ?? [])
+    } catch {
+      memberProfiles.value = []
+    }
+  },
+  { immediate: true },
+)
+onUnmounted(() => unsubscribePreference?.())
+
+const scoringMembers = computed(() =>
+  (activeGroup.value?.memberIds ?? []).map((uid) => ({
+    uid,
+    name: activeGroup.value?.members?.find((member) => member.id === uid)?.name || 'Group member',
+    profile: memberProfiles.value.find((profile) => profile.UserID === uid) || null,
+  })),
+)
+
+const commuteMembers = computed(() =>
+  scoringMembers.value
+    .filter((member) => member.profile?.CommuteDestination?.Lat)
+    .map((member) => ({
+      id: member.uid,
+      name: member.name,
+      destination: member.profile.CommuteDestination,
+      maxCommuteTime: member.profile.MaxCommuteTime ?? null,
+    })),
+)
+
+// Browse scores every listing, which is far too many to route, so commute is
+// read from the cache rather than measured. A listing already routed by the
+// Shortlist page therefore shows the same percentage on both pages.
+const scoredById = computed(() => {
+  if (!activeGroupId.value || !groupPreference.value) return new Map()
+  const matrix = cachedCommuteMatrix(listings.value, commuteMembers.value)
+  return new Map(
+    scoreListings(listings.value, groupPreference.value, scoringMembers.value, matrix).map(
+      (entry) => [entry.listingId, entry],
+    ),
+  )
+})
+
+const scoreOf = (listing) => scoredById.value.get(listing.ListingID)?.score ?? null
+const canScore = computed(() => scoredById.value.size > 0)
 
 /* ---------- filters ---------- */
 // Options come from the data, so we never offer a filter that returns nothing.
@@ -58,6 +128,8 @@ const filtered = computed(() => {
       (!maxRent.value || l.MonthlyRent <= Number(maxRent.value)),
   )
   const by = {
+    // Unscored listings sort last rather than as a zero (AC4).
+    match: (a, b) => (scoreOf(b) ?? -1) - (scoreOf(a) ?? -1),
     'rent-asc': (a, b) => a.MonthlyRent - b.MonthlyRent,
     'rent-desc': (a, b) => b.MonthlyRent - a.MonthlyRent,
     mrt: (a, b) => (a.MrtWalkingMinutes ?? 99) - (b.MrtWalkingMinutes ?? 99),
@@ -68,10 +140,18 @@ const filtered = computed(() => {
 /* ---------- list / map (F-REQ-017 AC4) ---------- */
 const view = ref('list')
 
-// Placeholder until User_Preferences.CommuteDestination is available.
-const destinations = ref([
-  { MemberName: 'NUS (demo)', Address: '21 Lower Kent Ridge Rd', Lat: 1.2966, Lng: 103.7764 },
-])
+// Group members' own saved commute destinations (F-REQ-017.3). Empty until
+// members set one, which is better than plotting a pin nobody chose.
+const destinations = computed(() =>
+  scoringMembers.value
+    .filter((member) => member.profile?.CommuteDestination?.Lat)
+    .map((member) => ({
+      MemberName: member.name,
+      Address: member.profile.CommuteDestination.Address,
+      Lat: member.profile.CommuteDestination.Lat,
+      Lng: member.profile.CommuteDestination.Lng,
+    })),
+)
 
 /* ---------- shortlist (F-REQ-016) ---------- */
 // Persisted in localStorage and shared with ShortlistView. Swap shortlistService
@@ -92,19 +172,11 @@ async function toggleSave(l) {
 /* ---------- details dialog ---------- */
 const selected = ref(null)
 
-// F-REQ-015: no GroupSummary yet, so every criterion reports "Insufficient data"
-// rather than a fabricated score. Replace once listingMatchScore() is real.
-const statusText = { met: 'Met', unmet: 'Not met', unknown: 'Insufficient data' }
-const statusClass = { met: 'tag-ok', unmet: 'tag-red', unknown: 'tag-warn' }
-const breakdown = computed(() => {
-  if (!selected.value) return []
-  return [
-    { label: 'Budget', detail: 'Needs the group budget ceiling', status: 'unknown' },
-    { label: 'Area', detail: selected.value.Neighbourhood ?? '—', status: 'unknown' },
-    { label: 'Bedrooms', detail: `${selected.value.Bedrooms} bedrooms`, status: 'unknown' },
-    { label: 'Amenities', detail: selected.value.Amenities?.join(', ') || 'None listed', status: 'unknown' },
-  ]
-})
+// The scored result for the open listing, or null when there is nothing to
+// score against (no group, or the group has not agreed any preferences yet).
+const selectedScore = computed(() =>
+  selected.value ? (scoredById.value.get(selected.value.ListingID) ?? null) : null,
+)
 </script>
 
 <template>
@@ -150,7 +222,9 @@ const breakdown = computed(() => {
             <div class="field">
               <label for="f-sort">Sort by</label>
               <select id="f-sort" class="input" v-model="sort">
-                <option value="" disabled>Best match (needs F-REQ-015)</option>
+                <option value="match" :disabled="!canScore">
+                  {{ canScore ? 'Best match for your group' : 'Best match (needs group preferences)' }}
+                </option>
                 <option value="rent-asc">Rent: low to high</option>
                 <option value="rent-desc">Rent: high to low</option>
                 <option value="mrt">Nearest MRT</option>
@@ -193,6 +267,7 @@ const breakdown = computed(() => {
             v-for="l in filtered"
             :key="l.ListingID"
             :listing="l"
+            :match-score="scoreOf(l)"
             :saved="isSaved(l)"
             @toggle-save="toggleSave"
             @view-details="selected = $event"
@@ -238,13 +313,16 @@ const breakdown = computed(() => {
         </div>
 
         <h3>How it fits your group</h3>
-        <ul class="breakdown">
-          <li v-for="b in breakdown" :key="b.label">
-            <span class="tag" :class="statusClass[b.status]">{{ statusText[b.status] }}</span>
-            <strong>{{ b.label }}</strong>
-            <span class="small muted">{{ b.detail }}</span>
-          </li>
-        </ul>
+        <ScoreBreakdown v-if="selectedScore" :result="selectedScore" />
+        <p v-else class="small muted">
+          <template v-if="!activeGroupId">
+            Join or create a group to see how this listing fits everyone.
+          </template>
+          <template v-else>
+            Your group has not agreed any preferences yet. Settle them on the Group
+            Summary page and a match score appears here.
+          </template>
+        </p>
 
         <p v-if="selected.OriginalSourceURL" class="small" style="margin: 0.9rem 0">
           <a class="link" :href="selected.OriginalSourceURL" target="_blank" rel="noopener noreferrer">
@@ -281,6 +359,4 @@ const breakdown = computed(() => {
 .price.big { font-size: 22px; }
 .price.big span { font-size: 12px; font-weight: 400; }
 .listing-error { color: var(--red); font-size: 13px; }
-.breakdown { list-style: none; padding: 0; margin: 0.6rem 0 0; display: grid; gap: 0.55rem; }
-.breakdown li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; font-size: 13px; }
 </style>

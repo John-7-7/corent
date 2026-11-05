@@ -281,6 +281,42 @@ export async function commuteMatrix(listings, members, departure = referenceDepa
   return matrix
 }
 
+/**
+ * The same matrix as commuteMatrix(), but cache-only: it never makes a request
+ * and simply leaves out any pair that has not been measured yet.
+ *
+ * Browse scores all 384 listings, which is far too many to route, while the
+ * shortlist routes the handful it holds. Reading the cache here means a
+ * shortlisted listing shows the *same* percentage on both pages instead of a
+ * lower one on Browse just because commute was missing there.
+ */
+export function cachedCommuteMatrix(listings, members, departure = referenceDeparture()) {
+  loadCache()
+  const matrix = new Map()
+  for (const listing of listings) {
+    const from = listing?.Coordinates
+    if (!from?.lat) continue
+    for (const member of members) {
+      const destination = member?.destination
+      if (!destination?.Lat) continue
+      const hit = memoryCache.get(
+        cacheKey(from, { lat: destination.Lat, lng: destination.Lng }, departure),
+      )
+      if (!hit) continue
+      matrix.set(commuteKey(listing.ListingID, member.id), {
+        ...hit,
+        memberId: member.id,
+        memberName: member.name ?? null,
+        listingId: listing.ListingID,
+        maxCommuteTime: member.maxCommuteTime ?? null,
+        withinLimit:
+          typeof member.maxCommuteTime === 'number' ? hit.minutes <= member.maxCommuteTime : null,
+      })
+    }
+  }
+  return matrix
+}
+
 /** True once any result in the matrix came from an estimate, not OneMap. */
 export function hasEstimates(matrix) {
   return [...matrix.values()].some((entry) => entry.source === 'estimate')
