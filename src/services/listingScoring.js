@@ -56,6 +56,17 @@ export const PENDING_GROUP_DECISION = [
 
 const clamp100 = (n) => Math.max(0, Math.min(100, Math.round(n)))
 
+/**
+ * Number(null) is 0 and Number('') is 0, so a missing field read through
+ * Number() turns into a real value and scores as a failure instead of as
+ * insufficient data. Everything taken off a listing goes through this.
+ */
+const toNumber = (value) => {
+  if (value === null || value === undefined || value === '') return null
+  const n = Number(value)
+  return Number.isFinite(n) ? n : null
+}
+
 // Full marks inside the limit, then straight down to zero at twice the limit.
 // Absolute against the stated limit, never relative to the other candidates, so
 // a listing's score does not move when the filters change (NFR-REQ-06).
@@ -89,15 +100,16 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
   const profile = member.profile || {}
 
   // Budget — the group rents together, so what matters is each member's share.
-  const household = Number(groupPref?.HouseholdSize) || member.householdSize || null
+  const household = toNumber(groupPref?.HouseholdSize) || member.householdSize || null
   const perPersonCap =
-    Number(groupPref?.BudgetPerPersonMax) ||
-    (Number(groupPref?.MonthlyRentMax) && household
-      ? Number(groupPref.MonthlyRentMax) / household
+    toNumber(groupPref?.BudgetPerPersonMax) ||
+    (toNumber(groupPref?.MonthlyRentMax) && household
+      ? toNumber(groupPref.MonthlyRentMax) / household
       : null) ||
-    Number(profile.BudgetMax) ||
+    toNumber(profile.BudgetMax) ||
     null
-  const share = household ? Number(listing.MonthlyRent) / household : null
+  const rent = toNumber(listing.MonthlyRent)
+  const share = household && rent !== null ? rent / household : null
   rows.push(
     row(
       'budget',
@@ -132,11 +144,13 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
   )
 
   // Bedrooms — a shortfall costs a third per missing room; a surplus is fine.
-  const beds = Number(listing.Bedrooms)
-  const min = Number(groupPref?.BedroomsMin) || null
-  const max = Number(groupPref?.BedroomsMax) || null
+  const bedsRaw = toNumber(listing.Bedrooms)
+  // Some exports use -1 for "not stated"; treat any non-positive count as unknown.
+  const beds = bedsRaw !== null && bedsRaw > 0 ? bedsRaw : null
+  const min = toNumber(groupPref?.BedroomsMin) || null
+  const max = toNumber(groupPref?.BedroomsMax) || null
   let bedScore = null
-  if (Number.isFinite(beds) && (min || max)) {
+  if (beds !== null && (min || max)) {
     if (min && beds < min) bedScore = clamp100(100 - (min - beds) * 34)
     else if (max && beds > max) bedScore = clamp100(100 - (beds - max) * 15)
     else bedScore = 100
@@ -146,7 +160,7 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
       'bedrooms',
       'Bedrooms',
       bedScore,
-      Number.isFinite(beds) ? `${beds} bedrooms` : 'Not listed',
+      beds !== null ? `${beds} bedrooms` : 'Not listed',
     ),
   )
 
@@ -154,7 +168,7 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
   // measurement, so it scores null: counting it would make the same listing
   // score differently depending on whether the OneMap token happened to work
   // (NFR-REQ-06), and AC4 already says unknown data is not a failure.
-  const limit = Number(profile.MaxCommuteTime) || null
+  const limit = toNumber(profile.MaxCommuteTime) || null
   const measured = commute && commute.source === 'onemap' ? commute.minutes : null
   rows.push(
     row(

@@ -5936,5 +5936,5336 @@
     "NearestMrt": "Tanjong Katong MRT",
     "MrtWalkingMinutes": 3,
     "FetchedAt": "2026-10-16T14:40:40.474Z"
+  },
+  {
+    "ListingID": "99CO-o2oMT5dxBjaoEfr97iuirB",
+    "Title": "1 Bed Apartment (Condo) for Rent in Visioncrest",
+    "ImageURL": "https://pic2.99.co/v3/74UmR9ZFpiJRCgkfSbbyPX?text=Selvi+Loe&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=9717e03cf1b84ee26f76a066ffac3d7ba964b7de",
+    "Address": "39 Oxley Rise 238713",
+    "PostalCode": "238713",
+    "Coordinates": {
+      "lat": 1.298411475261422,
+      "lng": 103.84283919973018
+    },
+    "MonthlyRent": 4500,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Dhoby Ghaut",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 81,
+    "NearestMrt": "Dhoby Ghaut MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-kVZgsVVpRbWiXCoWJ9P32m",
+    "Title": "1 Bed Condo for Rent in euHabitat",
+    "ImageURL": "https://pic2.99.co/v3/beqUB9cA2H6pJkPHoh44Mg?text=Wendy+Liew&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=afb9a623ef3f6b6ef64c0b27418d3039c7ce213f",
+    "Address": "208 Jalan Eunos 419548",
+    "PostalCode": "419548",
+    "Coordinates": {
+      "lat": 1.3279701030972024,
+      "lng": 103.90766194564084
+    },
+    "MonthlyRent": 3600,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kaki Bukit",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 59,
+    "NearestMrt": "Kaki Bukit MRT",
+    "MrtWalkingMinutes": 11,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-T2u5tB7T6xAbQzuP8PMY3u",
+    "Title": "2 Bed Condo for Rent in Forest Woods",
+    "ImageURL": "https://pic2.99.co/v3/iayVRypMLPcohaNSre7oU2?text=Kenny+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=70ce2cb356f00e87aeb49c86e7da1cd47286d706",
+    "Address": "19 Lorong Lew Lian 533851",
+    "PostalCode": "533851",
+    "Coordinates": {
+      "lat": 1.3513953418790856,
+      "lng": 103.8766792306963
+    },
+    "MonthlyRent": 3900,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Upper Paya Lebar",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 56,
+    "NearestMrt": "Serangoon MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-MnPJvczE8YUdvba7ty4oE7",
+    "Title": "3 Room (3NG) HDB for Rent in 181A Boon Lay Drive",
+    "ImageURL": "https://pic2.99.co/v3/hYLDKgD8qsnc2tbMNuQ2ac?text=LISA+THNG&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=c0edf53c26ddafbd451655f8d590e1a006d0dc48",
+    "Address": "181A Boon Lay Drive 641181",
+    "PostalCode": "641181",
+    "Coordinates": {
+      "lat": 1.34849083792572,
+      "lng": 103.708097262621
+    },
+    "MonthlyRent": 3000,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Boon Lay Place",
+    "Region": "West Region",
+    "Bathrooms": 2,
+    "AreaSqm": 65,
+    "NearestMrt": "Jurong West MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Z2QuG7JS5QYUqKhQCMoxdH",
+    "Title": "1 Bed Apartment (Condo) for Rent in Regency Suites",
+    "ImageURL": "https://pic2.99.co/v3/2x5t3hnGtNWoDPuCX4gStK?text=Karen+Woo&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=2d6e5f6df2056423d3bc5dc89eebe6de1b16101e",
+    "Address": "38 Kim Tian Road 169262",
+    "PostalCode": "169262",
+    "Coordinates": {
+      "lat": 1.284341167015685,
+      "lng": 103.8291322496455
+    },
+    "MonthlyRent": 4980,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tiong Bahru Station",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 88,
+    "NearestMrt": "Tiong Bahru MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-9RdkE9z26j3YdQhooAPdKu",
+    "Title": "3 Room (3I) HDB for Rent in 21 Chai Chee Road",
+    "ImageURL": "https://pic2.99.co/v3/ZtbuxNHqiTgaDAoLFEwgmZ?text=James+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=d0d2a12abb1a640dbc8621d88f1d67846c914b4a",
+    "Address": "21 Chai Chee Road 461021",
+    "PostalCode": "461021",
+    "Coordinates": {
+      "lat": 1.32577850604228,
+      "lng": 103.922424710131
+    },
+    "MonthlyRent": 3000,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kembangan",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 65,
+    "NearestMrt": "Bedok MRT",
+    "MrtWalkingMinutes": 11,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-dJgXiRvDQuAQyc3PsqnEAd",
+    "Title": "3 Bed Condo for Rent in River Isles",
+    "ImageURL": "https://pic2.99.co/v3/DHKMHfnMCALKCYfNknPVcG?text=Stephanie+Poon&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=43ad2f0ee712b4562567c7dfcc8bcc2534f69b51",
+    "Address": "54 Edgedale Plains 828821",
+    "PostalCode": "828821",
+    "Coordinates": {
+      "lat": 1.3970144502085182,
+      "lng": 103.9133096876421
+    },
+    "MonthlyRent": 4500,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Punggol Field",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 93,
+    "NearestMrt": "Coral Edge LRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-BRTxeHsvQ9coa6RgaQVdkm",
+    "Title": "Common Room (HDB) for Rent in 214 Choa Chu Kang Central",
+    "ImageURL": "https://pic2.99.co/v3/j6GPCz7mgrLG3UwrqAMkMG?text=George+Wang+Y.&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=de0d8bb4f9b0b1b59f302b73c93403c533fd5f39",
+    "Address": "214 Choa Chu Kang Central 680214",
+    "PostalCode": "680214",
+    "Coordinates": {
+      "lat": 1.38276016314999,
+      "lng": 103.746717702615
+    },
+    "MonthlyRent": 850,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Choa Chu Kang Central",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 11,
+    "NearestMrt": "Choa Chu Kang MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-fFnJrFh8ou3jDHDtNcUxNh",
+    "Title": "Common Room (HDB) for Rent in 787B Woodlands Crescent",
+    "ImageURL": "https://pic2.99.co/v3/NyVnR74NrdsLpis8fKX7R3?text=Shawn+Yong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=4c2d60dab11e8bc5f1dd958992e8e3fcb3d75080",
+    "Address": "787B Woodlands Crescent 732787",
+    "PostalCode": "732787",
+    "Coordinates": {
+      "lat": 1.44456206997385,
+      "lng": 103.800811554206
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Woodlands East",
+    "Region": "North Region",
+    "Bathrooms": null,
+    "AreaSqm": 10,
+    "NearestMrt": "Admiralty MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-5LhFYA9tdB3bKMY7tAhCbq",
+    "Title": "4 Room (4I) HDB for Rent in 69 Moulmein Road",
+    "ImageURL": "https://pic2.99.co/v3/MVacbR67zXcqsh75dpbLid?text=James+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=0b03005c9eacd2cdf64f6a05d2de6325dd4f5784",
+    "Address": "69 Moulmein Road 300069",
+    "PostalCode": "300069",
+    "Coordinates": {
+      "lat": 1.31895176233165,
+      "lng": 103.850517972593
+    },
+    "MonthlyRent": 4200,
+    "PropertyType": "HDB",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Moulmein",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 102,
+    "NearestMrt": "Novena MRT",
+    "MrtWalkingMinutes": 10,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Vo8SvvKP8R9REPfzbB4zsf",
+    "Title": "Common Room (HDB) for Rent in 288G Bukit Batok Street 25",
+    "ImageURL": "https://pic2.99.co/v3/gxudQLAkbjhvPCsxQwuic2?text=George+Wang+Y.&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=2a891ef67f85a340780bb0d450ae2e4fa835d041",
+    "Address": "288G Bukit Batok Street 25 656288",
+    "PostalCode": "656288",
+    "Coordinates": {
+      "lat": 1.345013481,
+      "lng": 103.7595968
+    },
+    "MonthlyRent": 850,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bukit Batok South",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 11,
+    "NearestMrt": "Bukit Batok MRT",
+    "MrtWalkingMinutes": 15,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-NvsHmyptBZdzgsdRfMYmm8",
+    "Title": "2 Bed Condo for Rent in One Holland Village Residences / One Holland Village",
+    "ImageURL": "https://pic2.99.co/v3/5MhfoYfbEf5v3YY9T4qPB3?text=Deon+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=877d5f2136c5bc4b876e495e8a385c127c0c37cd",
+    "Address": "5 Holland Village Way 275752",
+    "PostalCode": "275752",
+    "Coordinates": {
+      "lat": 1.31104916811064,
+      "lng": 103.794145546471
+    },
+    "MonthlyRent": 7000,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Holland Drive",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 77,
+    "NearestMrt": "Holland Village MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-N92ZAvKuHKhEBaGEvarGYo",
+    "Title": "2 Bed Apartment (Condo) for Rent in The Sail @ Marina Bay",
+    "ImageURL": "https://pic2.99.co/v3/QqfUxUVUjpaq48p3xPtoCF?text=Eric+Tay&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=769fa03b93e9944bf44f0a2d5ffc4dc8bd55e8e1",
+    "Address": "6 Marina Boulevard 018985",
+    "PostalCode": "018985",
+    "Coordinates": {
+      "lat": 1.2807694349509766,
+      "lng": 103.852658562152
+    },
+    "MonthlyRent": 6800,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Central Subzone",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 80,
+    "NearestMrt": "Downtown MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-dZzhWDfKasZpdgXwSuKcD5",
+    "Title": "Common Room (Landed) for Rent in Leith Road",
+    "ImageURL": "https://pic2.99.co/v3/bwtmfJPK3LMhgbPkHHUokg?text=Angeline+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=1987dd661f5d422b6c9dc3e00f27fe2659985933",
+    "Address": "Leith Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.36200009080512,
+      "lng": 103.875273821501
+    },
+    "MonthlyRent": 1400,
+    "PropertyType": "Landed",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kovan",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Serangoon North MRT",
+    "MrtWalkingMinutes": 14,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-CH7S8imiDtqGVtusfZ9DwH",
+    "Title": "Common Room (Condo) for Rent in Hertford Mansion",
+    "ImageURL": "https://pic2.99.co/v3/7FBGAou6LHGymSSPoFiLwU?text=eunice+wong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=83fd65ecb9f69eb585d5c41676430e48dac6cbfa",
+    "Address": "21 Bristol Road 219847",
+    "PostalCode": "219847",
+    "Coordinates": {
+      "lat": 1.31278620492787,
+      "lng": 103.84838568053776
+    },
+    "MonthlyRent": 1300,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kampong Java",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 10,
+    "NearestMrt": "Little India MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-aS5AJB8TgDy4PmSA9nZSjg",
+    "Title": "Common Room (HDB) for Rent in 190B Rivervale Drive",
+    "ImageURL": "https://pic2.99.co/v3/5ndM2uosxGQhceQnKHJA87?text=Jon+Tay&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e01fb3662b5beba54965fe01159a48c2723623f8",
+    "Address": "190B Rivervale Drive 542190",
+    "PostalCode": "542190",
+    "Coordinates": {
+      "lat": 1.39415593015611,
+      "lng": 103.902375946247
+    },
+    "MonthlyRent": 850,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Rivervale",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Compassvale LRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-dEEm5wutvtXKZBZv5vNgeP",
+    "Title": "3+1 Bed Condo for Rent in Pebble Bay",
+    "ImageURL": "https://pic2.99.co/v3/D4f5emB36ojk9SwTshMzHd?text=Nick+Tan+%E9%99%88%E9%A1%BA%E8%B4%A2&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=f334a6e87f57afbc8bdd51949821e1b3e472e735",
+    "Address": "130 Tanjong Rhu Road 436918",
+    "PostalCode": "436918",
+    "Coordinates": {
+      "lat": 1.2977712758611,
+      "lng": 103.8710451498505
+    },
+    "MonthlyRent": 11000,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Unfurnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tanjong Rhu",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 176,
+    "NearestMrt": "Tanjong Rhu MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-VWr4GhdFzAZMdZ4McKqSxR",
+    "Title": "3 Bed Condo for Rent in Sky Habitat",
+    "ImageURL": "https://pic2.99.co/v3/UrARQGkqSp2WRognXd79UL?text=Robin+Chan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=53c678769c2774f9859b27493162f7df292eb53a",
+    "Address": "9 Bishan Street 15 573909",
+    "PostalCode": "573909",
+    "Coordinates": {
+      "lat": 1.352265197983915,
+      "lng": 103.8518798166415
+    },
+    "MonthlyRent": 6900,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bishan East",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 116,
+    "NearestMrt": "Bishan MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Y3tHBENAYAPvsLdDLi4Xr4",
+    "Title": "1 Bed Condo for Rent in The Cascadia",
+    "ImageURL": "https://pic2.99.co/v3/BX3n49MeNcAJhabP6A3gs9?text=Yvonne+Chloe+Long&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=43cc80e28cc4a056de6805d031277ef8ea89a92b",
+    "Address": "945 Bukit Timah Road 589660",
+    "PostalCode": "589660",
+    "Coordinates": {
+      "lat": 1.3331464565085727,
+      "lng": 103.78720585859023
+    },
+    "MonthlyRent": 3300,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Holland Road",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 53,
+    "NearestMrt": "King Albert Park MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-KkkmoNjoZnag5WTN8GE6yw",
+    "Title": "Master Room (Condo) for Rent in Springdale Condominium",
+    "ImageURL": "https://pic2.99.co/v3/R6qyQiAJChCUvF7t8Annti?text=QIU+JINGJIE%28JANE%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ededce64a1d35a8696b75911f8535a90509d6eb2",
+    "Address": "49 Hindhede Walk 587976",
+    "PostalCode": "587976",
+    "Coordinates": {
+      "lat": 1.3484720951264701,
+      "lng": 103.7719205022318
+    },
+    "MonthlyRent": 2300,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Nature Reserve",
+    "Region": "West Region",
+    "Bathrooms": 1,
+    "AreaSqm": 17,
+    "NearestMrt": "Hume MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-eLezjyVecYrBTvNkv2Lgf6",
+    "Title": "Studio Terraced House (Landed) for Rent in Glasgow Road",
+    "ImageURL": "https://pic2.99.co/v3/FAa4yza4C4sahfGrHZe6XM?text=Stephen+Koh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=357b47ce2ba315dc9b52c33d8bc537e200b00367",
+    "Address": "Glasgow Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.36133876122176,
+      "lng": 103.877643538657
+    },
+    "MonthlyRent": 2000,
+    "PropertyType": "Landed",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kovan",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": null,
+    "NearestMrt": "Kovan MRT",
+    "MrtWalkingMinutes": 11,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-7xiPUPeCxyCGQvStdaqU8d",
+    "Title": "2 Bed Condo for Rent in JadeScape",
+    "ImageURL": "https://pic2.99.co/v3/6geNQgAudFZ3JJvBe648gd?text=Pang+Sor+Teck+%28Edmund%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=063f6c0ae841abfef2d4db2b9ab8688a6e8da9c1",
+    "Address": "8 Shunfu Road 575745",
+    "PostalCode": "575745",
+    "Coordinates": {
+      "lat": 1.3523141566566317,
+      "lng": 103.839143657127
+    },
+    "MonthlyRent": 4750,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Upper Thomson",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 71,
+    "NearestMrt": "Marymount MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-CVPcvsnsNdpsagKXyGgSrx",
+    "Title": "Master Room (HDB) for Rent in 266 Bishan Street 24",
+    "ImageURL": "https://pic2.99.co/v3/wppDLPpE4vUUFXx8wrFfvX?text=Kent+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=9d0f6d9a2d528cec568149a9dfd74a435a1c16de",
+    "Address": "266 Bishan Street 24 570266",
+    "PostalCode": "570266",
+    "Coordinates": {
+      "lat": 1.35793002051239,
+      "lng": 103.842088092204
+    },
+    "MonthlyRent": 1500,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Marymount",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 10,
+    "NearestMrt": "Teck Ghee MRT",
+    "MrtWalkingMinutes": 11,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-H46ZBFKg2X3WavCkE3uDnD",
+    "Title": "Common Room (Condo) for Rent in Cityscape @ Farrer Park",
+    "ImageURL": "https://pic2.99.co/v3/SZJL5yqh7N2fiswmuWeueD?text=CHIA+HOE+YIN&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=9be75ced9099eea18dfea43ea57764bfd0fbd0b5",
+    "Address": "101 Mergui Road 219067",
+    "PostalCode": "219067",
+    "Coordinates": {
+      "lat": 1.31802199387753,
+      "lng": 103.851593706635
+    },
+    "MonthlyRent": 1500,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kampong Java",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Farrer Park MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-CkauwwZLg4gzPjZ3RzD5sF",
+    "Title": "2 Bed Apartment (Condo) for Rent in The Clift",
+    "ImageURL": "https://pic2.99.co/v3/gCzyWo8hLGLKsoNZvBzAVL?text=Sucipto+Sasanadi&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=eedda8c1ab95ac2024b91e021f419bdfc8607c86",
+    "Address": "21 Mccallum Street 069047",
+    "PostalCode": "069047",
+    "Coordinates": {
+      "lat": 1.27940014288617,
+      "lng": 103.847329579148
+    },
+    "MonthlyRent": 5500,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Cecil",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 72,
+    "NearestMrt": "Telok Ayer MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-TQs9V464jPzw8NBbV7zQ3G",
+    "Title": "2 Bed Apartment (Condo) for Rent in Eon Shenton",
+    "ImageURL": "https://pic2.99.co/v3/scA3VkHLgLcJVvFgMSZdfX?text=Alvin+Yap&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=affb0040b46ef60e0b0ee004f4428e87241f8c09",
+    "Address": "70 Shenton Way 079118",
+    "PostalCode": "079118",
+    "Coordinates": {
+      "lat": 1.2738609284113,
+      "lng": 103.846213727237
+    },
+    "MonthlyRent": 4900,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tanjong Pagar",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 50,
+    "NearestMrt": "Prince Edward MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-GUeRZ6UrUo9TLefRPxrAZS",
+    "Title": "5+1 Bed Corner Terrace (Landed) for Rent in Hertford Road",
+    "ImageURL": "https://pic2.99.co/v3/hzSAzkMVkJoqZmjRUqhD95?text=Angeline+Liang&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ef7b08260458523b6d5fe5206f6e2bcd8e404b15",
+    "Address": "Hertford Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.31273894187573,
+      "lng": 103.848211702031
+    },
+    "MonthlyRent": 9000,
+    "PropertyType": "Landed",
+    "Bedrooms": 5,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kampong Java",
+    "Region": "Central Region",
+    "Bathrooms": 5,
+    "AreaSqm": null,
+    "NearestMrt": "Little India MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-NDChyeVpBnLELYmuVVjdHh",
+    "Title": "4 Bed Semi-Detached House (Landed) for Rent in Regent Villas",
+    "ImageURL": "https://pic2.99.co/v3/tnMUzefyQhvb8tv5yaqyQ9?text=Paul+Fam&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=627f2c968c18a05cb53f1b596236c7545b63ceb7",
+    "Address": "Jalan Lim Tai See",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.3217689403246324,
+      "lng": 103.79116170685701
+    },
+    "MonthlyRent": 13800,
+    "PropertyType": "Landed",
+    "Bedrooms": 4,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Leedon Park",
+    "Region": "Central Region",
+    "Bathrooms": 5,
+    "AreaSqm": null,
+    "NearestMrt": "Sixth Avenue MRT",
+    "MrtWalkingMinutes": 16,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-XSmpu4QTFGitsCLAUAp8oF",
+    "Title": "3 Bed Executive Condo for Rent in Austville Residences",
+    "ImageURL": "https://pic2.99.co/v3/CMqtGidpJBkpNxYd5WbTX2?text=Isaac+Liu&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=34f93caccbb193de80a501d420411ac259d07427",
+    "Address": "15 Sengkang East Avenue 544806",
+    "PostalCode": "544806",
+    "Coordinates": {
+      "lat": 1.3807297646074759,
+      "lng": 103.90130179570399
+    },
+    "MonthlyRent": 4500,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Rivervale",
+    "Region": "North-East Region",
+    "Bathrooms": 3,
+    "AreaSqm": 96,
+    "NearestMrt": "Kangkar LRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-S7HojCwPZVz4UFSqFwkRzm",
+    "Title": "3 Bed Apartment (Condo) for Rent in Stirling Residences",
+    "ImageURL": "https://pic2.99.co/v3/usBg92KqwK8BGZPou7GL9h?text=Lee+Sze+Min&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=d0fe604321bfd67d14a5b29be12d5c16a2efa2cf",
+    "Address": "25 Stirling Road 148962",
+    "PostalCode": "148962",
+    "Coordinates": {
+      "lat": 1.29160636625759,
+      "lng": 103.80505756584535
+    },
+    "MonthlyRent": 6500,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Mei Chin",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 82,
+    "NearestMrt": "Queenstown MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-R83sXwDrpKhq39LxwawzwZ",
+    "Title": "1 Bed Apartment (Condo) for Rent in Maple Leaf Elite 1",
+    "ImageURL": "https://pic2.99.co/v3/HQu2XxNDX3Fua3fV6dupaL?text=Matthew+Chan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=02b1ea7a2e2c210f2be6821f6e0835221e1bf54a",
+    "Address": "120 Rangoon Road 218398",
+    "PostalCode": "218398",
+    "Coordinates": {
+      "lat": 1.31532948630742,
+      "lng": 103.853804136116
+    },
+    "MonthlyRent": 3500,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kampong Java",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 57,
+    "NearestMrt": "Farrer Park MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-6SgUNhXEkSvEc3FQd9oSZ5",
+    "Title": "Common Room (Condo) for Rent in Aquarius By The Park",
+    "ImageURL": "https://pic2.99.co/v3/pXMHMMeggytzFroLiqk9Aj?text=Yi+Ting&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=f9e57d43be904923788bea59670f41ea52047ca0",
+    "Address": "11 Bedok Reservoir View 478931",
+    "PostalCode": "478931",
+    "Coordinates": {
+      "lat": 1.337947739446019,
+      "lng": 103.93595770240871
+    },
+    "MonthlyRent": 1200,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bedok Reservoir",
+    "Region": "East Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Bedok Reservoir MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-7ho7HEp4jRhpJd47SfCEQE",
+    "Title": "3 Bed Condo for Rent in Nassim Regency",
+    "ImageURL": "https://pic2.99.co/v3/nn6f3jhoMdXNwSZuMEq4N9?text=Kent+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=44bfcb30fa1eb12be70adb23085ff843bc2e033a",
+    "Address": "37 Nassim Road 258423",
+    "PostalCode": "258423",
+    "Coordinates": {
+      "lat": 1.31172126104037,
+      "lng": 103.819495755222
+    },
+    "MonthlyRent": 12300,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Nassim",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 188,
+    "NearestMrt": "Napier MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-G9AmwDxwfwgDUtTACZL2uX",
+    "Title": "Master Room (Condo) for Rent in Sunshine Loft",
+    "ImageURL": "https://pic2.99.co/v3/Qft4dYRk4ZocK9SuBwFjVW?text=John+Ma&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=b1d077532be6012d5e44877443d12d62cb43a134",
+    "Address": "2 Lorong L Telok Kurau 425600",
+    "PostalCode": "425600",
+    "Coordinates": {
+      "lat": 1.31099831906299,
+      "lng": 103.908046890845
+    },
+    "MonthlyRent": 1050,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Frankel",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 45,
+    "NearestMrt": "Marine Parade MRT",
+    "MrtWalkingMinutes": 11,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-RFpHY4Yo45qhJQVRARhmJj",
+    "Title": "Common Room (HDB) for Rent in 674A Jurong West Street 65",
+    "ImageURL": "https://pic2.99.co/v3/c6QtSqLSos8QF9sxuk9SBE?text=LISA+THNG&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=f1a37cf2ab3584ead8287ddaa1abb24b011e4954",
+    "Address": "674A Jurong West Street 65 641674",
+    "PostalCode": "641674",
+    "Coordinates": {
+      "lat": 1.34446133704193,
+      "lng": 103.702315277328
+    },
+    "MonthlyRent": 1188,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Jurong West Central",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 11,
+    "NearestMrt": "Bahar Junction MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-37LcNkgsXuFPV8jNoM3Kmn",
+    "Title": "Master Room (Condo) for Rent in The Linc",
+    "ImageURL": "https://pic2.99.co/v3/pooD8rshs9pfu6LFeZqdVU?text=Monica+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=fde84e177149d3b7b8794545d0cce7ecdfabf3b1",
+    "Address": "7 Lincoln Road 308346",
+    "PostalCode": "308346",
+    "Coordinates": {
+      "lat": 1.3146437531525201,
+      "lng": 103.8425396351625
+    },
+    "MonthlyRent": 2350,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Moulmein",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 14,
+    "NearestMrt": "Newton MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-h4PNbAKCBCMYGZHQCLpzKP",
+    "Title": "2 Bed Apartment (Condo) for Rent in City Gate",
+    "ImageURL": "https://pic2.99.co/v3/TCPeA9Jz6CX6EqAqMUtvSU?text=Ada+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=7bfb75c804bf087f5dc30050e49e26b394f51702",
+    "Address": "371 Beach Road 199597",
+    "PostalCode": "199597",
+    "Coordinates": {
+      "lat": 1.30231590504573,
+      "lng": 103.862331661034
+    },
+    "MonthlyRent": 4600,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Crawford",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 53,
+    "NearestMrt": "Nicoll Highway MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-KefJhLoU8L45Uj8j32zouY",
+    "Title": "1 Bed Condo for Rent in The Tembusu",
+    "ImageURL": "https://pic2.99.co/v3/Dt276Z88BPibDkJrNB8oXP?text=Charles+Wong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=8a5e63a169fe1d8d6a12c6942d1b858d0723eb89",
+    "Address": "107D Tampines Road 534006",
+    "PostalCode": "534006",
+    "Coordinates": {
+      "lat": 1.36153094393341,
+      "lng": 103.889409749076
+    },
+    "MonthlyRent": 3400,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Lorong Ah Soo",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 58,
+    "NearestMrt": "Kovan MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-FXA2azNbfMqETwGqY7m4Cn",
+    "Title": "Common Room (Condo) for Rent in St Francis Court",
+    "ImageURL": "https://pic2.99.co/v3/CJDFfDqnVmojbS2jERKD9P?text=Catherine+Soh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=2cfd6d724071122eced25eb1228ceda915e3f879",
+    "Address": "90 Saint Francis Road 328071",
+    "PostalCode": "328071",
+    "Coordinates": {
+      "lat": 1.32437966274857,
+      "lng": 103.863833862679
+    },
+    "MonthlyRent": 1250,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bendemeer",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Boon Keng MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-FxkC68ZetMLy565zhE8Sco",
+    "Title": "Common Room (HDB) for Rent in 451A Bukit Batok West Avenue 6",
+    "ImageURL": "https://pic2.99.co/v3/84fSG4Ue2MNeoH7kNNNqsd?text=James+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e274265c4c4f6a74a4349e00e555dc5959ec8c93",
+    "Address": "451A Bukit Batok West Avenue 6 651451",
+    "PostalCode": "651451",
+    "Coordinates": {
+      "lat": 1.35304899382254,
+      "lng": 103.742932562787
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Brickworks",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Tengah Park MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-gqGC9GJFTv8VBvVidbbtCq",
+    "Title": "Master Room (HDB) for Rent in 363 Bukit Batok Street 31",
+    "ImageURL": "https://pic2.99.co/v3/H2n3JP2Gzt9Ud3SwgmSbRZ?text=Shawn+Yong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=5059f5d0609a532f0519d7f745a81a31d9ce452b",
+    "Address": "363 Bukit Batok Street 31 650363",
+    "PostalCode": "650363",
+    "Coordinates": {
+      "lat": 1.36101444441179,
+      "lng": 103.74944732312
+    },
+    "MonthlyRent": 1300,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Hong Kah North",
+    "Region": "West Region",
+    "Bathrooms": 1,
+    "AreaSqm": 14,
+    "NearestMrt": "Bukit Gombak MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-VBvJxezEUCUvwFGbNrfnoy",
+    "Title": "Master Room (HDB) for Rent in 418 Tampines Street 41",
+    "ImageURL": "https://pic2.99.co/v3/kKwHJNBggHYyGTXxAVqwuT?text=Halim+Yunos&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=62d6f6d94fcf8cd44115911b623a8798c3605df9",
+    "Address": "418 Tampines Street 41 520418",
+    "PostalCode": "520418",
+    "Coordinates": {
+      "lat": 1.3582722131871,
+      "lng": 103.947308949059
+    },
+    "MonthlyRent": 1350,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tampines East",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 19,
+    "NearestMrt": "Tampines MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-PeBRMxDysYhcxDFev5ifoC",
+    "Title": "5 Bed Terraced House (Landed) for Rent in President Gardens",
+    "ImageURL": "https://pic2.99.co/v3/RGDB45Vd4mQBbKWEqA8jcN?text=Colin+Choo&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=aaff4d5fe2f026b9e72af63eb59ac8ade60d057e",
+    "Address": "Lentor Green",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.3857505507412682,
+      "lng": 103.83732782841061
+    },
+    "MonthlyRent": 7000,
+    "PropertyType": "Landed",
+    "Bedrooms": 5,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tagore",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": null,
+    "NearestMrt": "Lentor MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-54xsmmzwmh7H7uWuoMdCc6",
+    "Title": "Common Room (HDB) for Rent in 685 Choa Chu Kang Crescent",
+    "ImageURL": "https://pic2.99.co/v3/BTX9hP8xbNtYr3TV23p48U?text=Jess+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=29ebf8af821ccecdb0fb511e4ada0b47d3263268",
+    "Address": "685 Choa Chu Kang Crescent 680685",
+    "PostalCode": "680685",
+    "Coordinates": {
+      "lat": 1.40407879996278,
+      "lng": 103.748013933151
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yew Tee",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 20,
+    "NearestMrt": "Yew Tee MRT",
+    "MrtWalkingMinutes": 10,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-eEA4rGjyEJXXg5dUNVsNUh",
+    "Title": "4 Bed Condo for Rent in Ardmore II",
+    "ImageURL": "https://pic2.99.co/v3/cdrSP48dftTUYNd4s3p343?text=Jeffrey+Chow+90018373&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=0c74b86256e72a8ef58e14c24aa59783d44c76ac",
+    "Address": "1 Ardmore Park 259962",
+    "PostalCode": "259962",
+    "Coordinates": {
+      "lat": 1.3095331268720467,
+      "lng": 103.82780392607134
+    },
+    "MonthlyRent": 14998,
+    "PropertyType": "Condo",
+    "Bedrooms": 4,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Orange Grove",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 188,
+    "NearestMrt": "Orchard MRT",
+    "MrtWalkingMinutes": 10,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-jhd3nHi6D3LY2WVx3xsp3K",
+    "Title": "Common Room (Condo) for Rent in Ripple Bay",
+    "ImageURL": "https://pic2.99.co/v3/bCXsy7HQeA5BWRu5Gu8tC3?text=June+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=6db83440a2079810aa7776f9f56a9d5b9f394ea1",
+    "Address": "4 Pasir Ris Link 518160",
+    "PostalCode": "518160",
+    "Coordinates": {
+      "lat": 1.3779938097233024,
+      "lng": 103.961316559654
+    },
+    "MonthlyRent": 1250,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Pasir Ris Park",
+    "Region": "East Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Pasir Ris East MRT",
+    "MrtWalkingMinutes": 14,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-PrVtaSrVYqAbhWZWyiGarD",
+    "Title": "4 Room (4A) HDB for Rent in 311A Anchorvale Lane",
+    "ImageURL": "https://pic2.99.co/v3/kwpYpkAJFMVGBAXx2rsqTg?text=Nicholas+Kwek&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=d8b565f81b8f1dadae19104471bb352a305136b7",
+    "Address": "311A Anchorvale Lane 541311",
+    "PostalCode": "541311",
+    "Coordinates": {
+      "lat": 1.39096468167495,
+      "lng": 103.884060305383
+    },
+    "MonthlyRent": 3300,
+    "PropertyType": "HDB",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Anchorvale",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 95,
+    "NearestMrt": "Tongkang LRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-t6N2cFYYYoKFmdu3aRHtxK",
+    "Title": "4 Bed Condo for Rent in The Chuan",
+    "ImageURL": "https://pic2.99.co/v3/ypZQkiVUyGms2p7BWULtqG?text=Ng+Sylvia&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=0ce246a6fb0fbd4db5de82faf68a63127e8d3a83",
+    "Address": "31 Lorong Chuan 556820",
+    "PostalCode": "556820",
+    "Coordinates": {
+      "lat": 1.34988776144934,
+      "lng": 103.860451783204
+    },
+    "MonthlyRent": 7500,
+    "PropertyType": "Condo",
+    "Bedrooms": 4,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Lorong Chuan",
+    "Region": "North-East Region",
+    "Bathrooms": 4,
+    "AreaSqm": 154,
+    "NearestMrt": "Lorong Chuan MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-DhnggBNvcKK6EqGQbMUYxu",
+    "Title": "1+1 Bed Apartment (Condo) for Rent in Twin VEW",
+    "ImageURL": "https://pic2.99.co/v3/t6qnXzj9t3d77XnDXai3yG?text=Joanne+Tay&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=3dce9f6af43b641e5a114d9504a0651b4357e36f",
+    "Address": "93 West Coast Vale 126756",
+    "PostalCode": "126756",
+    "Coordinates": {
+      "lat": 1.319868531220455,
+      "lng": 103.7524303114015
+    },
+    "MonthlyRent": 3800,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "West Coast",
+    "Region": "West Region",
+    "Bathrooms": 1,
+    "AreaSqm": 53,
+    "NearestMrt": "Pandan Reservoir MRT",
+    "MrtWalkingMinutes": 11,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-jmwa36opJJsgxjVNogrL2H",
+    "Title": "Common Room (Condo) for Rent in Boonview",
+    "ImageURL": "https://pic2.99.co/v3/vuTwTu7KBJMZjYM9uZEtmf?text=Calvin+Aw+CK&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=8df0b3b96f04db65666bb4f1df9da23e5028f9b8",
+    "Address": "1 Marymount Terrace 574036",
+    "PostalCode": "574036",
+    "Coordinates": {
+      "lat": 1.35166519162343,
+      "lng": 103.84155399401
+    },
+    "MonthlyRent": 1300,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Marymount",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Marymount MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-5bYFVmYA34MVokeMxK2Lai",
+    "Title": "Common Room (HDB) for Rent in 177 Yung Sheng Road",
+    "ImageURL": "https://pic2.99.co/v3/VUa4GpWyB5SJiqw53iSgQQ?text=eunice+wong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=681c8d9829b3961dd42294103c49d8f86220ca85",
+    "Address": "177 Yung Sheng Road 610177",
+    "PostalCode": "610177",
+    "Coordinates": {
+      "lat": 1.333320452,
+      "lng": 103.7213087
+    },
+    "MonthlyRent": 700,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Taman Jurong",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 11,
+    "NearestMrt": "Lakeside MRT",
+    "MrtWalkingMinutes": 16,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-c8QjcmjeSPwVth7ASmmpoF",
+    "Title": "3 Bed Condo for Rent in Carpmael Thirty-Eight",
+    "ImageURL": "https://pic2.99.co/v3/tKnukZrt5k727CdJJsFeah?text=Paul+Chen&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=072df128395b8940cf8b86bb24f6115735221d34",
+    "Address": "38 Carpmael Road 429781",
+    "PostalCode": "429781",
+    "Coordinates": {
+      "lat": 1.31315720102795,
+      "lng": 103.897803671838
+    },
+    "MonthlyRent": 5800,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Geylang East",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 100,
+    "NearestMrt": "Paya Lebar MRT",
+    "MrtWalkingMinutes": 10,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-8YwrbGCgwSAaHycSVWjUHd",
+    "Title": "3 Bed Condo for Rent in The Botanic On Lloyd",
+    "ImageURL": "https://pic2.99.co/v3/jXXz37Sn2j2YZwENopSWmH?text=May+Yew&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=d746945a731cd7ac9fa68c914cf81bd7fd2ded4e",
+    "Address": "33 Lloyd Road 239106",
+    "PostalCode": "239106",
+    "Coordinates": {
+      "lat": 1.296846145175795,
+      "lng": 103.83973574641374
+    },
+    "MonthlyRent": 10000,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Oxley",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 169,
+    "NearestMrt": "Somerset MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-nZdyP67VUR74e2ERNA7erL",
+    "Title": "Common Room (HDB) for Rent in 118 Bedok Reservoir Road",
+    "ImageURL": "https://pic2.99.co/v3/2x4ujFDsrYFeEffc287fzb?text=Syed+nasir+Shamsudin&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=bf12a7b5b38bb65a018652c21cc7823f6080368f",
+    "Address": "118 Bedok Reservoir Road 470118",
+    "PostalCode": "470118",
+    "Coordinates": {
+      "lat": 1.33110238852805,
+      "lng": 103.90914661438
+    },
+    "MonthlyRent": 988,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kaki Bukit",
+    "Region": "East Region",
+    "Bathrooms": null,
+    "AreaSqm": 19,
+    "NearestMrt": "Kaki Bukit MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-SPhM8mTzqXuf8b26wFLoFV",
+    "Title": "2 Bed Condo for Rent in One-North Eden",
+    "ImageURL": "https://pic2.99.co/v3/N8gkShchRXAmH4uXx34BEb?text=SAMUEL+GOH+Y+T&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=12dec4aaffd0252cfac511df25df3a0619bb7bfd",
+    "Address": "8 Slim Barracks Rise 138492",
+    "PostalCode": "138492",
+    "Coordinates": {
+      "lat": 1.3033532644385448,
+      "lng": 103.7891389135775
+    },
+    "MonthlyRent": 5900,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Unfurnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "One North",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 74,
+    "NearestMrt": "One-North MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-4XJMoFESKR5UZjs5JNoLdu",
+    "Title": "Common Room (HDB) for Rent in 191B Rivervale Drive",
+    "ImageURL": "https://pic2.99.co/v3/4DQyhJN6ebbAbyeQCJ5M86?text=Amanda+Ang&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=31619ec9af632b153a584394d93601d80424bc3c",
+    "Address": "191B Rivervale Drive 542191",
+    "PostalCode": "542191",
+    "Coordinates": {
+      "lat": 1.39463128197571,
+      "lng": 103.903902960834
+    },
+    "MonthlyRent": 1150,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Rivervale",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": 15,
+    "NearestMrt": "Compassvale LRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-D7buCEPkrHcpX7hU3rUYpR",
+    "Title": "Common Room (Condo) for Rent in The Tampines Trilliant",
+    "ImageURL": "https://pic2.99.co/v3/ywuV3GuNhjvsPW4Dz6MLFM?text=Clement&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=977c07919fda13f8c0632c3b7878c7f9ca816818",
+    "Address": "33 Tampines Central 7 528614",
+    "PostalCode": "528614",
+    "Coordinates": {
+      "lat": 1.3593844340557617,
+      "lng": 103.93996957696174
+    },
+    "MonthlyRent": 1200,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tampines East",
+    "Region": "East Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Tampines MRT",
+    "MrtWalkingMinutes": 12,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-MWwi62dGbM8sz87mJe7Hhh",
+    "Title": "1 Bed Condo for Rent in Archipelago",
+    "ImageURL": "https://pic2.99.co/v3/S3TbTGCTedmvYgJ3k345zK?text=Jocelyn+Wong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=c38226d63816f07ea7f58389e80c3a53172af611",
+    "Address": "513 Bedok Reservoir Road 479273",
+    "PostalCode": "479273",
+    "Coordinates": {
+      "lat": 1.3382837134601058,
+      "lng": 103.92022833370153
+    },
+    "MonthlyRent": 3100,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bedok Reservoir",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 49,
+    "NearestMrt": "Bedok North MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-SgWSPUa8wMpNt44RzPVmff",
+    "Title": "Master Room (Condo) for Rent in La Dolce Vita",
+    "ImageURL": "https://pic2.99.co/v3/bSSExhtk76gDTzmvHWiFU9?text=Jeff+Zhang&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=29fa5ccb2349b88222e6aa94a069705a5ba5b5b4",
+    "Address": "345 Upper Paya Lebar Road 534955",
+    "PostalCode": "534955",
+    "Coordinates": {
+      "lat": 1.3460282520723663,
+      "lng": 103.88052315419968
+    },
+    "MonthlyRent": 2100,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Upper Paya Lebar",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 26,
+    "NearestMrt": "Bartley MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-jeMT5swUwzkVZEKHjxdPxU",
+    "Title": "2+1 Bed Apartment (Condo) for Rent in The Garden Residences",
+    "ImageURL": "https://pic2.99.co/v3/ho7z4jUtRWnK99veKyQeb5?text=Jacqueline+Chua&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=84b3d70bf72c0268e69dad4c3729056da3dc88b1",
+    "Address": "7 Serangoon North View 554346",
+    "PostalCode": "554346",
+    "Coordinates": {
+      "lat": 1.3658685374913535,
+      "lng": 103.87041015590717
+    },
+    "MonthlyRent": 4000,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Serangoon Garden",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 77,
+    "NearestMrt": "Serangoon North MRT",
+    "MrtWalkingMinutes": 10,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-hxuAG3Q25dbujuaWFmeFTq",
+    "Title": "3+1 Bed Apartment (Condo) for Rent in Casa Merah",
+    "ImageURL": "https://pic2.99.co/v3/DN2D3VNqtNMaQcb5PbPKYd?text=Richard+Sng+%E5%AD%99%E9%9D%96%E6%B4%86&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=a490d4e3f31597848510e56212f3fb46ed898ab5",
+    "Address": "50 Tanah Merah Kechil Avenue 465524",
+    "PostalCode": "465524",
+    "Coordinates": {
+      "lat": 1.3296255,
+      "lng": 103.9435114
+    },
+    "MonthlyRent": 5999,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bedok North",
+    "Region": "East Region",
+    "Bathrooms": 3,
+    "AreaSqm": 125,
+    "NearestMrt": "Tanah Merah MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-7k3Gb4D8T8aVUJbBf5cjqR",
+    "Title": "Common Room (HDB) for Rent in 609 Bukit Panjang Ring Road",
+    "ImageURL": "https://pic2.99.co/v3/agfbL7d5oRALqpW3uWHC3n?text=Chai+Sia+Toh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=35e3ad18d3d66cb187fcf754c101f4c4fc22cb5f",
+    "Address": "609 Bukit Panjang Ring Road 670609",
+    "PostalCode": "670609",
+    "Coordinates": {
+      "lat": 1.38285734125021,
+      "lng": 103.762010135941
+    },
+    "MonthlyRent": 850,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Senja",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Senja LRT",
+    "MrtWalkingMinutes": 1,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Eg8ojmxdApcprUX2sP7Dkq",
+    "Title": "Master Room (Condo) for Rent in Estella Gardens",
+    "ImageURL": "https://pic2.99.co/v3/herRcHiMph5Wc3RqZMKJML?text=James+Hee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e43ee37676595bda78c64222982f4a6694168001",
+    "Address": "23 Flora Road 509739",
+    "PostalCode": "509739",
+    "Coordinates": {
+      "lat": 1.359981242741656,
+      "lng": 103.96703906826801
+    },
+    "MonthlyRent": 1650,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Flora Drive",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 19,
+    "NearestMrt": "Pasir Ris East MRT",
+    "MrtWalkingMinutes": 14,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-XumTwL5yqfmE5b7pnwBmfP",
+    "Title": "Common Room (Landed) for Rent in Highgate Park",
+    "ImageURL": "https://pic2.99.co/v3/pry2KQaVRn37eFP4RYYz9E?text=Zen+Chua&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=209d43a4ec9e0f3e19197cc6a95a43a3e7c29162",
+    "Address": "Highgate Crescent",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.3404977712822512,
+      "lng": 103.76596254227577
+    },
+    "MonthlyRent": 1700,
+    "PropertyType": "Landed",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Anak Bukit",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Beauty World MRT",
+    "MrtWalkingMinutes": 14,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-GbpvfygnEzHQcLyhiYR5MB",
+    "Title": "1 Bed Condo for Rent in 8 Bassein",
+    "ImageURL": "https://pic2.99.co/v3/UUEG4KngvGfVAXGXehZdri?text=Clement&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=3b78b690b9d1b7705f0a83f715e0eab2c8f113b7",
+    "Address": "8 Bassein Road 309838",
+    "PostalCode": "309838",
+    "Coordinates": {
+      "lat": 1.32353748014389,
+      "lng": 103.848108217465
+    },
+    "MonthlyRent": 3200,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Balestier",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 42,
+    "NearestMrt": "Novena MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-RX9cxNAh2hTuqqx8ovdtvp",
+    "Title": "3 Room (3I) HDB for Rent in 19 Ghim Moh Road",
+    "ImageURL": "https://pic2.99.co/v3/7yAip4pPVkCh3r2GKqcMae?text=Vivian+Goi&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=0fa9bea4a44ffd5c83a80f1f1d95788d15fc46bf",
+    "Address": "19 Ghim Moh Road 270019",
+    "PostalCode": "270019",
+    "Coordinates": {
+      "lat": 1.31143852315951,
+      "lng": 103.788298892377
+    },
+    "MonthlyRent": 3800,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Ghim Moh",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 76,
+    "NearestMrt": "Buona Vista MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-bwaPJ3vA6FVQPLigfnfVKK",
+    "Title": "1 Bed Apartment (Condo) for Rent in Suites 28",
+    "ImageURL": "https://pic2.99.co/v3/xeNH3iicxyuxTEkH6h73RX?text=Irene+Ang&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=67229c632b388a1619c29ce575e5ea3364d057c7",
+    "Address": "28 Lorong 30 Geylang 398361",
+    "PostalCode": "398361",
+    "Coordinates": {
+      "lat": 1.31268459175571,
+      "lng": 103.885941111431
+    },
+    "MonthlyRent": 3000,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Aljunied",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 46,
+    "NearestMrt": "Aljunied MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-67Rj5RdNViLH3NwXY6a3cy",
+    "Title": "2 Bed Townhouse (Landed) for Rent in Townerville",
+    "ImageURL": "https://pic2.99.co/v3/tqQuWH7ZPnV9QBhFeyGtRa?text=Kent+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=385594b37f56eab87dd0d69e80a4fef13da94ea1",
+    "Address": "Towner Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.319831974103756,
+      "lng": 103.85793748536902
+    },
+    "MonthlyRent": 5700,
+    "PropertyType": "Landed",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bendemeer",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": null,
+    "NearestMrt": "Boon Keng MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-A4EFUyeGX9CrzQfjrZ9RPa",
+    "Title": "2 Bed Condo for Rent in Parc Riviera",
+    "ImageURL": "https://pic2.99.co/v3/MT6KHzC3uJAtiNHvv5Jjc4?text=Jason+lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=fb715f31434a9d40a35d28c1554086eeb11ad847",
+    "Address": "103 West Coast Vale 126754",
+    "PostalCode": "126754",
+    "Coordinates": {
+      "lat": 1.320715996469275,
+      "lng": 103.7529791112845
+    },
+    "MonthlyRent": 4300,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "West Coast",
+    "Region": "West Region",
+    "Bathrooms": 2,
+    "AreaSqm": 60,
+    "NearestMrt": "Pandan Reservoir MRT",
+    "MrtWalkingMinutes": 12,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-XhXYEgHpnARRjxQvxu4PgX",
+    "Title": "3 Bed Condo for Rent in A Treasure Trove",
+    "ImageURL": "https://pic2.99.co/v3/huPWgdxJQpQRafjjfvcMLj?text=Adi+Wong+S+F&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=714597bd38fb58b94f806d4d5bae63b3355731f3",
+    "Address": "76 Punggol Walk 828788",
+    "PostalCode": "828788",
+    "Coordinates": {
+      "lat": 1.4053784858374128,
+      "lng": 103.899682535654
+    },
+    "MonthlyRent": 4888,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Matilda",
+    "Region": "North-East Region",
+    "Bathrooms": 3,
+    "AreaSqm": 97,
+    "NearestMrt": "Soo Teck LRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Xpw6zxmvHHJKYNaUnRkSaY",
+    "Title": "Common Room (HDB) for Rent in 486 Choa Chu Kang Avenue 5",
+    "ImageURL": "https://pic2.99.co/v3/cVCFmaZ9WnSoWNrBFd5VUE?text=HELEN+TAN&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=f13b8bf397eb9ea63745f08e35b747742f81c91a",
+    "Address": "486 Choa Chu Kang Avenue 5 680486",
+    "PostalCode": "680486",
+    "Coordinates": {
+      "lat": 1.37544982404192,
+      "lng": 103.738349548996
+    },
+    "MonthlyRent": 1000,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Peng Siang",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 11,
+    "NearestMrt": "Choa Chu Kang West MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-S7WZTcqYnaNa4NaAtEvzdz",
+    "Title": "Studio Condo for Rent in Bedok Residences",
+    "ImageURL": "https://pic2.99.co/v3/dV7XgqdEiDBC9TCSjt8XKK?text=Eric+Choy+82228903&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=3904f61ee2c6ea80be0c34639323c2f666163484",
+    "Address": "30 Bedok North Drive 465501",
+    "PostalCode": "465501",
+    "Coordinates": {
+      "lat": 1.3247714508433646,
+      "lng": 103.929263021505
+    },
+    "MonthlyRent": 2900,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bedok North",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 28,
+    "NearestMrt": "Bedok MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-5zKTva9SfESR8uHuBay6EK",
+    "Title": "Master Room (HDB) for Rent in 406 Pandan Gardens",
+    "ImageURL": "https://pic2.99.co/v3/heKWKL7FvCnDJiLs5XtUbK?text=George+Wang+Y.&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=7b5f8113f941a80bd815d5c280dce72e795d9637",
+    "Address": "406 Pandan Gardens 600406",
+    "PostalCode": "600406",
+    "Coordinates": {
+      "lat": 1.318821472571,
+      "lng": 103.74922637213
+    },
+    "MonthlyRent": 1100,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Teban Gardens",
+    "Region": "West Region",
+    "Bathrooms": 1,
+    "AreaSqm": 11,
+    "NearestMrt": "Pandan Reservoir MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-F5CxprVJxSN5gjU3ALxD5s",
+    "Title": "Common Room (HDB) for Rent in 350 Ang Mo Kio Street 32",
+    "ImageURL": "https://pic2.99.co/v3/ZGwvJMUWFwpJwd8Y5eQomZ?text=Chris+Tan+Realtor&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=3481d9cb513dc71dd705170d89d895f84d8289ac",
+    "Address": "350 Ang Mo Kio Street 32 560350",
+    "PostalCode": "560350",
+    "Coordinates": {
+      "lat": 1.36371311763063,
+      "lng": 103.850044231877
+    },
+    "MonthlyRent": 850,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Townsville",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": 13,
+    "NearestMrt": "Ang Mo Kio MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-WghHyG4MM5WgHhPucmnyLc",
+    "Title": "2 Bed Condo for Rent in Vogx",
+    "ImageURL": "https://pic2.99.co/v3/3iRJkMAEyb96UTUEPgw89Z?text=Thamodharan+Ramu&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=c02e8184f60170578f7e14a432ed4c070f784b05",
+    "Address": "109 Dorset Road 219498",
+    "PostalCode": "219498",
+    "Coordinates": {
+      "lat": 1.31396746380431,
+      "lng": 103.85034965153099
+    },
+    "MonthlyRent": 4500,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kampong Java",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 82,
+    "NearestMrt": "Farrer Park MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-BHSeiRpYCaooE958wCCY3W",
+    "Title": "Studio Apartment (Condo) for Rent in Hertford Collection",
+    "ImageURL": "https://pic2.99.co/v3/RBZFSMKjTxy2mYKr8agHPo?text=Barry+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ce6b06dfdd7039442cb5efe659c95a7697dc4fa6",
+    "Address": "None None None",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.31325732047152,
+      "lng": 103.848953427343
+    },
+    "MonthlyRent": 3650,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kampong Java",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 68,
+    "NearestMrt": "Farrer Park MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-KXL4JKSrA3f9kvqycddi7r",
+    "Title": "2 Bed Condo for Rent in Pollen & Bleu",
+    "ImageURL": "https://pic2.99.co/v3/Xg2aNBLEsbGrxdyPY4PPs6?text=Jimmy+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=a770e15b0c54e6e32ef0c5eed6cc64e4d81e5c9b",
+    "Address": "15 Farrer Drive 259296",
+    "PostalCode": "259296",
+    "Coordinates": {
+      "lat": 1.3140954689492832,
+      "lng": 103.80698400622833
+    },
+    "MonthlyRent": 4900,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tyersall",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 81,
+    "NearestMrt": "Farrer Road MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-CPatVw3RXRgzQEBwFQ4eaF",
+    "Title": "3+1 Bed Apartment (Condo) for Rent in The Rochester Residences",
+    "ImageURL": "https://pic2.99.co/v3/jr9RUfJKcAbqsEDz3t9YPE?text=Joleen+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=1d5e63d28a8f03b92529b9a5864befe504890081",
+    "Address": "33 Rochester Drive 138638",
+    "PostalCode": "138638",
+    "Coordinates": {
+      "lat": 1.30566614731702,
+      "lng": 103.7880251815065
+    },
+    "MonthlyRent": 11000,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "One North",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 173,
+    "NearestMrt": "Buona Vista MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-nVvJJQZrniW4Ngosyq6a4e",
+    "Title": "Studio Condo for Rent in The Nautical",
+    "ImageURL": "https://pic2.99.co/v3/rgQ8LMjJaDB4xAeua2Em4R?text=Angeline+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=4a630465e579085beb0e29b5be18b35e9a86bd2b",
+    "Address": "93 Jalan Sendudok 769472",
+    "PostalCode": "769472",
+    "Coordinates": {
+      "lat": 1.4431035765886697,
+      "lng": 103.82480035858359
+    },
+    "MonthlyRent": 3200,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Sembawang Springs",
+    "Region": "North Region",
+    "Bathrooms": 1,
+    "AreaSqm": 41,
+    "NearestMrt": "Canberra MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-e2KiUCdWWrqxgeo6XgwPCz",
+    "Title": "2 Bed Apartment (Condo) for Rent in Spottiswoode Park Road",
+    "ImageURL": "https://pic2.99.co/v3/eK2uhF4uVC7AN2pYEMaPin?text=Elan+Govan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=f80d37b895161fc6f723d8e941fcee2ff888cbb0",
+    "Address": "101 Spottiswoode Park Road 080101",
+    "PostalCode": "080101",
+    "Coordinates": {
+      "lat": 1.27524141291212,
+      "lng": 103.836045808088
+    },
+    "MonthlyRent": 4500,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Everton Park",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 79,
+    "NearestMrt": "Cantonment MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-KPXSdy5sd8tJ5VVtoAqYEX",
+    "Title": "3 Bed Executive Condo for Rent in Chestervale",
+    "ImageURL": "https://pic2.99.co/v3/9rfjhQiXRQ6X9mBoY4n8VE?text=Edward+Meow&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=79535786758c0d40575e8557f0affeb8280c7e41",
+    "Address": "41 Bangkit Road 679978",
+    "PostalCode": "679978",
+    "Coordinates": {
+      "lat": 1.3785868482324182,
+      "lng": 103.77440926342399
+    },
+    "MonthlyRent": 4500,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bangkit",
+    "Region": "West Region",
+    "Bathrooms": 3,
+    "AreaSqm": 140,
+    "NearestMrt": "Bangkit LRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-dY22uRYdowisCENm4dKLGz",
+    "Title": "3 Bed Terraced House (Landed) for Rent in Woo Mon Chew Road",
+    "ImageURL": "https://pic2.99.co/v3/nHjvPT3vrZxTU2Gf4RYLoC?text=Mike+Teo&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=dc448f57278762ec483752f0bed8a8f786da0ea0",
+    "Address": "Woo Mon Chew Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.31644302992382,
+      "lng": 103.931038292946
+    },
+    "MonthlyRent": 8500,
+    "PropertyType": "Landed",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Frankel",
+    "Region": "East Region",
+    "Bathrooms": 3,
+    "AreaSqm": null,
+    "NearestMrt": "Siglap MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-4zUu7xZjNq5Bcskgv97xYA",
+    "Title": "2 Bed Apartment (Condo) for Rent in High Street Centre",
+    "ImageURL": "https://pic2.99.co/v3/qxWnHJwYxUdipNJYz4fTr5?text=Rachel+Hoe&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e10a660deb0629047fc294a55a98e877caf27425",
+    "Address": "1 North Bridge Road 179094",
+    "PostalCode": "179094",
+    "Coordinates": {
+      "lat": 1.28999676915058,
+      "lng": 103.849282222609
+    },
+    "MonthlyRent": 8000,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "City Hall",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 84,
+    "NearestMrt": "Clarke Quay MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-edUBqKhhREXmVNFbphGLiq",
+    "Title": "2 Bed Apartment (Condo) for Rent in D'ixoras",
+    "ImageURL": "https://pic2.99.co/v3/rZ7akzG5UnfL2ogRwZHtC5?text=Tardas+Tambunan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=727066b8712b5ae38e41ad33692ae68b19e80992",
+    "Address": "23 Minbu Road 308172",
+    "PostalCode": "308172",
+    "Coordinates": {
+      "lat": 1.32411334495333,
+      "lng": 103.849040669227
+    },
+    "MonthlyRent": 4250,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Balestier",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 78,
+    "NearestMrt": "Novena MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-kRBJ2aPNEjR6VApb23er97",
+    "Title": "Common Room (Condo) for Rent in The Terrace",
+    "ImageURL": "https://pic2.99.co/v3/PEnTkzUbd6eX8VcabH3TQY?text=Amy+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=540cb9f6f830aaf295d41f8c06153eda0ae47d75",
+    "Address": "86 Edgedale Plains 828738",
+    "PostalCode": "828738",
+    "Coordinates": {
+      "lat": 1.4010881251344982,
+      "lng": 103.91629443469735
+    },
+    "MonthlyRent": 1000,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Waterway East",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Kadaloor LRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Xq7zZ6VWujhZcjz3rApBN7",
+    "Title": "1 Bed Condo for Rent in Queens Peak",
+    "ImageURL": "https://pic2.99.co/v3/tMW4kopKYeXVMG5Xxz8b8k?text=Kassandra+Oh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=91da0851332d60377b5d8cf6949c6087f8d8ae65",
+    "Address": "3 Dundee Road 149457",
+    "PostalCode": "149457",
+    "Coordinates": {
+      "lat": 1.29454139286491,
+      "lng": 103.806925208767
+    },
+    "MonthlyRent": 3700,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Margaret Drive",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 46,
+    "NearestMrt": "Queenstown MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-h4MWWyUsdFrpwwe4YRhAEk",
+    "Title": "Premium HDB for Rent in 139A Lorong 1A Toa Payoh",
+    "ImageURL": "https://pic2.99.co/v3/HPgjZR7qt3DAprnEeUvsUo?text=Linda&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=9fc0ae437f7fafa07a0579bac00b9248919fae1e",
+    "Address": "139A Lorong 1A Toa Payoh 311139",
+    "PostalCode": "311139",
+    "Coordinates": {
+      "lat": 1.33627775831234,
+      "lng": 103.844044881122
+    },
+    "MonthlyRent": 4989,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Toa Payoh Central",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 110,
+    "NearestMrt": "Braddell MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-fhga49JF3f52tavZRzXwTD",
+    "Title": "Common Room (Condo) for Rent in The Topiary",
+    "ImageURL": "https://pic2.99.co/v3/F67TxDL4uEsFWWHKLJGHpX?text=Lucas+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=273d20af28b9f8ab9b44aa81574cc0db6dc645e4",
+    "Address": "25 Fernvale Lane 797502",
+    "PostalCode": "797502",
+    "Coordinates": {
+      "lat": 1.3883016723816752,
+      "lng": 103.87209448802638
+    },
+    "MonthlyRent": 1100,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Fernvale",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": 19,
+    "NearestMrt": "Fernvale LRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-nardM79TpFa4UtqhnDpdkF",
+    "Title": "Common Room (HDB) for Rent in 404 Admiralty Link",
+    "ImageURL": "https://pic2.99.co/v3/Stcst5RU5UFjWpaCqpEfD5?text=Dylan+Ong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=4627daa35e00b060cbf8e27db72dc3275d3a652e",
+    "Address": "404 Admiralty Link 750404",
+    "PostalCode": "750404",
+    "Coordinates": {
+      "lat": 1.45356650489638,
+      "lng": 103.816469172419
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Sembawang North",
+    "Region": "North Region",
+    "Bathrooms": null,
+    "AreaSqm": 19,
+    "NearestMrt": "Sembawang MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-5s9CkLeVJiyCnVfKaAA4eL",
+    "Title": "Common Room (Condo) for Rent in People's Park Complex",
+    "ImageURL": "https://pic2.99.co/v3/rdYYeYv3NdFeDpaM4fHj7Z?text=Zen+Chua&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=b7078fbfff6d94f31b49dd0fcbc71149983f89a4",
+    "Address": "1 Park Road 059108",
+    "PostalCode": "059108",
+    "Coordinates": {
+      "lat": 1.28404487854559,
+      "lng": 103.842590753293
+    },
+    "MonthlyRent": 2100,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "People'S Park",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 22,
+    "NearestMrt": "Chinatown MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-kZ4V9u2hmrSma3THPTtQfr",
+    "Title": "Master Room (HDB) for Rent in 310 Clementi Avenue 4",
+    "ImageURL": "https://pic2.99.co/v3/eAZCXj2u2zBmrLe35mZckP?text=Hazel+Ong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=8c5e7dbd6499668d78586928824979e3f3cbe809",
+    "Address": "310 Clementi Avenue 4 120310",
+    "PostalCode": "120310",
+    "Coordinates": {
+      "lat": 1.32027016006349,
+      "lng": 103.765944899873
+    },
+    "MonthlyRent": 1400,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Clementi North",
+    "Region": "West Region",
+    "Bathrooms": 1,
+    "AreaSqm": 11,
+    "NearestMrt": "Clementi MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-iD84YgKqJaYoQGnrc8gJAT",
+    "Title": "Common Room (HDB) for Rent in 529 Hougang Avenue 6",
+    "ImageURL": "https://pic2.99.co/v3/vDoff3SmQLBCDfnFL7jTCH?text=Azman+Bin+Abd+Aziz+%28Azman+Abd+Aziz%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=08c35175318cd5948f0f795f190f96799b170e5c",
+    "Address": "529 Hougang Avenue 6 530529",
+    "PostalCode": "530529",
+    "Coordinates": {
+      "lat": 1.37546896487502,
+      "lng": 103.890729546346
+    },
+    "MonthlyRent": 1000,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Hougang West",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Hougang MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-K7JjrWH4oD43tLbVokz2SF",
+    "Title": "Master Room (Landed) for Rent in Golden Shower Park",
+    "ImageURL": "https://pic2.99.co/v3/KbHy5qD6jiDKU43CoWAjh7?text=Adrian+%E4%BC%9F%E6%98%8E+ERA&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=336c32d4f252c410ba8871791d2146531533b512",
+    "Address": "Meragi Terrace",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.3421951044239788,
+      "lng": 103.95968121255481
+    },
+    "MonthlyRent": 1600,
+    "PropertyType": "Landed",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Simei",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": null,
+    "NearestMrt": "Upper Changi MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-faCs54uJ5DPc6J9jaouE5m",
+    "Title": "2 Bed Condo for Rent in J Gateway",
+    "ImageURL": "https://pic2.99.co/v3/fTtrzSHKQNpXsLCd49jG6C?text=Lee+Sze+Min&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=dc238f74866c9fd05079f1a08b2c49fbed4f433b",
+    "Address": "6 Gateway Drive 608535",
+    "PostalCode": "608535",
+    "Coordinates": {
+      "lat": 1.335926843719435,
+      "lng": 103.7420740937815
+    },
+    "MonthlyRent": 4900,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Jurong Gateway",
+    "Region": "West Region",
+    "Bathrooms": 2,
+    "AreaSqm": 63,
+    "NearestMrt": "Jurong East MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-2AqbVKHMtABbGNhoVjRMSV",
+    "Title": "4 Bed Terraced House (Landed) for Rent in People's Garden",
+    "ImageURL": "https://pic2.99.co/v3/amKprMTXNwcDEJvpdeynXJ?text=Doreen+Own&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=8a1f5884bfd83d49477848cb3bdfa824eaf42e95",
+    "Address": "Lorong 7 Realty Park",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.3675495436690233,
+      "lng": 103.89047787244768
+    },
+    "MonthlyRent": 7000,
+    "PropertyType": "Landed",
+    "Bedrooms": 4,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Hougang Central",
+    "Region": "North-East Region",
+    "Bathrooms": 3,
+    "AreaSqm": null,
+    "NearestMrt": "Hougang MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-XmYoddKAMyYx7MfehhnVUH",
+    "Title": "Master Room (HDB) for Rent in 401F Fernvale Lane",
+    "ImageURL": "https://pic2.99.co/v3/4DGYbBRPdPTEGcyPtGnWCL?text=Catherine+Soh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=00d784824482554ea5773dbf6777de476718752e",
+    "Address": "401F Fernvale Lane 796401",
+    "PostalCode": "796401",
+    "Coordinates": {
+      "lat": 1.3897006581849,
+      "lng": 103.871202528371
+    },
+    "MonthlyRent": 1300,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Fernvale",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 93,
+    "NearestMrt": "Fernvale LRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-GVwkTuCoHdeZ3cKhJkoExe",
+    "Title": "1+1 Bed Condo for Rent in Forett@Bukit Timah",
+    "ImageURL": "https://pic2.99.co/v3/ogHrbBA9CGhwrpijh6npm2?text=Josie+Quek&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e0ac914cc5db202a798dd813f66fda4007487763",
+    "Address": "32A Toh Tuck Road 596110",
+    "PostalCode": "596110",
+    "Coordinates": {
+      "lat": 1.3404236366694111,
+      "lng": 103.76840221973916
+    },
+    "MonthlyRent": 3290,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Anak Bukit",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 44,
+    "NearestMrt": "Beauty World MRT",
+    "MrtWalkingMinutes": 11,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-76LMeQYNQpRd3Z8wqx4qr8",
+    "Title": "3 Room (3NG) HDB for Rent in 106 Serangoon North Avenue 1",
+    "ImageURL": "https://pic2.99.co/v3/K4ae6uvSd3eDJG7VsX3DcR?text=Irene+Ang&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=bbf4e558c9a293d03ba448dfb4ab915f8955ca39",
+    "Address": "106 Serangoon North Avenue 1 550106",
+    "PostalCode": "550106",
+    "Coordinates": {
+      "lat": 1.370244621,
+      "lng": 103.870823
+    },
+    "MonthlyRent": 3000,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Serangoon Garden",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 82,
+    "NearestMrt": "Serangoon North MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-jizTGvYKTMxcLTY6EiqcGS",
+    "Title": "Common Room (Condo) for Rent in Cascadale",
+    "ImageURL": "https://pic2.99.co/v3/TdSGnRcXymZfUkiMqv6uSd?text=Joyce+Tong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=4f624c3fe98a9cbeb50095fa19752299c98cc68e",
+    "Address": "730 Upper Changi Road East 486858",
+    "PostalCode": "486858",
+    "Coordinates": {
+      "lat": 1.3456800195862602,
+      "lng": 103.96350947165301
+    },
+    "MonthlyRent": 1200,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Xilin",
+    "Region": "East Region",
+    "Bathrooms": null,
+    "AreaSqm": 13,
+    "NearestMrt": "Upper Changi MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-GMFDrdDxmYnArZuEvRSSSS",
+    "Title": "1 Room HDB for Rent in 103 Ang Mo Kio Avenue 3",
+    "ImageURL": "https://pic2.99.co/v3/5KBa4skTERYnEdosXi4anX?text=Azman+Bin+Abd+Aziz+%28Azman+Abd+Aziz%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e55a477a1712f088faadb6c3601ab73f84aa250b",
+    "Address": "103 Ang Mo Kio Avenue 3 560103",
+    "PostalCode": "560103",
+    "Coordinates": {
+      "lat": 1.37101657804604,
+      "lng": 103.839304839187
+    },
+    "MonthlyRent": 2900,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kebun Bahru",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 74,
+    "NearestMrt": "Mayflower MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-PP2KX3kFj5S6a6wvifsJwd",
+    "Title": "Common Room (HDB) for Rent in 261 Bishan Street 22",
+    "ImageURL": "https://pic2.99.co/v3/UUCbTcrx3dKjcGtDaAQ2vQ?text=David+Koay&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=b39b9d69beb1598410df7353f5289db9f43601a3",
+    "Address": "261 Bishan Street 22 570261",
+    "PostalCode": "570261",
+    "Coordinates": {
+      "lat": 1.35898689332218,
+      "lng": 103.843324418377
+    },
+    "MonthlyRent": 1200,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Spacious (100+ sqm)"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Marymount",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 147,
+    "NearestMrt": "Teck Ghee MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-WpuoVHDmKcJH5xFyi9gKyE",
+    "Title": "Common Room (HDB) for Rent in 170 Gangsa Road",
+    "ImageURL": "https://pic2.99.co/v3/fVR6DctVLRX9JPGjgPqej6?text=Eileen+Siu&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=d94eee51c71db61c0dd4ffd7ae40755a0e940a20",
+    "Address": "170 Gangsa Road 670170",
+    "PostalCode": "670170",
+    "Coordinates": {
+      "lat": 1.37856275551968,
+      "lng": 103.766097785672
+    },
+    "MonthlyRent": 1200,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Jelebu",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 19,
+    "NearestMrt": "Petir LRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-hhzABpMgtThoNaojZYQUfs",
+    "Title": "5 Room (5I) HDB for Rent in 775 Pasir Ris Street 71",
+    "ImageURL": "https://pic2.99.co/v3/xkaHsCHCdCbi4D4h4BWZ26?text=Grace+Peh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=7ff0fad5fdfe0415378b9a15b894564e08c77f49",
+    "Address": "775 Pasir Ris Street 71 510775",
+    "PostalCode": "510775",
+    "Coordinates": {
+      "lat": 1.37409137626789,
+      "lng": 103.937134012769
+    },
+    "MonthlyRent": 3800,
+    "PropertyType": "HDB",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Pasir Ris West",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 129,
+    "NearestMrt": "Tampines North MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-ZhzpynczEJj3HE5ara5LWc",
+    "Title": "2 Bed Condo for Rent in Parc Centros",
+    "ImageURL": "https://pic2.99.co/v3/X7KE5tMEVvcKLTyinz3uSe?text=Wendy+Ng&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=04bf93e6fe99323d1f63e0ef910a4097188fcf4c",
+    "Address": "80 Punggol Central 828762",
+    "PostalCode": "828762",
+    "Coordinates": {
+      "lat": 1.4033487586470512,
+      "lng": 103.90399095539401
+    },
+    "MonthlyRent": 3800,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Matilda",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 71,
+    "NearestMrt": "Punggol MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-8tXNcZbfWdwJSVhz26wscF",
+    "Title": "5 Bed Bungalow (Landed) for Rent in Gentle Villas",
+    "ImageURL": "https://pic2.99.co/v3/suUfR7r2YUbwZ2NwY7f5CX?text=Jeslyn+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=554418071fc7822ea535beb06326ec98d80305aa",
+    "Address": "Gentle Drive",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.3207516173550393,
+      "lng": 103.84110422259945
+    },
+    "MonthlyRent": 18000,
+    "PropertyType": "Landed",
+    "Bedrooms": 5,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Moulmein",
+    "Region": "Central Region",
+    "Bathrooms": 4,
+    "AreaSqm": null,
+    "NearestMrt": "Novena MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-J7bbNbvasVs9Vb6cD546G7",
+    "Title": "1 Bed Apartment (Condo) for Rent in Riverside 48",
+    "ImageURL": "https://pic2.99.co/v3/4wckh5A4o6qrxeEYuaTiqV?text=Lynn+Ling&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=c85b62d903c8e09f84f985795d410e3c1fec7eda",
+    "Address": "48 Robertson Quay 238237",
+    "PostalCode": "238237",
+    "Coordinates": {
+      "lat": 1.29092617225007,
+      "lng": 103.839799908617
+    },
+    "MonthlyRent": 4350,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Robertson Quay",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 79,
+    "NearestMrt": "Fort Canning MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-aRcP4EKjPGjJ4euqfwrz3i",
+    "Title": "2 Bed Condo for Rent in Q Bay Residences",
+    "ImageURL": "https://pic2.99.co/v3/2diMdSXvbmaMMeNV2jC4Xi?text=David+Khor&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=cfda48ef43c8630183bb8de48181e0671ef86cc9",
+    "Address": "3 Tampines Street 86 528584",
+    "PostalCode": "528584",
+    "Coordinates": {
+      "lat": 1.3508064042385068,
+      "lng": 103.927319703991
+    },
+    "MonthlyRent": 3700,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tampines West",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 74,
+    "NearestMrt": "Tampines West MRT",
+    "MrtWalkingMinutes": 18,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-cR3yrfUUcf6NbesN35VCbW",
+    "Title": "Common Room (HDB) for Rent in 607 Hougang Avenue 4",
+    "ImageURL": "https://pic2.99.co/v3/uvwWqMLzPkPYp8NsVrmg7b?text=Yang&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=8bd50462681c69bff86d1c63beebe665a1a8ef28",
+    "Address": "607 Hougang Avenue 4 530607",
+    "PostalCode": "530607",
+    "Coordinates": {
+      "lat": 1.3702520267426,
+      "lng": 103.886157677641
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Hougang West",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": 14,
+    "NearestMrt": "Hougang MRT",
+    "MrtWalkingMinutes": 10,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-REscDLytKChyBcVEHBsNjd",
+    "Title": "Master Room (HDB) for Rent in 486 Choa Chu Kang Avenue 5",
+    "ImageURL": "https://pic2.99.co/v3/ox44PSFqywmLkZsQnFgDbi?text=HELEN+TAN&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=b2f6ef3f28cd3da94a05aa4b1347eb75e37042ca",
+    "Address": "486 Choa Chu Kang Avenue 5 680486",
+    "PostalCode": "680486",
+    "Coordinates": {
+      "lat": 1.37544982404192,
+      "lng": 103.738349548996
+    },
+    "MonthlyRent": 1380,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Unfurnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Peng Siang",
+    "Region": "West Region",
+    "Bathrooms": 1,
+    "AreaSqm": 14,
+    "NearestMrt": "Choa Chu Kang West MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-7FM6uApYhKZvy37CR8gcpK",
+    "Title": "Common Room (HDB) for Rent in 488A Tampines Avenue 9",
+    "ImageURL": "https://pic2.99.co/v3/rRecPCoqXWM7XUu67XDfQP?text=Jess+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=28753e93fdf56826d60b8d35b74bc88a59347419",
+    "Address": "488A Tampines Avenue 9 520488",
+    "PostalCode": "520488",
+    "Coordinates": {
+      "lat": 1.36022206338794,
+      "lng": 103.956335998151
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tampines East",
+    "Region": "East Region",
+    "Bathrooms": null,
+    "AreaSqm": 14,
+    "NearestMrt": "Tampines East MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-MxNZdZBxbg4RJxvT5UTS9P",
+    "Title": "Common Room (Condo) for Rent in The Calrose",
+    "ImageURL": "https://pic2.99.co/v3/GaWYBHpNtktWx4jWAMZeuS?text=Shawn+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ec136414d5b06d282aa26927318640f2746b0b49",
+    "Address": "513 Yio Chu Kang Road 787067",
+    "PostalCode": "787067",
+    "Coordinates": {
+      "lat": 1.3822382750311035,
+      "lng": 103.83691830055551
+    },
+    "MonthlyRent": 1280,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yio Chu Kang West",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": 14,
+    "NearestMrt": "Lentor MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-JYmUoB2bcaDZxUeiJKBko3",
+    "Title": "Master Room (Landed) for Rent in Lowland Terrace",
+    "ImageURL": "https://pic2.99.co/v3/ZhDjsX99RR4jzwHR28WG7G?text=Annie+Cheovys+Tiew&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=208aa48989bbf7eb64b743eb135c3344dd811245",
+    "Address": "Lowland Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.3619127201628458,
+      "lng": 103.88335817778645
+    },
+    "MonthlyRent": 1950,
+    "PropertyType": "Landed",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kovan",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": null,
+    "NearestMrt": "Kovan MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-T6Ko3fcDfcua4wuKjLxbH4",
+    "Title": "3 Bed Condo for Rent in A Treasure Trove",
+    "ImageURL": "https://pic2.99.co/v3/hsccANeGeQ8mLq7paB44Xn?text=Leon+Chea&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=de0963c48c1cf5b40ff8e7d9ca069d192286b586",
+    "Address": "52 Punggol Walk 828831",
+    "PostalCode": "828831",
+    "Coordinates": {
+      "lat": 1.4053784858374128,
+      "lng": 103.899682535654
+    },
+    "MonthlyRent": 4950,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Matilda",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 112,
+    "NearestMrt": "Soo Teck LRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-KeG5TbrpbZE8U8R4dtXyiD",
+    "Title": "Master Room (HDB) for Rent in 663A Punggol Drive",
+    "ImageURL": "https://pic2.99.co/v3/PHPZDDKSojCJ4ccqjpxu7g?text=Shanti+Jasmine&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=50bf985924dda5b54799a4a111c78ac46f696bba",
+    "Address": "663A Punggol Drive 821663",
+    "PostalCode": "821663",
+    "Coordinates": {
+      "lat": 1.40024347553794,
+      "lng": 103.917080046799
+    },
+    "MonthlyRent": 1200,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Waterway East",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 11,
+    "NearestMrt": "Kadaloor LRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-YMrw4t4giw8vuGFpCmELtP",
+    "Title": "2 Bed Apartment (Condo) for Rent in Thomson Three",
+    "ImageURL": "https://pic2.99.co/v3/WaaYfWPWhwRuE6mnijwCcU?text=Joseph+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=120ab9b822c7934c3a5735b193b0ff8d1d58de03",
+    "Address": "45 Bright Hill Drive 573895",
+    "PostalCode": "573895",
+    "Coordinates": {
+      "lat": 1.3573693908487183,
+      "lng": 103.83062415140361
+    },
+    "MonthlyRent": 4000,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Upper Thomson",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 68,
+    "NearestMrt": "Upper Thomson MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-BzyXiHFqd67PTFYzL4Evoe",
+    "Title": "4 Bed Terraced House (Landed) for Rent in Opera Estate",
+    "ImageURL": "https://pic2.99.co/v3/MSTFsMAqoPnvkDSBVcq2FR?text=MICHELLE+TIAH+HUI+WEN&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=39aa72493cc41b6ecfebcbafa462f81b4f25c6c9",
+    "Address": "Jalan Terang Bulan",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.3198185421251478,
+      "lng": 103.92506615549947
+    },
+    "MonthlyRent": 7500,
+    "PropertyType": "Landed",
+    "Bedrooms": 4,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Frankel",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": null,
+    "NearestMrt": "Bedok MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-9QmyKgWZDjipyUXCjCoK5o",
+    "Title": "1 Bed Condo for Rent in The Minton",
+    "ImageURL": "https://pic2.99.co/v3/6P5AKt5HkKEbEi8K98oMYG?text=Nelson+Neo&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=97585cda920957422d9f47acd90a371f7ae3dc66",
+    "Address": "10D Hougang Street 11 534076",
+    "PostalCode": "534076",
+    "Coordinates": {
+      "lat": 1.3521241978755731,
+      "lng": 103.88161949279024
+    },
+    "MonthlyRent": 3500,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Lorong Ah Soo",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 65,
+    "NearestMrt": "Serangoon MRT",
+    "MrtWalkingMinutes": 12,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-WJnK6sn2dK9FoZjcpvNyds",
+    "Title": "Common Room (HDB) for Rent in 30 Ghim Moh Link",
+    "ImageURL": "https://pic2.99.co/v3/JB3HsJytaZJ6hPBPdghZVZ?text=QIU+JINGJIE%28JANE%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=2b37f7824036cc21279428d7f47d3fbb1c7798f8",
+    "Address": "30 Ghim Moh Link 272030",
+    "PostalCode": "272030",
+    "Coordinates": {
+      "lat": 1.30881985260161,
+      "lng": 103.7838389718
+    },
+    "MonthlyRent": 1500,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Ghim Moh",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 10,
+    "NearestMrt": "Dover MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-6EkFVGEfFeVcZfwP7vYEsL",
+    "Title": "Master Room (HDB) for Rent in 618D Punggol Drive",
+    "ImageURL": "https://pic2.99.co/v3/QHzcJvnhUf5t2bXemrfZwE?text=Jenny+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=78ff336b414c1f00819f62b73982292897397fb8",
+    "Address": "618D Punggol Drive 824618",
+    "PostalCode": "824618",
+    "Coordinates": {
+      "lat": 1.40184131856722,
+      "lng": 103.911466174026
+    },
+    "MonthlyRent": 1650,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Waterway East",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 28,
+    "NearestMrt": "Oasis LRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-jcoVy2BBbojcnrjcB7LsAn",
+    "Title": "3+1 Bed Apartment (Condo) for Rent in The Rochester Residences",
+    "ImageURL": "https://pic2.99.co/v3/TQSDuqHdYt9Nnqn8hMQKfZ?text=Irene+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=33ecb3eee7768312e0f6d051d68f9ab77703c4ff",
+    "Address": "33 Rochester Drive 138638",
+    "PostalCode": "138638",
+    "Coordinates": {
+      "lat": 1.30566614731702,
+      "lng": 103.7880251815065
+    },
+    "MonthlyRent": 8800,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "One North",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 173,
+    "NearestMrt": "Buona Vista MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-LDPVunfhjBDfXUaTkzJtSh",
+    "Title": "Common Room (HDB) for Rent in 490C Choa Chu Kang Avenue 5",
+    "ImageURL": "https://pic2.99.co/v3/6cL5BPcAc8D8Gk8xgRHgVj?text=Wendy+Wo&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=28a263df7d3bbc56fa130a8d68f3c0ae48e37663",
+    "Address": "490C Choa Chu Kang Avenue 5 683490",
+    "PostalCode": "683490",
+    "Coordinates": {
+      "lat": 1.37575014356152,
+      "lng": 103.741751767068
+    },
+    "MonthlyRent": 750,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Peng Siang",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 13,
+    "NearestMrt": "Choa Chu Kang West MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Fxx5ieZfrpACmCbndNSz8f",
+    "Title": "3 Room (3I) HDB for Rent in 30 New Upper Changi Road",
+    "ImageURL": "https://pic2.99.co/v3/qsUgpj2mVTAtE2bvx4cNhm?text=Valerie+Ong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=48982b9ff1f48122ecbeda0f25f3e4754d5b756c",
+    "Address": "30 New Upper Changi Road 461030",
+    "PostalCode": "461030",
+    "Coordinates": {
+      "lat": 1.32352678248226,
+      "lng": 103.936423896498
+    },
+    "MonthlyRent": 3400,
+    "PropertyType": "HDB",
+    "Bedrooms": 4,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bedok South",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 65,
+    "NearestMrt": "Bedok MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-RCBxkZGw4TDLsjcTiN4U7V",
+    "Title": "Common Room (HDB) for Rent in 136 Yishun Ring Road",
+    "ImageURL": "https://pic2.99.co/v3/Pdc9catzuWNSeK6DxEUdqc?text=Dylan+Ong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=f25e756dfbddcc78f6a11601c22e8315769b44b4",
+    "Address": "136 Yishun Ring Road 760136",
+    "PostalCode": "760136",
+    "Coordinates": {
+      "lat": 1.432031291,
+      "lng": 103.8314362
+    },
+    "MonthlyRent": 950,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yishun West",
+    "Region": "North Region",
+    "Bathrooms": null,
+    "AreaSqm": 14,
+    "NearestMrt": "Yishun MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-6H46mSRN3qCVHFomYYd4QJ",
+    "Title": "3 Bed Condo for Rent in The Gardens At Bishan",
+    "ImageURL": "https://pic2.99.co/v3/FKUxCJHzks7GNuDGAnxo3f?text=Daniel+chan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=4f5ed6f3d42f1866fb3b472bfdb6b33696f80658",
+    "Address": "3 Sin Ming Walk 575575",
+    "PostalCode": "575575",
+    "Coordinates": {
+      "lat": 1.364334777122816,
+      "lng": 103.8314869109496
+    },
+    "MonthlyRent": 5288,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Unfurnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Upper Thomson",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 114,
+    "NearestMrt": "Bright Hill MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-TdYfoEGtTun98en47GnGZg",
+    "Title": "Common Room (HDB) for Rent in 671 Hougang Avenue 8",
+    "ImageURL": "https://pic2.99.co/v3/aVuqaJE6SdWDLaRdiYqMwf?text=Dylan+Ong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=92cda6a0a598f3990507710c419d8e50f0bf40c5",
+    "Address": "671 Hougang Avenue 8 530671",
+    "PostalCode": "530671",
+    "Coordinates": {
+      "lat": 1.37306392255757,
+      "lng": 103.883813492683
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Hougang West",
+    "Region": "North-East Region",
+    "Bathrooms": null,
+    "AreaSqm": 14,
+    "NearestMrt": "Hougang MRT",
+    "MrtWalkingMinutes": 13,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-YpjBgB8mo65qQhT6uvYVrR",
+    "Title": "Common Room (HDB) for Rent in 107 Yishun Ring Road",
+    "ImageURL": "https://pic2.99.co/v3/m8BZ6dn3tzHqFiynAWQQPL?text=Alex+Toh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=4c7e53536341087728b3b65bbd5f4b52242a9778",
+    "Address": "107 Yishun Ring Road 760107",
+    "PostalCode": "760107",
+    "Coordinates": {
+      "lat": 1.432221351,
+      "lng": 103.8275551
+    },
+    "MonthlyRent": 500,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yishun West",
+    "Region": "North Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Yishun MRT",
+    "MrtWalkingMinutes": 12,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-aoHF9WQGFi4L5D8kYWrxA4",
+    "Title": "3 Bed Executive Condo for Rent in Citylife @ Tampines",
+    "ImageURL": "https://pic2.99.co/v3/vi4HvEeUjqhMVDFJJinmjA?text=Nicole+Chew&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=095236d00c39db030f32aca3fea5757c26fb9387",
+    "Address": "55 Tampines Central 7 528617",
+    "PostalCode": "528617",
+    "Coordinates": {
+      "lat": 1.359759546672572,
+      "lng": 103.9411869263495
+    },
+    "MonthlyRent": 4700,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tampines East",
+    "Region": "East Region",
+    "Bathrooms": 3,
+    "AreaSqm": 105,
+    "NearestMrt": "Tampines MRT",
+    "MrtWalkingMinutes": 11,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-DeXH7YeYRApE36tdoATFER",
+    "Title": "2 Bed Condo for Rent in City Gate",
+    "ImageURL": "https://pic2.99.co/v3/CFSdZgVefng7ReGHiAZyvM?text=Irene+Lim+Oi+Lin+%28Irene+Lim+O.+L.%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=28d30b81ca9774e134a037954e20127f7c7f9abf",
+    "Address": "371 Beach Road 199597",
+    "PostalCode": "199597",
+    "Coordinates": {
+      "lat": 1.30231590504573,
+      "lng": 103.862331661034
+    },
+    "MonthlyRent": 4950,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Crawford",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 58,
+    "NearestMrt": "Nicoll Highway MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-vguL7LHf3hWbksYyPbz7LY",
+    "Title": "2 Bed Condo for Rent in Highline Residences",
+    "ImageURL": "https://pic2.99.co/v3/YKYZ9pxVbuNEJmvJ5RDoUa?text=Ada+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=c1665958e0dc01de50bb1dc67b2ab509dcaf8857",
+    "Address": "1 Kim Tian Road 169280",
+    "PostalCode": "169280",
+    "Coordinates": {
+      "lat": 1.28436745913678,
+      "lng": 103.82977671484558
+    },
+    "MonthlyRent": 5500,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tiong Bahru",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 59,
+    "NearestMrt": "Tiong Bahru MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-td3NnVAzVvWQNYZCVbnS3m",
+    "Title": "6 Bed Bungalow (Landed) for Rent in Bournemouth Road",
+    "ImageURL": "https://pic2.99.co/v3/abAuZE69fG3s4r3nKGd48m?text=Champa+Murjani&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=2b00499a4e823ff447286b9289740390e4023ca1",
+    "Address": "Bournemouth Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.30123231152466,
+      "lng": 103.892220553553
+    },
+    "MonthlyRent": 14000,
+    "PropertyType": "Landed",
+    "Bedrooms": 6,
+    "AvailableDate": null,
+    "Amenities": [
+      "Unfurnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Mountbatten",
+    "Region": "Central Region",
+    "Bathrooms": 5,
+    "AreaSqm": null,
+    "NearestMrt": "Tanjong Katong MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-G45xX9BGTAD3rQnrqrYTeg",
+    "Title": "Studio Walk-up Apartment (Condo) for Rent in Hai Sing Park Walk Up Apartment",
+    "ImageURL": "https://pic2.99.co/v3/A4A5LwF8a8LJ99BaazpTJi?text=Keith+Er&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=aa2ad05a8264a9a8f477bc3a9b86af556c5fa7a7",
+    "Address": "46A Lorong Low Koon 536457",
+    "PostalCode": "536457",
+    "Coordinates": {
+      "lat": 1.36601673743944,
+      "lng": 103.893515456034
+    },
+    "MonthlyRent": 2000,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kangkar",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 28,
+    "NearestMrt": "Hougang MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-84JGLk6fZ78bFFU2KMBP8W",
+    "Title": "3 Bed Condo for Rent in The Vermont On Cairnhill",
+    "ImageURL": "https://pic2.99.co/v3/D7wJ9j6ZgbgbgvhN4L4Y4g?text=Winson+Chua&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=0f6823e08dc516476014ef71a1882738aff9e185",
+    "Address": "12A Cairnhill Rise 229746",
+    "PostalCode": "229746",
+    "Coordinates": {
+      "lat": 1.3087402216443833,
+      "lng": 103.83844080306368
+    },
+    "MonthlyRent": 9500,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Cairnhill",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 132,
+    "NearestMrt": "Newton MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-EXkKUbAoYpiNUppWM9c75W",
+    "Title": "Master Room (HDB) for Rent in 246 Pasir Ris Street 21",
+    "ImageURL": "https://pic2.99.co/v3/jMHgwqpYHrpaM7AQH3yyC3?text=Azman+Bin+Abd+Aziz+%28Azman+Abd+Aziz%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=8764004270dc421c2edf642f74080d2548a6d43f",
+    "Address": "246 Pasir Ris Street 21 510246",
+    "PostalCode": "510246",
+    "Coordinates": {
+      "lat": 1.37110870483675,
+      "lng": 103.962453963376
+    },
+    "MonthlyRent": 1300,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Pasir Ris Drive",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": null,
+    "NearestMrt": "Pasir Ris East MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-gqszhfRpjnxX8XUx8rn6RY",
+    "Title": "1 Room HDB for Rent in 742 Yishun Avenue 5",
+    "ImageURL": "https://pic2.99.co/v3/f7rrNPLapf849nstn56fVm?text=James+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=1b12541c7a427cbf07a125cda315fbbb3f42ae71",
+    "Address": "742 Yishun Avenue 5 760742",
+    "PostalCode": "760742",
+    "Coordinates": {
+      "lat": 1.42972007631008,
+      "lng": 103.833109444064
+    },
+    "MonthlyRent": 3000,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yishun West",
+    "Region": "North Region",
+    "Bathrooms": 2,
+    "AreaSqm": 65,
+    "NearestMrt": "Yishun MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-CArAwxCdBiHCA9D9gbL7Js",
+    "Title": "Common Room (HDB) for Rent in 390 Yishun Avenue 6",
+    "ImageURL": "https://pic2.99.co/v3/KaobTseqqqBjGbkZXdtwdm?text=Shanti+Jasmine&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=96ca9d9cc504b157b94cb27b0ffe1b6b9e4673f2",
+    "Address": "390 Yishun Avenue 6 760390",
+    "PostalCode": "760390",
+    "Coordinates": {
+      "lat": 1.42921279276692,
+      "lng": 103.848403863548
+    },
+    "MonthlyRent": 1100,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yishun East",
+    "Region": "North Region",
+    "Bathrooms": null,
+    "AreaSqm": 14,
+    "NearestMrt": "Yishun MRT",
+    "MrtWalkingMinutes": 19,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-8zTE3Wm3fJHSi2gwSRYdvy",
+    "Title": "Common Room (HDB) for Rent in 42A Margaret Drive",
+    "ImageURL": "https://pic2.99.co/v3/KDsbjU9Yh4fDPGxZG2opSP?text=Amy+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=19f546c2760091f0068ad3bba29579663bcd5154",
+    "Address": "42A Margaret Drive 143042",
+    "PostalCode": "143042",
+    "Coordinates": {
+      "lat": 1.29679541465289,
+      "lng": 103.807326025942
+    },
+    "MonthlyRent": 1100,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Spacious (100+ sqm)"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Margaret Drive",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 102,
+    "NearestMrt": "Queenstown MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-RH8JFbVq9jroia3PC3g9Dk",
+    "Title": "1 Bed Condo for Rent in The M",
+    "ImageURL": "https://pic2.99.co/v3/KrxQ3yfsVTdzx3TwUTfDQF?text=Michael+Chin&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=43a1b551a0efcc99e5b495880d8e4d9d88d5ff4e",
+    "Address": "36 Middle Road 188945",
+    "PostalCode": "188945",
+    "Coordinates": {
+      "lat": 1.2976075507688427,
+      "lng": 103.85600790924501
+    },
+    "MonthlyRent": 4000,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bugis",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 40,
+    "NearestMrt": "Bugis MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-jp7wQpRzGCybcjWMDBpE3X",
+    "Title": "Common Room (Condo) for Rent in Simsville",
+    "ImageURL": "https://pic2.99.co/v3/D3qGZTBrm8WbkfDcKQG4X4?text=Evone+Yap&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e7ad1f5c0d2c52638dc03a85769c5d2a8b9305f9",
+    "Address": "6 Geylang East Avenue 2 389756",
+    "PostalCode": "389756",
+    "Coordinates": {
+      "lat": 1.3167314556731984,
+      "lng": 103.88895688571235
+    },
+    "MonthlyRent": 1380,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Aljunied",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Paya Lebar MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-H8ZSKhmigVSh9dP3BUwnzM",
+    "Title": "Master Room (Condo) for Rent in Rangoon View",
+    "ImageURL": "https://pic2.99.co/v3/VU2cbDJhsCaQoVCsH7KsW5?text=Amy+Zeng+%E6%88%BF%E5%A7%90%E5%A7%90&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=c70a17bbea5e1013a2a00cfa115208e551f9dfff",
+    "Address": "223 Rangoon Road 218460",
+    "PostalCode": "218460",
+    "Coordinates": {
+      "lat": 1.31782390941569,
+      "lng": 103.852225092717
+    },
+    "MonthlyRent": 2200,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kampong Java",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 74,
+    "NearestMrt": "Farrer Park MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-3nWxY9DX3NqkZEdyeaej2F",
+    "Title": "Master Room (HDB) for Rent in 310C Ang Mo Kio Avenue 1",
+    "ImageURL": "https://pic2.99.co/v3/ZiNo6uPEgLeVQzY8NgA5Zn?text=Shanti+Jasmine&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e7cb9a238169b9505af7ee25d9ba89be590f9410",
+    "Address": "310C Ang Mo Kio Avenue 1 563310",
+    "PostalCode": "563310",
+    "Coordinates": {
+      "lat": 1.36460857491872,
+      "lng": 103.844854593055
+    },
+    "MonthlyRent": 1200,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Townsville",
+    "Region": "North-East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 14,
+    "NearestMrt": "Teck Ghee MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-9iJo2Qheoj9nxj9xJgbspZ",
+    "Title": "4 Room (4A) HDB for Rent in 43 Chai Chee Street",
+    "ImageURL": "https://pic2.99.co/v3/5cg2UADW9XgS5sVMHYxcad?text=Leon+Chea&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=9857bd9b48a4f1fc3c8e62360854408482f7c204",
+    "Address": "43 Chai Chee Street 461043",
+    "PostalCode": "461043",
+    "Coordinates": {
+      "lat": 1.32834668503077,
+      "lng": 103.925654810377
+    },
+    "MonthlyRent": 3800,
+    "PropertyType": "HDB",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kembangan",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 92,
+    "NearestMrt": "Bedok MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-CHkVMuGSWXxVV6JLqaGg3r",
+    "Title": "Common Room (HDB) for Rent in 635 Veerasamy Road",
+    "ImageURL": "https://pic2.99.co/v3/ftgdd7UVi785wKiRW28BYL?text=Joyce+Tong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=746c73138b9a1fdd7152506284fa972c1cf66883",
+    "Address": "635 Veerasamy Road 200635",
+    "PostalCode": "200635",
+    "Coordinates": {
+      "lat": 1.30658850181781,
+      "lng": 103.855218716278
+    },
+    "MonthlyRent": 1490,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Little India",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 12,
+    "NearestMrt": "Jalan Besar MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-JK9iqc4hrDdaKQjDSUzuvy",
+    "Title": "3 Bed Condo for Rent in The Alps Residences",
+    "ImageURL": "https://pic2.99.co/v3/9aTpzSbe7GvTD3wfMKv8ih?text=Jeremiah+Chua&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=14e0e89add0341c0a262cec5fc9873d1b8ac9a1e",
+    "Address": "113 Tampines Street 86 528536",
+    "PostalCode": "528536",
+    "Coordinates": {
+      "lat": 1.3551779753696966,
+      "lng": 103.9296198110789
+    },
+    "MonthlyRent": 4500,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tampines West",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 87,
+    "NearestMrt": "Tampines West MRT",
+    "MrtWalkingMinutes": 19,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-JrfFdH8cHAnV3VPBATndBp",
+    "Title": "1+1 Bed Condo for Rent in The Summit",
+    "ImageURL": "https://pic2.99.co/v3/dMzAuPs9JV2umKtP4PkRb8?text=Nasser+Aboobakar&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=0851cdfc7064806a5153564916106ca47cdf377e",
+    "Address": "451 Upper East Coast Road 466499",
+    "PostalCode": "466499",
+    "Coordinates": {
+      "lat": 1.31622026681178,
+      "lng": 103.940961510952
+    },
+    "MonthlyRent": 2100,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bedok South",
+    "Region": "East Region",
+    "Bathrooms": 1,
+    "AreaSqm": 37,
+    "NearestMrt": "Bayshore MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-n5TFpCGXFdTQkQFd3UZUUd",
+    "Title": "5 Room (5I) HDB for Rent in 183A Rivervale Crescent",
+    "ImageURL": "https://pic2.99.co/v3/TcKo3Pkd7n3sxEk3qXYhd9?text=Sr+Thanas&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e7bca829b72633f8b9f03bd5431e2568218d5c13",
+    "Address": "183A Rivervale Crescent 541183",
+    "PostalCode": "541183",
+    "Coordinates": {
+      "lat": 1.39164106188715,
+      "lng": 103.907924031863
+    },
+    "MonthlyRent": 3200,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Rivervale",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 121,
+    "NearestMrt": "Rumbia LRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Z7Djf9GX62CJ69C6Ffxxy2",
+    "Title": "1 Bed Condo for Rent in Sims Urban Oasis",
+    "ImageURL": "https://pic2.99.co/v3/U6oDJ7bqTqamw9YjkwzJuR?text=Ernest+Goh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=8a393b8d4a13134f709d3eeb94a1f8df2c95119c",
+    "Address": "12 Sims Drive 387391",
+    "PostalCode": "387391",
+    "Coordinates": {
+      "lat": 1.319551459926589,
+      "lng": 103.88100147650809
+    },
+    "MonthlyRent": 3599,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Aljunied",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 45,
+    "NearestMrt": "Aljunied MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-TTVvvSroWqWaaXbDqb7GkN",
+    "Title": "1 Bed Apartment (Condo) for Rent in High Street Centre",
+    "ImageURL": "https://pic2.99.co/v3/wTnUyyUrS9745xWaTvHjSW?text=Rachel+Hoe&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=185179d3b44532852e8a2ae40fb4e9b3a52c3b00",
+    "Address": "1 North Bridge Road 179094",
+    "PostalCode": "179094",
+    "Coordinates": {
+      "lat": 1.28999676915058,
+      "lng": 103.849282222609
+    },
+    "MonthlyRent": 5500,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "City Hall",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 50,
+    "NearestMrt": "Clarke Quay MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-TnPu4NaaTjbY4dhJSTh2iW",
+    "Title": "3 Room (3I) HDB for Rent in 2 Dover Road",
+    "ImageURL": "https://pic2.99.co/v3/j4jfbGSnXj38mFdABAdsh7?text=Joseph+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=fb6717dd1084fb63d357ffd0c4580677692db38f",
+    "Address": "2 Dover Road 130002",
+    "PostalCode": "130002",
+    "Coordinates": {
+      "lat": 1.303107453,
+      "lng": 103.7829008
+    },
+    "MonthlyRent": 3400,
+    "PropertyType": "HDB",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Dover",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 74,
+    "NearestMrt": "One-North MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-W5i5hFqEUxX2YnpKnnVPEa",
+    "Title": "Common Room (HDB) for Rent in 21 Dover Crescent",
+    "ImageURL": "https://pic2.99.co/v3/NRvjTUa9zMABpTm3XiJzne?text=George+Wang+Y.&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=f6e509a01a243c6d6b276efe846580b7f01c7b38",
+    "Address": "21 Dover Crescent 130021",
+    "PostalCode": "130021",
+    "Coordinates": {
+      "lat": 1.307036026,
+      "lng": 103.7846333
+    },
+    "MonthlyRent": 1400,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Dover",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 11,
+    "NearestMrt": "Buona Vista MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-kUuRvTwPQxA2ykeWgpJZ3H",
+    "Title": "Studio Terraced House (Landed) for Rent in Niven Road",
+    "ImageURL": "https://pic2.99.co/v3/4GebS7eadVaaiCEkbVfEeg?text=Annie+Mah&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=db3601b3de82b8301e054012ad05a2cb83d33365",
+    "Address": "Niven Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.30302223543108,
+      "lng": 103.849661591056
+    },
+    "MonthlyRent": 2350,
+    "PropertyType": "Landed",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Selegie",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": null,
+    "NearestMrt": "Rochor MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-axzub49itkvB4qP2zCsZdU",
+    "Title": "2 Bed Condo for Rent in Cairnhill 16",
+    "ImageURL": "https://pic2.99.co/v3/9Ce5qMyRz2HU7ycKwiAnmR?text=Irene+Ang&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=f6270f07640babf2f83f95d7db6249d34cc753c3",
+    "Address": "16 Cairnhill Rise 229744",
+    "PostalCode": "229744",
+    "Coordinates": {
+      "lat": 1.30851030840347,
+      "lng": 103.837972449413
+    },
+    "MonthlyRent": 5800,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Cairnhill",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 72,
+    "NearestMrt": "Newton MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-ML9fkBCKGyNF4FmKawgCZH",
+    "Title": "2 Bed Condo for Rent in The Interlace",
+    "ImageURL": "https://pic2.99.co/v3/FvcJ76hqYhE3s9eaXMiwpf?text=Robin+Chan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=1d41fb52628f5dc528efd24f9051e405eae229f2",
+    "Address": "204 Depot Road 109696",
+    "PostalCode": "109696",
+    "Coordinates": {
+      "lat": 1.282209525353651,
+      "lng": 103.80334289919097
+    },
+    "MonthlyRent": 5550,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Depot Road",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 98,
+    "NearestMrt": "Labrador Park MRT",
+    "MrtWalkingMinutes": 14,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-YsuqwPYyDxXbFq86MPWKZ4",
+    "Title": "4 Room (4A) HDB for Rent in 484D Choa Chu Kang Avenue 5",
+    "ImageURL": "https://pic2.99.co/v3/7vznd3cBbjYvYEeWG2AsxW?text=Wendy+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=2b64e4c3972d84cfa27e7518d5ea5b45edeede30",
+    "Address": "484D Choa Chu Kang Avenue 5 684484",
+    "PostalCode": "684484",
+    "Coordinates": {
+      "lat": 1.37534797754277,
+      "lng": 103.737317097286
+    },
+    "MonthlyRent": 3350,
+    "PropertyType": "HDB",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Peng Siang",
+    "Region": "West Region",
+    "Bathrooms": 3,
+    "AreaSqm": 101,
+    "NearestMrt": "Choa Chu Kang West MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Q7VVAMFVo44U8ycmTFJmSf",
+    "Title": "Common Room (Condo) for Rent in Springdale Condominium",
+    "ImageURL": "https://pic2.99.co/v3/AsuYDFmLm4dCM6maFiBg44?text=QIU+JINGJIE%28JANE%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=82358738adf3630ae7e6019704bbef800929703c",
+    "Address": "51 Hindhede Walk 587975",
+    "PostalCode": "587975",
+    "Coordinates": {
+      "lat": 1.3484720951264701,
+      "lng": 103.7719205022318
+    },
+    "MonthlyRent": 1700,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Nature Reserve",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 10,
+    "NearestMrt": "Hume MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-kmF4Mndq8ACwm3ZbC8BoMo",
+    "Title": "3 Bed Condo for Rent in Citylights",
+    "ImageURL": "https://pic2.99.co/v3/23avyK5TmE9jQWwkHVxDKo?text=Amy+Zeng+%E6%88%BF%E5%A7%90%E5%A7%90&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=70978fd5de35d8d236ece750f03c39b047a1a8c6",
+    "Address": "86 Jellicoe Road 208745",
+    "PostalCode": "208745",
+    "Coordinates": {
+      "lat": 1.308941239500815,
+      "lng": 103.86306177608917
+    },
+    "MonthlyRent": 8700,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Lavender",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 176,
+    "NearestMrt": "Lavender MRT",
+    "MrtWalkingMinutes": 4,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-5tWKEAhvTyDfMYQtHe93dS",
+    "Title": "3 Bed Condo for Rent in Uber 388",
+    "ImageURL": "https://pic2.99.co/v3/vXHhVcPfvmpL2FKZQQdfdJ?text=Joan+Low&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=056de1b3f1afd071b8d9c6cb8130e530466272dc",
+    "Address": "388 Upper East Coast Road 466477",
+    "PostalCode": "466477",
+    "Coordinates": {
+      "lat": 1.31365569116404,
+      "lng": 103.939090715487
+    },
+    "MonthlyRent": 6000,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bayshore",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 118,
+    "NearestMrt": "Bayshore MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-mbDoMFvukF6ysUUhP3ExRt",
+    "Title": "Common Room (HDB) for Rent in 19 Cantonment Close",
+    "ImageURL": "https://pic2.99.co/v3/W4TJmKe3UkzRA7fByjWrTG?text=Warren+Wong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ddfccb8beabef3fa3206af1cb092e100bdfe9063",
+    "Address": "19 Cantonment Close 080019",
+    "PostalCode": "080019",
+    "Coordinates": {
+      "lat": 1.2738835418848,
+      "lng": 103.839003328569
+    },
+    "MonthlyRent": 1000,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Everton Park",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 14,
+    "NearestMrt": "Cantonment MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-LUhiDUcP9AHHgXzkdRMeX9",
+    "Title": "Common Room (HDB) for Rent in 610 Yishun Street 61",
+    "ImageURL": "https://pic2.99.co/v3/WSP6r74j3x3Q5EztWeb4yn?text=Chris+Tan+Realtor&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=7f516fb8fab169640aee3b6a3fed783ccbd78f4c",
+    "Address": "610 Yishun Street 61 760610",
+    "PostalCode": "760610",
+    "Coordinates": {
+      "lat": 1.42057938136498,
+      "lng": 103.836103032168
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yishun South",
+    "Region": "North Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Khatib MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-hCSMEhxdsEriaXRszVVmjn",
+    "Title": "Common Room (Condo) for Rent in Double Bay Residences",
+    "ImageURL": "https://pic2.99.co/v3/HXbnKVxhcjcQcGaj5J37m6?text=Eric+Choy+82228903&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=2e5b8799dfdb4ef1b297f39f654f4220178a7a44",
+    "Address": "17 Simei Street 4 529881",
+    "PostalCode": "529881",
+    "Coordinates": {
+      "lat": 1.340451349556119,
+      "lng": 103.95645816427488
+    },
+    "MonthlyRent": 2500,
+    "PropertyType": "Condo",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Simei",
+    "Region": "East Region",
+    "Bathrooms": null,
+    "AreaSqm": 23,
+    "NearestMrt": "Simei MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-i8ZXgPoMW486bfhLtKhnDE",
+    "Title": "2 Bed Apartment (Condo) for Rent in Parc Mackenzie",
+    "ImageURL": "https://pic2.99.co/v3/snKgWZEBq2iNjSQbMjTq5Q?text=Selvi+Loe&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=8661f8c7a1dcaa8dfa7c7e56c643967cccd70af0",
+    "Address": "68 Mackenzie Road 228687",
+    "PostalCode": "228687",
+    "Coordinates": {
+      "lat": 1.3062554196251,
+      "lng": 103.847876483186
+    },
+    "MonthlyRent": 5000,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Mackenzie",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 133,
+    "NearestMrt": "Little India MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-oBd93ty7bLysnTXUxirFS4",
+    "Title": "Common Room (HDB) for Rent in 339 Tampines Street 33",
+    "ImageURL": "https://pic2.99.co/v3/uJHkdmYwWABR4GwtwrcoyD?text=Tan+Shirley&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=09965cd5e434210f2a89ddf8dbf09f8c3d73925d",
+    "Address": "339 Tampines Street 33 520339",
+    "PostalCode": "520339",
+    "Coordinates": {
+      "lat": 1.35114569081609,
+      "lng": 103.959124538361
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tampines East",
+    "Region": "East Region",
+    "Bathrooms": null,
+    "AreaSqm": null,
+    "NearestMrt": "Tampines East MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-GswoX9Lp3sHNP442XNteqJ",
+    "Title": "3 Bed Condo for Rent in The Meyerise",
+    "ImageURL": "https://pic2.99.co/v3/cyYFMrjMg2wtdrayZTBX5j?text=Champa+Murjani&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=4cb9368044fccd32acd5627c65ace88f68418fd5",
+    "Address": "97 Meyer Road 437918",
+    "PostalCode": "437918",
+    "Coordinates": {
+      "lat": 1.296615728764,
+      "lng": 103.89287891772433
+    },
+    "MonthlyRent": 7900,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Mountbatten",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": 118,
+    "NearestMrt": "Tanjong Katong MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-WVnrauwWsk6guigMVbZFQD",
+    "Title": "1 Bed Apartment (Condo) for Rent in Laurel Tree",
+    "ImageURL": "https://pic2.99.co/v3/ew36nYoxbgvjfcwe8rVHUj?text=Andrew+Ho&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=13fd07f64e7eceb6dcde2224757d78852d91cfa8",
+    "Address": "42 Hillview Terrace 669267",
+    "PostalCode": "669267",
+    "Coordinates": {
+      "lat": 1.35297897768631,
+      "lng": 103.758272812318
+    },
+    "MonthlyRent": 3100,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Guilin",
+    "Region": "West Region",
+    "Bathrooms": 1,
+    "AreaSqm": 43,
+    "NearestMrt": "Bukit Gombak MRT",
+    "MrtWalkingMinutes": 12,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-oLxZA4PfJZdnyNPeqPdzCB",
+    "Title": "Common Room (HDB) for Rent in 309 Yishun Ring Road",
+    "ImageURL": "https://pic2.99.co/v3/2XiZNVfrK7r4nS7uay9a88?text=Vivian+Goi&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=267c9a8d9346d6a76b7c2fb164a9ecb050ca6488",
+    "Address": "309 Yishun Ring Road 760309",
+    "PostalCode": "760309",
+    "Coordinates": {
+      "lat": 1.43237650422142,
+      "lng": 103.840587727638
+    },
+    "MonthlyRent": 800,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yishun East",
+    "Region": "North Region",
+    "Bathrooms": null,
+    "AreaSqm": 12,
+    "NearestMrt": "Yishun MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-EaaT6M7HiUrNycjsS3wPqh",
+    "Title": "4 Bed Terraced House (Landed) for Rent in Townerville",
+    "ImageURL": "https://pic2.99.co/v3/sMZPw4bz3MeN6MQnKGnQJg?text=Kent+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=66a385f38b1246733b2f53b9c4436a4919c565d0",
+    "Address": "Mcnair Road",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.319831974103756,
+      "lng": 103.85793748536902
+    },
+    "MonthlyRent": 8600,
+    "PropertyType": "Landed",
+    "Bedrooms": 4,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bendemeer",
+    "Region": "Central Region",
+    "Bathrooms": 3,
+    "AreaSqm": null,
+    "NearestMrt": "Boon Keng MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-BLmkdStYAeFXyJtAEdHAfM",
+    "Title": "4 Room (4NG) HDB for Rent in 428 Bedok North Road",
+    "ImageURL": "https://pic2.99.co/v3/m9YBZoSewKF6aZXt85jZPd?text=Joe+Lim&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=bf578b50d7d6dce72991a4ed0513181ab5fe5824",
+    "Address": "428 Bedok North Road 460428",
+    "PostalCode": "460428",
+    "Coordinates": {
+      "lat": 1.32953994162628,
+      "lng": 103.9276500842
+    },
+    "MonthlyRent": 3600,
+    "PropertyType": "HDB",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Bedok North",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 92,
+    "NearestMrt": "Bedok MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Nh9Q6TLa7ApAPdMZVG7nbC",
+    "Title": "2 Bed Condo for Rent in The Lilium",
+    "ImageURL": "https://pic2.99.co/v3/zGVcVyAdJfLVvwqZNdu6kX?text=George+Wang+Y.&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=7b7970138783f7a3615bacee1900ff70d59bd021",
+    "Address": "31 How Sun Road 538500",
+    "PostalCode": "538500",
+    "Coordinates": {
+      "lat": 1.3456227247234034,
+      "lng": 103.88084851431667
+    },
+    "MonthlyRent": 3990,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Upper Paya Lebar",
+    "Region": "North-East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 65,
+    "NearestMrt": "Bartley MRT",
+    "MrtWalkingMinutes": 5,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-WUyKk8MSnPuhS52sB9AoSY",
+    "Title": "3 Bed Condo for Rent in Cuscaden Reserve",
+    "ImageURL": "https://pic2.99.co/v3/yvoHwRpF93QxUH8CJzm5Dn?text=Gary+Lin&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=c70277a1da6e72e948fe1d8f6ba50d7560ca014e",
+    "Address": "8 Cuscaden Road 249732",
+    "PostalCode": "249732",
+    "Coordinates": {
+      "lat": 1.30361011228586,
+      "lng": 103.825167160428
+    },
+    "MonthlyRent": 8900,
+    "PropertyType": "Condo",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tanglin",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 87,
+    "NearestMrt": "Orchard Boulevard MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-PxHthipDsV25T2Y7u6M5ho",
+    "Title": "4 Room (4A) HDB for Rent in 417 Woodlands Street 41",
+    "ImageURL": "https://pic2.99.co/v3/YfgjfboYF88Ct3aGdhnT8k?text=Ada+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=713f5669dc333a94fb0c195624303ffd6384b67c",
+    "Address": "417 Woodlands Street 41 730417",
+    "PostalCode": "730417",
+    "Coordinates": {
+      "lat": 1.42885830961844,
+      "lng": 103.774024710128
+    },
+    "MonthlyRent": 3800,
+    "PropertyType": "HDB",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Woodgrove",
+    "Region": "North Region",
+    "Bathrooms": 2,
+    "AreaSqm": 114,
+    "NearestMrt": "Marsiling MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-V6poCUqNHhPbmzQsVE5rLJ",
+    "Title": "Common Room (HDB) for Rent in 845 Jurong West Street 81",
+    "ImageURL": "https://pic2.99.co/v3/h829Js4jM7bSoZHtguC7E3?text=LISA+THNG&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=9215ba9e246e62145a98f848d51ad384417b02ba",
+    "Address": "845 Jurong West Street 81 640845",
+    "PostalCode": "640845",
+    "Coordinates": {
+      "lat": 1.34486053300379,
+      "lng": 103.691684234571
+    },
+    "MonthlyRent": 900,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Yunnan",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 11,
+    "NearestMrt": "Tawas MRT",
+    "MrtWalkingMinutes": 9,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-nGYPFiFy4sUp6HJ8UV9Paj",
+    "Title": "4 Bed Condo for Rent in Kovan Residences",
+    "ImageURL": "https://pic2.99.co/v3/JLyg3U9RGAAbmQdqTArtNW?text=Juliana+Lee&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=4e6ec4b6ad18fe00b8272cf8db2e571ea3d79217",
+    "Address": "9 Kovan Road 544898",
+    "PostalCode": "544898",
+    "Coordinates": {
+      "lat": 1.3611317091881456,
+      "lng": 103.88500640800733
+    },
+    "MonthlyRent": 11500,
+    "PropertyType": "Condo",
+    "Bedrooms": 4,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Kovan",
+    "Region": "North-East Region",
+    "Bathrooms": 5,
+    "AreaSqm": 305,
+    "NearestMrt": "Kovan MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-Me9GN2Cxo3Yh45SkFJBoSn",
+    "Title": "Common Room (HDB) for Rent in 450 Clementi Avenue 3",
+    "ImageURL": "https://pic2.99.co/v3/hwJTzGTeGdcUjjAJq5cMo9?text=eunice+wong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=0f386e1d8453c982c3d8f7625d8c2516f6adebb1",
+    "Address": "450 Clementi Avenue 3 120450",
+    "PostalCode": "120450",
+    "Coordinates": {
+      "lat": 1.31353886128,
+      "lng": 103.765476305204
+    },
+    "MonthlyRent": 1000,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Clementi Central",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 12,
+    "NearestMrt": "Clementi MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-BuJhP6qiEuXYt48SGwsrKf",
+    "Title": "2 Bed Condo for Rent in Nin Residence",
+    "ImageURL": "https://pic2.99.co/v3/9CZDy7BTXrnggED7cp8PuV?text=Nicsson+Kwok&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e299fbd9eba7b1a474bd6ea71b46d79643118824",
+    "Address": "85 Pheng Geck Avenue 348271",
+    "PostalCode": "348271",
+    "Coordinates": {
+      "lat": 1.3327512410855331,
+      "lng": 103.86991317013566
+    },
+    "MonthlyRent": 4600,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Sennett",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 79,
+    "NearestMrt": "Potong Pasir MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-JohNbxNC2XKQNUDGFzbAF5",
+    "Title": "4 Room (4S) HDB for Rent in 259 Yishun Street 22",
+    "ImageURL": "https://pic2.99.co/v3/XTU5YgZntgRJ5yzmiwUhtR?text=Jagjit+Singh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=7dd2d7a184328a28909de07e0fc5f6836f56d58c",
+    "Address": "259 Yishun Street 22 760259",
+    "PostalCode": "760259",
+    "Coordinates": {
+      "lat": 1.43498006358563,
+      "lng": 103.8389647186
+    },
+    "MonthlyRent": 3600,
+    "PropertyType": "HDB",
+    "Bedrooms": 3,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Northland",
+    "Region": "North Region",
+    "Bathrooms": 2,
+    "AreaSqm": 84,
+    "NearestMrt": "Yishun MRT",
+    "MrtWalkingMinutes": 10,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-necTYNbVy23jPGX4HBwK4j",
+    "Title": "5 Bed Condo for Rent in Waterview",
+    "ImageURL": "https://pic2.99.co/v3/UKiQhTeX3X5ZSHEk4fas7b?text=Bill+Singh&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=db27752c3f5e2d023daa1779a034e6e1517a57fa",
+    "Address": "91 Tampines Avenue 1 528690",
+    "PostalCode": "528690",
+    "Coordinates": {
+      "lat": 1.3488690198005218,
+      "lng": 103.92632382090915
+    },
+    "MonthlyRent": 12500,
+    "PropertyType": "Condo",
+    "Bedrooms": 5,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "2+ bathrooms",
+      "Spacious (100+ sqm)",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tampines West",
+    "Region": "East Region",
+    "Bathrooms": 4,
+    "AreaSqm": 386,
+    "NearestMrt": "Tampines West MRT",
+    "MrtWalkingMinutes": 18,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-JJYofszUZsMamsAHmqPSqM",
+    "Title": "1 Bed Condo for Rent in Marina One Residences",
+    "ImageURL": "https://pic2.99.co/v3/wRhHdNLvB5i26J336oXAN3?text=Shirley+Chong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ed17f19bf35fb82e6f24007d3e96a947402dbfa4",
+    "Address": "23 Marina Way 018979",
+    "PostalCode": "018979",
+    "Coordinates": {
+      "lat": 1.2769696206188,
+      "lng": 103.8535109362695
+    },
+    "MonthlyRent": 5000,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Central Subzone",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 65,
+    "NearestMrt": "Marina Bay MRT",
+    "MrtWalkingMinutes": 3,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-RH5FgmgctdQbdkJzZ7jnVF",
+    "Title": "2 Bed Condo for Rent in Haus on Handy",
+    "ImageURL": "https://pic2.99.co/v3/KVfbHcRxRMTGKAjNPWf3tL?text=Marcus+Tan&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=e571a6de5667441683657b607541896b543f02c6",
+    "Address": "28 Handy Road 229240",
+    "PostalCode": "229240",
+    "Coordinates": {
+      "lat": 1.3002127757768835,
+      "lng": 103.84664371272868
+    },
+    "MonthlyRent": 5821,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Dhoby Ghaut",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 58,
+    "NearestMrt": "Dhoby Ghaut MRT",
+    "MrtWalkingMinutes": 2,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-C2XP5c6TH8ehDwpo4xfaKB",
+    "Title": "2 Bed Condo for Rent in D'nest",
+    "ImageURL": "https://pic2.99.co/v3/ga348xaTBTywYoyeHXMKRe?text=Eileen+Leong+%28SG+Property%29&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ea33cc7c0bafc431a22ac2a1c6e9a78f448a78e8",
+    "Address": "129 Pasir Ris Grove 518179",
+    "PostalCode": "518179",
+    "Coordinates": {
+      "lat": 1.3692087962538473,
+      "lng": 103.94574662279099
+    },
+    "MonthlyRent": 3800,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Pasir Ris Central",
+    "Region": "East Region",
+    "Bathrooms": 2,
+    "AreaSqm": 70,
+    "NearestMrt": "Pasir Ris MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-SzYuNSiBHQshdzXCUtuT2M",
+    "Title": "Common Room (HDB) for Rent in 464A Clementi Avenue 1",
+    "ImageURL": "https://pic2.99.co/v3/XCThtspKb434tU4QnC5Bsf?text=Chan+Khin+Yew&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ef03379d2c52acf61564412510d0e54d29e46a3a",
+    "Address": "464A Clementi Avenue 1 121464",
+    "PostalCode": "121464",
+    "Coordinates": {
+      "lat": 1.31105769992309,
+      "lng": 103.768498489284
+    },
+    "MonthlyRent": 1150,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Clementi Woods",
+    "Region": "West Region",
+    "Bathrooms": null,
+    "AreaSqm": 12,
+    "NearestMrt": "Clementi MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-AD7vAhHcGgkbUB3uSRp3K5",
+    "Title": "Common Room (HDB) for Rent in 12 Kampong Arang Road",
+    "ImageURL": "https://pic2.99.co/v3/eb3ihfu26tVsPLx3nUY4mn?text=Chiong+Kim+Mui%2C+Felicia&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=9ea23a0b3eae679a150cf5095cf788a08a2582ce",
+    "Address": "12 Kampong Arang Road 431012",
+    "PostalCode": "431012",
+    "Coordinates": {
+      "lat": 1.300828855,
+      "lng": 103.8836948
+    },
+    "MonthlyRent": 1100,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Tanjong Rhu",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 17,
+    "NearestMrt": "Katong Park MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-4G8NkFvAD3NBKkd9GfiNfK",
+    "Title": "Common Room (HDB) for Rent in 9 Holland Avenue",
+    "ImageURL": "https://pic2.99.co/v3/jHZKSByZLJgToprLjnpbrN?text=eunice+wong&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=ddd8e337b2286c18afc7c9d012f838e2d7a8e9b2",
+    "Address": "9 Holland Avenue 272009",
+    "PostalCode": "272009",
+    "Coordinates": {
+      "lat": 1.307555926,
+      "lng": 103.7944436
+    },
+    "MonthlyRent": 1200,
+    "PropertyType": "HDB",
+    "Bedrooms": null,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Holland Drive",
+    "Region": "Central Region",
+    "Bathrooms": null,
+    "AreaSqm": 12,
+    "NearestMrt": "Buona Vista MRT",
+    "MrtWalkingMinutes": 6,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-AAWedTDgGpuYySxhDsmpjr",
+    "Title": "1 Bed Condo for Rent in Forett@Bukit Timah",
+    "ImageURL": "https://pic2.99.co/v3/FuQjRFrkdjDdTC9cVdLfvY?text=Yen+Yuin+Lui&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=b25d6dd0bdb27362cebad25608f39f09a36fb9e8",
+    "Address": "32 Toh Tuck Road 596710",
+    "PostalCode": "596710",
+    "Coordinates": {
+      "lat": 1.3404236366694111,
+      "lng": 103.76840221973916
+    },
+    "MonthlyRent": 3499,
+    "PropertyType": "Condo",
+    "Bedrooms": 1,
+    "AvailableDate": null,
+    "Amenities": [
+      "Partially furnished",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Anak Bukit",
+    "Region": "Central Region",
+    "Bathrooms": 1,
+    "AreaSqm": 45,
+    "NearestMrt": "Beauty World MRT",
+    "MrtWalkingMinutes": 12,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-5gHAHxMh5dxgN6bmA7iRNn",
+    "Title": "2 Bed Condo for Rent in Heritage View",
+    "ImageURL": "https://pic2.99.co/v3/RsoiehY4eKVmxuPf9mMg7D?text=Beatrice+Ng&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=a6606c58d52004f857bca21805d11de2d7bed8a0",
+    "Address": "10 Dover Rise 138680",
+    "PostalCode": "138680",
+    "Coordinates": {
+      "lat": 1.3041837295013534,
+      "lng": 103.78386712820468
+    },
+    "MonthlyRent": 5600,
+    "PropertyType": "Condo",
+    "Bedrooms": 2,
+    "AvailableDate": null,
+    "Amenities": [
+      "Fully furnished",
+      "Near MRT",
+      "2+ bathrooms",
+      "Condo facilities"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Dover",
+    "Region": "Central Region",
+    "Bathrooms": 2,
+    "AreaSqm": 90,
+    "NearestMrt": "One-North MRT",
+    "MrtWalkingMinutes": 8,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
+  },
+  {
+    "ListingID": "99CO-82AUR6Wgzx9Kxm3bMvx62o",
+    "Title": "5+1 Bed Bungalow (Landed) for Rent in Yarwood Avenue",
+    "ImageURL": "https://pic2.99.co/v3/HXSTquYeM6McqZHbn37bqS?text=Douglas+Quah&sampling=lanczos&version=1&height=600&width=800&mode=fill&quality=80&convert_if_png=true&signature=900275803c480cce9dc8a4f91a49bc0ccb54d615",
+    "Address": "Yarwood Avenue",
+    "PostalCode": null,
+    "Coordinates": {
+      "lat": 1.34039582870748,
+      "lng": 103.784430740845
+    },
+    "MonthlyRent": 19000,
+    "PropertyType": "Landed",
+    "Bedrooms": 5,
+    "AvailableDate": null,
+    "Amenities": [
+      "Unfurnished",
+      "Near MRT",
+      "2+ bathrooms"
+    ],
+    "OriginalSourceURL": null,
+    "IsAvailable": true,
+    "Neighbourhood": "Swiss Club",
+    "Region": "Central Region",
+    "Bathrooms": 6,
+    "AreaSqm": null,
+    "NearestMrt": "King Albert Park MRT",
+    "MrtWalkingMinutes": 7,
+    "FetchedAt": "2026-11-05T04:55:16.714Z"
   }
 ]
