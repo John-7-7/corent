@@ -2,7 +2,7 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthChange } from '@/services/authService'
-import { getGroupById } from '@/services/groupService' 
+import {getGroupById, leaveGroup, } from '@/services/groupService'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,6 +12,8 @@ const loading = ref(true)
 const error = ref('')
 const copying = ref(false)
 const copyFeedback = ref('')
+const currentUserId = ref('')
+const leavingGroup = ref(false)
 
 const memberCount = computed(() => {
   return group.value?.memberCount ?? members.value.length
@@ -28,6 +30,8 @@ async function loadGroup(user) {
   error.value = ''
   group.value = null
   members.value = []
+
+  currentUserId.value = user?.uid || ''
 
   if (!user?.uid) {
     error.value = 'You must be signed in to view this group.'
@@ -94,6 +98,35 @@ function viewGroupSummary() {
       groupId: group.value.id,
     },
   })
+}
+
+async function handleLeaveGroup() {
+  if (!group.value || !currentUserId.value) return
+
+  const confirmed = window.confirm(
+    'Are you sure you want to leave this group? You will lose access to its shared shortlist and group details.',
+  )
+
+  if (!confirmed) return
+
+  leavingGroup.value = true
+  error.value = ''
+
+  try {
+    await leaveGroup(group.value.id, currentUserId.value)
+
+    // Return the user to Home after successfully leaving.
+    router.push('/home')
+  } catch (leaveError) {
+    console.error('Error leaving group:', leaveError)
+
+    error.value =
+      leaveError instanceof Error
+        ? leaveError.message
+        : 'Unable to leave the group.'
+  } finally {
+    leavingGroup.value = false
+  }
 }
 
 function getInitials(name) {
@@ -228,6 +261,14 @@ onUnmounted(unsubscribeAuth)
         @click="viewGroupSummary"
       >
         View Group Summary
+      </button>
+      <button
+        class="leave-button"
+        type="button"
+        :disabled="leavingGroup"
+        @click="handleLeaveGroup"
+      >
+        {{ leavingGroup ? 'Leaving group…' : 'Leave Group' }}
       </button>
     </div>
   </section>
@@ -435,6 +476,26 @@ onUnmounted(unsubscribeAuth)
 
 .text-link {
   color: var(--red, #ed003b);
+}
+
+.leave-button {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fff;
+  color: #dc2626;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.leave-button:hover:not(:disabled) {
+  background: #fef2f2;
 }
 
 button:disabled {

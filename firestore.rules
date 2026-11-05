@@ -49,6 +49,35 @@ service cloud.firestore {
         // Entries are add/remove only — no edits in place.
         allow update: if false;
       }
+
+      // groups/{groupId}/listingVotes/{uid}_{listingId} — one vote per member
+      // per listing (groupShortlistService.js).
+      match /listingVotes/{voteId} {
+        allow read: if isMember();
+        allow create: if isMember()
+          && request.resource.data.userId == request.auth.uid
+          && voteId == request.auth.uid + '_' + request.resource.data.listingId;
+        // Members can only withdraw their own vote.
+        allow delete: if isMember() && resource.data.userId == request.auth.uid;
+        allow update: if false;
+      }
+    }
+
+    // enquiries/{groupId}_{listingId} — one enquiry per group per listing
+    // (enquiryService.js). Read by query on groupId, so the rule checks
+    // membership of the group named in the document.
+    match /enquiries/{enquiryId} {
+      function isMemberOf(groupId) {
+        return request.auth != null
+          && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.memberIds;
+      }
+
+      allow read: if isMemberOf(resource.data.groupId);
+      allow create: if isMemberOf(request.resource.data.groupId)
+        && request.resource.data.userId == request.auth.uid
+        && enquiryId == request.resource.data.groupId + '_' + request.resource.data.listingId;
+      // Submitted enquiries are final.
+      allow update, delete: if false;
     }
 
     match /User_Preferences/{uid} {

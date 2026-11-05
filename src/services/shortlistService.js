@@ -4,8 +4,8 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
+  runTransaction,
   serverTimestamp,
-  setDoc,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { activeGroup, activeGroupId, startActiveGroupTracking } from './activeGroup'
@@ -152,11 +152,18 @@ export function useShortlist() {
     const user = auth.currentUser
     if (!user) throw new Error('Sign in to change your group shortlist.')
 
-    await setDoc(doc(shortlistRef(activeGroupId.value), listingId), {
-      listingId,
-      addedBy: user.uid,
-      addedByName: user.displayName || user.email?.split('@')[0] || 'Group member',
-      addedAt: serverTimestamp(),
+    // A transaction rather than setDoc (from Yi Phu's groupShortlistService): if
+    // two members save the same listing at once, the first entry wins and the
+    // second is a no-op instead of an update the rules reject.
+    const entryRef = doc(shortlistRef(activeGroupId.value), listingId)
+    await runTransaction(db, async (transaction) => {
+      if ((await transaction.get(entryRef)).exists()) return
+      transaction.set(entryRef, {
+        listingId,
+        addedBy: user.uid,
+        addedByName: user.displayName || user.email?.split('@')[0] || 'Group member',
+        addedAt: serverTimestamp(),
+      })
     })
   }
 

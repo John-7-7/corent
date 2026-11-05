@@ -1,18 +1,164 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import { formatRent } from '@/services/listingsService'
 import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
+import { activeGroupId } from '@/services/activeGroup'
+import { onAuthChange } from '@/services/authService'
+import { submitEnquiry, subscribeToGroupEnquiries, } from '@/services/enquiryService'
+import { getMemberProfiles } from '@/services/groupSummaryService'
+import { watchGroupPreference } from '@/services/groupPreferencesService'
+import { scoreListings } from '@/services/listingScoring'
 
+import {
+  voteForListing,
+  removeListingVote,
+  subscribeToGroupVotes,
+} from '@/services/groupShortlistService'
+
+// Add/remove goes through shortlistService (shared with Browse) and follows the
+// group picked on Home; votes and enquiries are scoped to that same group.
 const { listingIds, entries, storageError, loading, isGroupMode, activeGroup, removeFromShortlist } =
   useShortlist()
-const listings = ref([])
+const rawListings = ref([])
+
+// Controls which tab is currently displayed.
+const activeTab = ref('shortlist')
+// Controls the view inside Property Comparison.
+const comparisonView = ref('chart')
 
 // Rough Singapore bounds, used to place real coordinates on the overview map.
 const SG = { north: 1.47, south: 1.22, west: 103.6, east: 104.05 }
 const clampPct = (n) => `${Math.min(95, Math.max(5, n * 100)).toFixed(1)}%`
+
+// The current user's information
+const currentUserId = ref('')
+const groupId = computed(() => activeGroupId.value ?? '')
+
+// Votes shared by everyone in the group
+const groupVotes = ref([])
+
+// Enquiries shared by everyone in the group
+const groupEnquiries = ref([])
+const groupError = ref('')
+
+// Group preferences and member profiles, for the group-match % (F-REQ-015)
+const groupPreference = ref(null)
+const memberProfiles = ref([])
+
+// Store the Firestore listeners so we can stop them later
+let unsubscribeVotes = null
+let unsubscribeEnquiries = null
+let unsubscribePreference = null
+
+const unsubscribeAuth = onAuthChange((user) => {
+  currentUserId.value = user?.uid ?? ''
+})
+
+getListings()
+  .then((all) => {
+    rawListings.value = all
+  })
+  .catch((error) => {
+    console.error('Error loading listings:', error)
+    groupError.value = 'Unable to load listings.'
+  })
+
+function stopGroupListeners() {
+  unsubscribeVotes?.()
+  unsubscribeEnquiries?.()
+  unsubscribePreference?.()
+  unsubscribeVotes = unsubscribeEnquiries = unsubscribePreference = null
+}
+
+// Re-subscribe whenever the active group changes (or the user leaves it).
+watch(
+  groupId,
+  (id) => {
+    stopGroupListeners()
+    groupVotes.value = []
+    groupEnquiries.value = []
+    groupPreference.value = null
+    groupError.value = ''
+    if (!id) return
+
+    // Listen for shared voting changes
+    unsubscribeVotes = subscribeToGroupVotes(
+      id,
+      (votes) => {
+        groupVotes.value = votes
+      },
+      (error) => {
+        groupError.value = error.message
+      },
+    )
+
+    // Listen for enquiries submitted by the group
+    unsubscribeEnquiries = subscribeToGroupEnquiries(
+      id,
+      (items) => {
+        groupEnquiries.value = items
+      },
+      (error) => {
+        console.error('Error loading group enquiries:', error)
+      },
+    )
+
+    // The agreed preferences change as the group votes, so keep scores live.
+    unsubscribePreference = watchGroupPreference(
+      id,
+      (preference) => {
+        groupPreference.value = preference
+      },
+      (error) => {
+        console.error('Error loading group preferences:', error)
+      },
+    )
+
+  },
+  { immediate: true },
+)
+
+// Reload profiles when members join or leave, not only when the group changes.
+watch(
+  () => (activeGroup.value?.memberIds ?? []).join(),
+  async () => {
+    try {
+      memberProfiles.value = await getMemberProfiles(activeGroup.value?.memberIds ?? [])
+    } catch (error) {
+      console.error('Error loading member preferences:', error)
+    }
+  },
+  { immediate: true },
+)
+
+onUnmounted(() => {
+  stopGroupListeners()
+  unsubscribeAuth?.()
+})
+
+// Members in the shape listingScoring expects.
+const scoringMembers = computed(() =>
+  (activeGroup.value?.memberIds ?? []).map((uid) => ({
+    uid,
+    name: activeGroup.value?.members?.find((member) => member.id === uid)?.name || 'Group member',
+    profile: memberProfiles.value.find((profile) => profile.UserID === uid) || null,
+  })),
+)
+
+// Group-match % per shortlisted listing; null means insufficient data (AC4).
+const scoreById = computed(() => {
+  if (!isGroupMode.value) return new Map()
+  const shortlisted = rawListings.value.filter((l) => listingIds.value.includes(l.ListingID))
+  return new Map(
+    scoreListings(shortlisted, groupPreference.value, scoringMembers.value).map((entry) => [
+      entry.listingId,
+      entry.score,
+    ]),
+  )
+})
 
 // Map a Housing_Listing record onto the shape this page renders.
 function toShortlistItem(l) {
@@ -22,11 +168,12 @@ function toShortlistItem(l) {
     title: l.Title,
     price: l.MonthlyRent,
     area: l.Neighbourhood,
+    areaSqm: l.AreaSqm, // Floor area in square metres
     beds: l.Bedrooms,
     available: l.IsAvailable,
     tone: ['', 'alt', 'cool'][n],
-    // null until F-REQ-015 can compute a real score.
-    match: null,
+
+    match: scoreById.value.get(l.ListingID) ?? null,
     mapPosition: l.Coordinates && {
       left: clampPct((l.Coordinates.lng - SG.west) / (SG.east - SG.west)),
       top: clampPct((SG.north - l.Coordinates.lat) / (SG.north - SG.south)),
@@ -36,27 +183,88 @@ function toShortlistItem(l) {
   }
 }
 
-onMounted(async () => {
-  try {
-    listings.value = (await getListings()).map(toShortlistItem)
-  } catch (error) {
-    storageError.value = error instanceof Error ? error.message : 'Unable to load listings.'
-  }
-})
 const selectedListingId = ref('')
 const expandedCommentsId = ref('')
 const enquiryDialogOpen = ref(false)
-const enquirySent = ref(false)
+const emailReceipt = ref(false)
 const enquiryError = ref('')
+const agentContactDialogOpen = ref(false)
 
+// In the order members added them.
 const savedListings = computed(() =>
-  listingIds.value.map((id) => listings.value.find((listing) => listing.id === id)).filter(Boolean),
+  listingIds.value
+    .map((id) => rawListings.value.find((l) => l.ListingID === id))
+    .filter(Boolean)
+    .map(toShortlistItem),
 )
+
+function getVoteCount(listingId) {
+  return groupVotes.value.filter(
+    (vote) => vote.listingId === listingId,
+  ).length
+}
+
+// Data used by the Property Comparison chart and table.
+const comparisonListings = computed(() => {
+  return savedListings.value.map((listing) => ({
+    ...listing,
+    votes: getVoteCount(listing.id),
+    rentPerSqm:
+      listing.areaSqm > 0
+        ? listing.price / listing.areaSqm
+        : null,
+  }))
+})
+
+// Scale the rent and vote values into chart positions.
+const chartData = computed(() => {
+  const items = comparisonListings.value
+
+  if (!items.length) return []
+
+  const maxRent = Math.max(...items.map((l) => l.price), 1)
+  const maxVotes = Math.max(...items.map((l) => l.votes), 1)
+
+  return items.map((listing, index) => ({
+    ...listing,
+    x: 80 + index * (560 / Math.max(items.length, 1)),
+    barHeight: (listing.price / maxRent) * 180,
+    voteY: 220 - (listing.votes / maxVotes) * 180,
+  }))
+})
+
+function hasUserVoted(listingId) {
+  return groupVotes.value.some(
+    (vote) =>
+      vote.listingId === listingId &&
+      vote.userId === currentUserId.value,
+  )
+}
+
+// Rank shortlisted properties by vote count.
+// If vote counts tie, use the higher group-match percentage.
+const rankedListings = computed(() => {
+  return [...savedListings.value].sort((a, b) => {
+    // First: higher vote count comes first.
+    const voteDifference = getVoteCount(b.id) - getVoteCount(a.id)
+
+    if (voteDifference !== 0) {
+      return voteDifference
+    }
+    // Second: higher match percentage comes first.
+    // Only compare match scores when both are available.
+    if (typeof a.match === 'number' && typeof b.match === 'number') {
+      return b.match - a.match
+    }
+    return 0
+  })
+})
+
 const enquiryListing = computed(
   () =>
-    savedListings.value.find((listing) => listing.id === selectedListingId.value) ??
-    savedListings.value[0] ??
-    null,
+    savedListings.value.find(
+      (listing) => listing.id === selectedListingId.value,
+    ) ?? null,
 )
 
 function selectMapPin(listing) {
@@ -67,13 +275,19 @@ function selectMapPin(listing) {
   })
 }
 
+function hasEnquiryBeenSent(listingId) {
+  return groupEnquiries.value.some(
+    (enquiry) => enquiry.listingId === listingId,
+  )
+}
+
 async function removeListing(id) {
   try {
     await removeFromShortlist(id)
     if (selectedListingId.value === id) selectedListingId.value = ''
   } catch (error) {
-    storageError.value =
-      error instanceof Error ? error.message : 'Unable to update your shortlist.'
+    console.error('Error removing property:', error)
+    groupError.value = 'Unable to remove this property.'
   }
 }
 
@@ -81,36 +295,124 @@ async function removeListing(id) {
 const addedByFor = (listingId) =>
   entries.value.find((entry) => entry.listingId === listingId)?.addedByName ?? null
 
-function confirmEnquiry() {
+async function voteForProperty(listingId) {
+  if (!groupId.value) {
+    groupError.value = 'Join a group to vote on listings.'
+    return
+  }
+  try {
+    await voteForListing(
+      groupId.value,
+      listingId,
+      currentUserId.value,
+    )
+  } catch (error) {
+    console.error('Error voting for property:', error)
+    groupError.value = 'Unable to submit your vote.'
+  }
+}
+
+async function unvoteForProperty(listingId) {
+  try {
+    await removeListingVote(
+      groupId.value,
+      listingId,
+      currentUserId.value,
+    )
+  } catch (error) {
+    console.error('Error removing vote:', error)
+    groupError.value = 'Unable to remove your vote.'
+  }
+}
+
+async function confirmEnquiry() {
   if (!enquiryListing.value) {
     enquiryError.value = 'Add a listing to your shortlist before submitting an enquiry.'
     return
   }
-  enquirySent.value = true
-  enquiryDialogOpen.value = false
+
+  if (hasEnquiryBeenSent(enquiryListing.value.id)) {
+    enquiryError.value = 'Your group has already submitted an enquiry for this listing.'
+    return
+  }
+
+  if (!groupId.value || !currentUserId.value) {
+    enquiryError.value = 'Join a group to submit an enquiry.'
+    return
+  }
+
+  try {
+    enquiryError.value = ''
+
+    await submitEnquiry(
+      groupId.value,
+      currentUserId.value,
+      {
+        ListingID: enquiryListing.value.id,
+        Title: enquiryListing.value.title,
+      },
+      emailReceipt.value,
+    )
+
+    emailReceipt.value = false
+    enquiryDialogOpen.value = false
+    agentContactDialogOpen.value = true
+  } catch (error) {
+    console.error('Error submitting enquiry:', error)
+    enquiryError.value = 'Unable to submit your enquiry. Please try again.'
+  }
 }
 </script>
 
 <template>
   <div>
     <header class="page-head">
-      <h1>Shortlist</h1>
-      <p>
-        {{ savedListings.length }} {{ savedListings.length === 1 ? 'listing' : 'listings' }}
+      <h1>{{ activeTab === 'shortlist' ? 'Shortlist' : 'Analytics' }}</h1>
+
+      <p v-if="activeTab === 'shortlist'">
+        {{ savedListings.length }}
+        {{ savedListings.length === 1 ? 'listing' : 'listings' }}
         shortlisted
         <template v-if="isGroupMode"> · shared with {{ activeGroup?.name }}</template>
         <template v-else> · only on this device until you join a group</template>
       </p>
+
+      <p v-else>
+        Compare your group's shortlisted properties.
+      </p>
     </header>
 
-    <main class="content">
+    <!-- Tab navigation -->
+    <nav class="shortlist-tabs" aria-label="Shortlist sections">
+      <button
+        type="button"
+        :class="{ 'shortlist-tab--active': activeTab === 'shortlist' }"
+        @click="activeTab = 'shortlist'"
+      >
+        <AppIcon name="bookmark" :size="14" />
+        Shortlist
+      </button>
+
+      <button
+        type="button"
+        :class="{ 'shortlist-tab--active': activeTab === 'analytics' }"
+        @click="activeTab = 'analytics'"
+      >
+        <AppIcon name="chart" :size="14" />
+        Analytics
+      </button>
+    </nav>
+
+    <main v-if="activeTab === 'shortlist'" class="content">
       <section class="shortlist-layout">
-        <aside v-if="savedListings.length" class="consensus-banner" aria-label="Sample group consensus">
-          <span class="consensus-icon"><AppIcon name="check" :size="16" /></span>
+        <aside
+          v-if="savedListings.length"
+          class="consensus-banner"
+          aria-label="Group shortlist status"
+        >
           <span>
-            <strong>Group consensus reached</strong>
-            <small>3 out of 4 members agreed on these listings.</small>
-            <small class="sample-notice">Sample votes only — voting is not connected or shared yet.</small>
+            <strong>Group shortlist</strong>
+            <small>Votes are shared with all group members.</small>
           </span>
         </aside>
 
@@ -148,12 +450,14 @@ function confirmEnquiry() {
           <p class="map-hint">Select a pin to highlight its listing below.</p>
         </section>
 
-        <p v-if="storageError" class="error-message" role="alert">{{ storageError }}</p>
+        <p v-if="storageError || groupError" class="error-message" role="alert">
+          {{ storageError || groupError }}
+        </p>
         <p v-else-if="loading" class="muted">Loading your group's shortlist…</p>
 
         <div v-if="savedListings.length" class="listing-list">
           <article
-            v-for="listing in savedListings"
+            v-for="listing in rankedListings"
             :id="`shortlist-${listing.id}`"
             :key="listing.id"
             class="listing-card"
@@ -161,6 +465,7 @@ function confirmEnquiry() {
               'listing-card--selected': selectedListingId === listing.id,
               'listing-card--unavailable': !listing.available,
             }"
+            @click="selectedListingId = listing.id"
           >
             <div class="listing-main">
               <div class="listing-photo" :class="`listing-photo--${listing.tone || 'warm'}`">
@@ -169,6 +474,13 @@ function confirmEnquiry() {
               <div class="listing-info">
                 <div class="listing-title-row">
                   <h3>{{ listing.title }}</h3>
+                  <span
+                    v-if="hasEnquiryBeenSent(listing.id)"
+                    class="enquiry-sent-badge"
+                  >
+                    <AppIcon name="check" :size="12" />
+                    Enquiry sent
+                  </span>
                   <div class="listing-title-actions">
                     <span v-if="listing.match !== null" class="match-pill">{{ listing.match }}%</span>
                     <button
@@ -196,11 +508,21 @@ function confirmEnquiry() {
                       {{ member }}
                     </span>
                   </div>
-                  <button class="vote-button" type="button" disabled :aria-label="`${listing.sampleVotes} sample votes`">
+                  <button
+                    class="vote-button"
+                    type="button"
+                    :class="{ 'vote-button--active': hasUserVoted(listing.id) }"
+                    :aria-label="hasUserVoted(listing.id)
+                      ? `Remove your vote from ${listing.title}`
+                      : `Vote for ${listing.title}`"
+                    @click="hasUserVoted(listing.id)
+                      ? unvoteForProperty(listing.id)
+                      : voteForProperty(listing.id)"
+                  >
                     <AppIcon name="thumbs-up" :size="12" />
-                    Vote ({{ listing.sampleVotes }})
+                    {{ hasUserVoted(listing.id) ? 'Voted' : 'Vote' }}
+                    ({{ getVoteCount(listing.id) }})
                   </button>
-                  <span class="sample-tag">Sample</span>
                 </div>
               </div>
             </div>
@@ -220,20 +542,35 @@ function confirmEnquiry() {
           </article>
 
           <div class="enquiry-area">
-            <div v-if="enquirySent" class="enquiry-success" role="status">
-              <span class="enquiry-success-icon"><AppIcon name="check" :size="17" /></span>
-              <strong>Enquiry sent!</strong>
-            </div>
             <button
-              v-else
               class="enquiry-button"
               type="button"
+              :disabled="
+                !enquiryListing ||
+                hasEnquiryBeenSent(enquiryListing.id)
+              "
               @click="enquiryError = ''; enquiryDialogOpen = true"
             >
-              Submit Enquiry
+              {{
+                !enquiryListing
+                  ? 'Select a listing first'
+                  : hasEnquiryBeenSent(enquiryListing.id)
+                    ? 'Enquiry already sent'
+                    : 'Submit Enquiry'
+              }}
             </button>
-            <p class="enquiry-note">Notifies all group members and assigns a property agent.</p>
-            <p v-if="enquiryError" class="enquiry-message" role="alert">{{ enquiryError }}</p>
+
+            <p class="enquiry-note">
+              Notifies all group members and assigns a property agent.
+            </p>
+
+            <p
+              v-if="enquiryError"
+              class="enquiry-message"
+              role="alert"
+            >
+              {{ enquiryError }}
+            </p>
           </div>
         </div>
 
@@ -243,6 +580,182 @@ function confirmEnquiry() {
           <p>Save listings from Browse to see them here.</p>
           <RouterLink class="btn btn-primary" to="/listings">Browse listings</RouterLink>
         </section>
+      </section>
+    </main>
+
+    <!-- Analytics tab -->
+    <main v-else class="content">
+      <section class="analytics-layout">
+
+        <div class="analytics-heading">
+          <h2>Property Comparison</h2>
+          <p>
+            Compare shortlisted properties based on rental price,
+            group votes and property size.
+          </p>
+        </div>
+
+        <!-- Switch between chart and table -->
+        <div class="comparison-switcher">
+          <button
+            type="button"
+            :class="{ 'comparison-switcher--active': comparisonView === 'chart' }"
+            @click="comparisonView = 'chart'"
+          >
+            Chart View
+          </button>
+
+          <button
+            type="button"
+            :class="{ 'comparison-switcher--active': comparisonView === 'table' }"
+            @click="comparisonView = 'table'"
+          >
+            Table View
+          </button>
+        </div>
+
+        <!-- Chart View -->
+        <div
+          v-if="comparisonView === 'chart' && comparisonListings.length"
+          class="comparison-chart-wrapper"
+        >
+          <div class="chart-legend">
+            <span><i class="legend-bar"></i> Monthly Rent</span>
+            <span><i class="legend-line"></i> Group Votes</span>
+          </div>
+
+          <div class="comparison-chart-scroll">
+            <svg
+              viewBox="0 0 680 280"
+              class="comparison-chart"
+              role="img"
+              aria-label="Bar chart comparing monthly rent and group votes for shortlisted properties"
+            >
+              <!-- Chart baseline -->
+              <line
+                x1="55" y1="220"
+                x2="640" y2="220"
+                stroke="#ddd"
+              />
+
+              <!-- Rent bars -->
+              <g v-for="item in chartData" :key="item.id">
+                <rect
+                  :x="item.x - 18"
+                  :y="220 - item.barHeight"
+                  width="36"
+                  :height="item.barHeight"
+                  rx="4"
+                  fill="#c75b55"
+                />
+
+                <text
+                  :x="item.x"
+                  :y="210 - item.barHeight"
+                  text-anchor="middle"
+                  font-size="10"
+                  fill="currentColor"
+                >
+                  {{ Math.round(item.price / 100) / 10 }}k
+                </text>
+
+                <text
+                  :x="item.x"
+                  y="238"
+                  text-anchor="middle"
+                  font-size="9"
+                  fill="currentColor"
+                >
+                  {{ item.title.length > 14 ? `${item.title.slice(0, 12)}...` : item.title }}
+                </text>
+              </g>
+
+              <!-- Vote line -->
+              <polyline
+                v-if="chartData.length > 1"
+                :points="chartData.map(item => `${item.x},${item.voteY}`).join(' ')"
+                fill="none"
+                stroke="#397c91"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <!-- Vote dots -->
+              <g v-for="item in chartData" :key="`vote-${item.id}`">
+                <circle
+                  :cx="item.x"
+                  :cy="item.voteY"
+                  r="5"
+                  fill="#397c91"
+                />
+                <text
+                  :x="item.x"
+                  :y="item.voteY - 10"
+                  text-anchor="middle"
+                  font-size="10"
+                  fill="#397c91"
+                >
+                  {{ item.votes }}
+                </text>
+              </g>
+            </svg>
+          </div>
+
+          <p class="chart-note">
+            Higher bars indicate higher monthly rent. The line indicates group votes.
+          </p>
+        </div>
+        <!-- Table View -->
+        <div
+          v-if="comparisonView === 'table' && comparisonListings.length"
+          class="comparison-table-wrapper"
+        >
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Monthly Rent</th>
+                <th>Group Votes</th>
+                <th>Floor Area</th>
+                <th>Rent / sqm</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                v-for="listing in comparisonListings"
+                :key="listing.id"
+              >
+                <td>{{ listing.title }}</td>
+                <td>{{ formatRent(listing.price) }}</td>
+                <td>{{ listing.votes }}</td>
+                <td>
+                  {{ listing.areaSqm ? `${listing.areaSqm} sqm` : 'N/A' }}
+                </td>
+                <td>
+                  {{
+                    listing.rentPerSqm !== null
+                      ? `$${listing.rentPerSqm.toFixed(2)}`
+                      : 'N/A'
+                  }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div
+          v-if="!comparisonListings.length"
+          class="analytics-placeholder"
+        >
+          <h3>No properties to compare yet</h3>
+          <p>
+            Add properties to your group shortlist to start comparing them.
+          </p>
+        </div>
+
       </section>
     </main>
 
@@ -266,11 +779,70 @@ function confirmEnquiry() {
             <strong>{{ enquiryListing?.title }}</strong>
             to the property agent. This action cannot be undone.
           </p>
+          <label class="email-receipt-option">
+            <input
+              v-model="emailReceipt"
+              type="checkbox"
+            />
+            <span>Email me a receipt of this enquiry</span>
+          </label>
           <button class="enquiry-button" type="button" @click="confirmEnquiry">
             Yes, Submit Enquiry
           </button>
           <button class="enquiry-cancel" type="button" @click="enquiryDialogOpen = false">
             Cancel
+          </button>
+        </section>
+      </div>
+    </Teleport>
+    <Teleport to="body">
+      <div
+        v-if="agentContactDialogOpen"
+        class="enquiry-backdrop"
+        @click.self="agentContactDialogOpen = false"
+      >
+        <section class="enquiry-dialog">
+          <h2>Enquiry Submitted!</h2>
+
+          <p>
+            Your enquiry for
+            <strong>{{ enquiryListing?.title }}</strong>
+            has been submitted successfully.
+          </p>
+
+          <div class="agent-contact">
+            <h3>Property Agent Contact</h3>
+
+            <span class="sample-agent-label">
+              SAMPLE CONTACT DETAILS
+            </span>
+
+            <div class="agent-detail">
+              <AppIcon name="user" :size="16" />
+              <span>Property Agent: Jane</span>
+            </div>
+
+            <div class="agent-detail">
+              <AppIcon name="phone" :size="16" />
+              <span>+65 6000 0000</span>
+            </div>
+
+            <div class="agent-detail">
+              <AppIcon name="mail" :size="16" />
+              <span>jane@gmail.com</span>
+            </div>
+          </div>
+
+          <p class="agent-disclaimer">
+            These are placeholder contact details.
+          </p>
+
+          <button
+            class="enquiry-button"
+            type="button"
+            @click="agentContactDialogOpen = false"
+          >
+            Close
           </button>
         </section>
       </div>
@@ -653,6 +1225,32 @@ function confirmEnquiry() {
   font-size: 10px;
 }
 
+/* Default state: member has not voted */
+.vote-button {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.vote-button:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+/* Active state: member has voted */
+.vote-button--active {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  font-weight: 700;
+}
+
+.vote-button--active:hover:not(:disabled) {
+  background: #bbf7d0;
+  border-color: #4ade80;
+}
+
 .vote-button:disabled {
   cursor: not-allowed;
 }
@@ -840,21 +1438,243 @@ function confirmEnquiry() {
   font-size: 13px;
 }
 
-@media (max-width: 560px) {
-  .listing-photo {
-    flex-basis: 82px;
-  }
-
-  .listing-info {
-    padding: 8px;
-  }
-
-  .social-row {
-    gap: 4px;
-  }
-
-  .sample-tag {
-    display: none;
-  }
+.agent-contact {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e7e5e2;
+  border-radius: 12px;
+  background: #faf9f8;
 }
+
+.agent-contact h3 {
+  font-size: 14px;
+}
+
+.sample-agent-label {
+  color: #b7791f;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.agent-detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #555;
+  font-size: 12px;
+}
+
+.agent-disclaimer {
+  color: #999 !important;
+  font-size: 10px !important;
+}
+
+.enquiry-sent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #e8f5e9;
+  color: #287a3e;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Shortlist and Analytics tabs */
+.shortlist-tabs {
+  display: flex;
+  width: min(100% - 32px, 720px);
+  gap: 8px;
+  margin: 0 auto 20px;
+  padding: 5px;
+  border: 1px solid #e7e5e2;
+  border-radius: 12px;
+  background: #f7f6f4;
+}
+
+.shortlist-tabs button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #777;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shortlist-tabs button.shortlist-tab--active {
+  background: #fff;
+  color: var(--red);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
+}
+
+/* Analytics layout */
+.analytics-layout {
+  display: grid;
+  width: min(100%, 720px);
+  gap: 16px;
+  margin: 0 auto;
+}
+
+.analytics-heading h2 {
+  margin-bottom: 5px;
+  font-size: 16px;
+}
+
+.analytics-heading p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.analytics-placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 40px 20px;
+  border: 1px dashed var(--chip-line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--muted);
+  text-align: center;
+}
+
+.analytics-placeholder h3 {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.analytics-placeholder p {
+  font-size: 12px;
+}
+
+/* Chart and table view switcher */
+.comparison-switcher {
+  display: flex;
+  gap: 8px;
+  padding: 5px;
+  border-radius: 10px;
+  background: #f7f6f4;
+}
+
+.comparison-switcher button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comparison-switcher button.comparison-switcher--active {
+  background: white;
+  color: var(--red);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
+}
+
+/* Comparison table */
+.comparison-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--chip-line);
+  border-radius: 12px;
+  background: white;
+}
+
+.comparison-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--chip-line);
+}
+
+.comparison-table th {
+  background: #f7f6f4;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.comparison-table td {
+  color: var(--text);
+}
+
+.comparison-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Property comparison chart */
+.comparison-chart-wrapper {
+  padding: 18px;
+  border: 1px solid var(--chip-line);
+  border-radius: 12px;
+  background: white;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-bar {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #c75b55;
+}
+
+.legend-line {
+  width: 18px;
+  height: 3px;
+  border-radius: 3px;
+  background: #397c91;
+}
+
+.comparison-chart-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.comparison-chart {
+  display: block;
+  width: 100%;
+  min-width: 580px;
+  overflow: visible;
+}
+
+.chart-note {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
 </style>

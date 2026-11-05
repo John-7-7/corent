@@ -218,7 +218,7 @@ export async function routeCommute(from, to, departure = referenceDeparture()) {
 
 /** Runs tasks with a small concurrency cap so OneMap is not hit all at once. */
 async function pooled(tasks, limit = MAX_CONCURRENT) {
-  const results = new Array(tasks.length)
+  const results = Array.from({ length: tasks.length })
   let next = 0
   const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
     while (next < tasks.length) {
