@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import ListingCard from '@/components/listings/ListingCard.vue'
@@ -7,11 +7,8 @@ import ListingMap from '@/components/listings/ListingMap.vue'
 import ScoreBreakdown from '@/components/listings/ScoreBreakdown.vue'
 import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
-import { activeGroup, activeGroupId } from '@/services/activeGroup'
-import { watchGroupPreference } from '@/services/groupPreferencesService'
-import { getMemberProfiles } from '@/services/groupSummaryService'
-import { scoreListings } from '@/services/listingScoring'
-import { cachedCommuteMatrix } from '@/services/routingService'
+import { activeGroupId } from '@/services/activeGroup'
+import { useGroupScoring } from '@/services/useGroupScoring'
 
 const listings = ref([])
 const loading = ref(true)
@@ -28,68 +25,10 @@ onMounted(async () => {
 })
 
 /* ---------- group preferences, for the match % (F-REQ-015) ---------- */
-const groupPreference = ref(null)
-const memberProfiles = ref([])
-let unsubscribePreference = null
-
-// Follows the group picked on Home, the same as Browse's shortlist does.
-watch(
-  activeGroupId,
-  async (id) => {
-    unsubscribePreference?.()
-    unsubscribePreference = null
-    groupPreference.value = null
-    memberProfiles.value = []
-    if (!id) return
-    unsubscribePreference = watchGroupPreference(
-      id,
-      (preference) => (groupPreference.value = preference),
-      () => (groupPreference.value = null),
-    )
-    try {
-      memberProfiles.value = await getMemberProfiles(activeGroup.value?.memberIds ?? [])
-    } catch {
-      memberProfiles.value = []
-    }
-  },
-  { immediate: true },
-)
-onUnmounted(() => unsubscribePreference?.())
-
-const scoringMembers = computed(() =>
-  (activeGroup.value?.memberIds ?? []).map((uid) => ({
-    uid,
-    name: activeGroup.value?.members?.find((member) => member.id === uid)?.name || 'Group member',
-    profile: memberProfiles.value.find((profile) => profile.UserID === uid) || null,
-  })),
-)
-
-const commuteMembers = computed(() =>
-  scoringMembers.value
-    .filter((member) => member.profile?.CommuteDestination?.Lat)
-    .map((member) => ({
-      id: member.uid,
-      name: member.name,
-      destination: member.profile.CommuteDestination,
-      maxCommuteTime: member.profile.MaxCommuteTime ?? null,
-    })),
-)
-
-// Browse scores every listing, which is far too many to route, so commute is
-// read from the cache rather than measured. A listing already routed by the
-// Shortlist page therefore shows the same percentage on both pages.
-const scoredById = computed(() => {
-  if (!activeGroupId.value || !groupPreference.value) return new Map()
-  const matrix = cachedCommuteMatrix(listings.value, commuteMembers.value)
-  return new Map(
-    scoreListings(listings.value, groupPreference.value, scoringMembers.value, matrix).map(
-      (entry) => [entry.listingId, entry],
-    ),
-  )
-})
-
-const scoreOf = (listing) => scoredById.value.get(listing.ListingID)?.score ?? null
-const canScore = computed(() => scoredById.value.size > 0)
+// Shared with Home so the same listing cannot show two different numbers.
+// Commute comes from the routing cache: Browse holds far too many listings to
+// route, but anything the Shortlist page already measured carries over.
+const { scoringMembers, scoredById, scoreOf, canScore } = useGroupScoring(listings)
 
 /* ---------- filters ---------- */
 // Options come from the data, so we never offer a filter that returns nothing.

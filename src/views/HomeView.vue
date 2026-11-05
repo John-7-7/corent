@@ -5,6 +5,8 @@ import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import GroupCard from '@/components/groups/GroupCard.vue'
 import { onAuthChange } from '@/services/authService'
+import { getListings } from '@/services/listings'
+import { useGroupScoring } from '@/services/useGroupScoring'
 import {createGroup as createGroupInFirestore, getUserGroups, joinGroupByInviteCode,} from '@/services/groupService.js'
 import { refreshGroups, setActiveGroup } from '@/services/activeGroup'
 
@@ -26,22 +28,40 @@ const firstName = computed(
     'there',
 )
 
-const picks = [
-  {
-    title: 'Clementi Ave 2 Condo',
-    price: '$2,800',
-    area: 'Clementi',
-    match: 94,
-    tone: '',
-  },
-  {
-    title: 'Tampines St 86 HDB',
-    price: '$2,200',
-    area: 'Tampines',
-    match: 87,
-    tone: 'alt',
-  },
-] // Hardcoded top picks used as placeholders for now.
+// Top picks were two hardcoded percentages (94% and 87%) against invented
+// listings. Everything else in the app refuses to show a score it cannot
+// compute, so these are real listings scored the same way Browse scores them.
+// With no group or no agreed preferences there is no basis for a match, so the
+// section falls back to the cheapest listings and shows no percentage at all.
+const allListings = ref([])
+getListings()
+  .then((data) => (allListings.value = data))
+  .catch(() => (allListings.value = []))
+
+const { scoredById, canScore } = useGroupScoring(allListings)
+
+const picks = computed(() => {
+  const available = allListings.value.filter((l) => l.IsAvailable)
+  const ranked = canScore.value
+    ? available
+        .map((l) => ({ listing: l, score: scoredById.value.get(l.ListingID)?.score ?? null }))
+        .filter((e) => e.score !== null)
+        .sort((a, b) => b.score - a.score)
+    : [...available].sort((a, b) => a.MonthlyRent - b.MonthlyRent).map((l) => ({ listing: l, score: null }))
+
+  return ranked.slice(0, 3).map(({ listing, score }, index) => ({
+    id: listing.ListingID,
+    title: listing.Title,
+    price: `$${listing.MonthlyRent.toLocaleString('en-SG')}`,
+    area: listing.Neighbourhood ?? listing.Region ?? '',
+    match: score,
+    tone: ['', 'alt', 'cool'][index],
+  }))
+})
+
+const picksHeading = computed(() =>
+  canScore.value ? 'Top picks for your group' : 'Lowest rent right now',
+)
 
 function getErrorMessage(error, fallbackMessage) {
   return error instanceof Error
@@ -234,15 +254,18 @@ onUnmounted(unsubscribeAuth)
         </section>
 
         <div class="between">
-          <h2 class="section-title">Top Picks for You</h2>
+          <h2 class="section-title">{{ picksHeading }}</h2>
           <router-link class="link" to="/listings">See all</router-link>
         </div>
-        <article v-for="pick in picks" :key="pick.title" class="pick">
+        <p v-if="!canScore && picks.length" class="small muted" style="margin: -4px 0 10px">
+          Agree your group's preferences to see which listings actually fit.
+        </p>
+        <article v-for="pick in picks" :key="pick.id" class="pick">
           <div class="thumb" :class="pick.tone" aria-hidden="true"></div>
           <div class="pick-body">
             <div class="between" style="align-items: flex-start">
               <h3>{{ pick.title }}</h3>
-              <span class="pill">{{ pick.match }}%</span>
+              <span v-if="pick.match !== null" class="pill">{{ pick.match }}%</span>
             </div>
             <p class="price">{{ pick.price }}<span class="muted">/mo</span></p>
             <p class="small muted row-inline"><AppIcon name="pin" :size="11" /> {{ pick.area }}</p>
