@@ -32,7 +32,16 @@ const clampPct = (n) => `${Math.min(95, Math.max(5, n * 100)).toFixed(1)}%`
 
 // The current user's information
 const currentUserId = ref('')
+const currentUserDisplayName = ref('')
+const currentUserPhotoURL = ref('')
 const groupId = ref('')
+const currentUserInitials = computed(() => {
+  const displayName = currentUserDisplayName.value || 'CoRent member'
+  const parts = displayName.trim().split(/\s+/).filter(Boolean)
+  return parts.length > 1
+    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    : displayName.slice(0, 2).toUpperCase()
+})
 
 // Properties shared by everyone in the group
 const groupListingIds = ref([])
@@ -84,6 +93,9 @@ onMounted(async () => {
     }
 
     currentUserId.value = user.uid
+    currentUserDisplayName.value =
+      user.displayName || user.email?.split('@')[0] || 'CoRent member'
+    currentUserPhotoURL.value = user.photoURL || ''
 
     // 2. Find the group this user belongs to
     const groups = await getUserGroups(user.uid)
@@ -462,10 +474,18 @@ async function confirmEnquiry() {
                 </p>
 
                 <div class="social-row">
-                  <div class="member-avatars" aria-label="Sample group members">
-                    <span v-for="(member, index) in ['AT', 'BL', 'CM', 'DK']" :key="member" :class="`member-avatar member-avatar--${index}`">
-                      {{ member }}
-                    </span>
+                  <div
+                    v-if="hasUserVoted(listing.id)"
+                    class="member-avatars"
+                    :aria-label="`${currentUserDisplayName} voted`"
+                  >
+                    <img
+                      v-if="currentUserPhotoURL"
+                      class="member-avatar"
+                      :src="currentUserPhotoURL"
+                      alt=""
+                    />
+                    <span v-else class="member-avatar">{{ currentUserInitials }}</span>
                   </div>
                   <button
                     class="vote-button"
@@ -1151,26 +1171,21 @@ async function confirmEnquiry() {
 
 .member-avatars {
   display: flex;
-  padding-left: 1px;
 }
 
 .member-avatar {
   display: grid;
-  width: 17px;
-  height: 17px;
-  margin-left: -2px;
+  width: 22px;
+  height: 22px;
   place-items: center;
-  border: 1px solid #fff;
+  border: 1px solid var(--line);
   border-radius: 50%;
+  background: var(--red);
   color: #fff;
-  font-size: 6px;
+  font-size: 9px;
   font-weight: 700;
+  object-fit: cover;
 }
-
-.member-avatar--0 { background: #cf343c; }
-.member-avatar--1 { background: #5089d6; }
-.member-avatar--2 { background: #49a886; }
-.member-avatar--3 { background: #e6a23b; }
 
 .vote-button {
   display: inline-flex;

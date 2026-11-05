@@ -562,9 +562,8 @@ onBeforeUnmount(() => unsubscribeAuth?.())
   gap: 10px;
   padding: 22px;
   border-radius: 14px;
-  background: rgb(255 255 255 / 96%);
+  background: var(--cr-modal-surface);
   color: var(--cr-text);
-  backdrop-filter: var(--cr-glass-blur);
   box-shadow: 0 20px 50px rgb(0 0 0 / 20%);
   font-family: var(--cr-font);
 }
