@@ -6,20 +6,28 @@ defineProps({
     type: Object,
     required: true,
   },
+  // The group Browse and Shortlist are currently scoring against. A user can
+  // belong to several, and without this marker there is no way to tell which
+  // one the match percentages refer to.
+  active: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['view-group'])
 </script>
 
 <template>
-  <article class="group-card">
+  <article class="group-card" :class="{ 'is-active': active }">
     <div class="group-icon" aria-hidden="true">
       <AppIcon name="users" :size="18" />
     </div>
     <div class="group-info">
       <div class="group-title-row">
         <h3>{{ group.name }}</h3>
-        <span class="preview-label">Rental group</span>
+        <span v-if="active" class="preview-label is-active">Active</span>
+        <span v-else class="preview-label">Rental group</span>
       </div>
       <p class="group-meta">
         {{ group.memberCount }} {{ group.memberCount === 1 ? 'member' : 'members' }}
@@ -39,6 +47,12 @@ const emit = defineEmits(['view-group'])
 </template>
 
 <style scoped>
+.group-card.is-active { border-color: var(--red); }
+.preview-label.is-active {
+  background: var(--red-tint);
+  color: var(--red);
+  font-weight: 600;
+}
 .group-card {
   display: flex;
   align-items: center;

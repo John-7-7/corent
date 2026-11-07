@@ -37,21 +37,36 @@ function priceIcon(rent) {
   })
 }
 
+// Listing titles and neighbourhoods come from an imported corpus, not from us,
+// and Leaflet popups take an HTML string — so everything interpolated here is
+// escaped rather than trusted.
+const escapeHtml = (value) =>
+  String(value ?? '').replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+  )
+
+// Most of the corpus has no bedroom count; "null bed" is worse than saying so.
+function bedroomText(value) {
+  const n = Number(value)
+  return Number.isFinite(n) && n > 0 ? `${n} bed` : 'Bedrooms not listed'
+}
+
 function popupHtml(l) {
   const dists = props.destinations
     .map((d) => {
       const km = haversineKm(l.Coordinates, { lat: d.Lat, lng: d.Lng })
-      return `<li>${d.MemberName ?? d.Address}: ${formatDistance(km)}</li>`
+      return `<li>${escapeHtml(d.MemberName ?? d.Address)}: ${formatDistance(km)}</li>`
     })
     .join('')
 
   return `
     <div class="pop">
-      <strong>${l.Title}</strong>
+      <strong>${escapeHtml(l.Title)}</strong>
       <div class="pop-meta">
-        S$${l.MonthlyRent.toLocaleString()}/mo &middot; ${l.Bedrooms} bed &middot; ${l.PropertyType}
+        S$${l.MonthlyRent.toLocaleString()}/mo &middot; ${bedroomText(l.Bedrooms)} &middot; ${escapeHtml(l.PropertyType)}
       </div>
-      <div class="pop-meta">${l.Neighbourhood ?? ''}${l.NearestMrt ? ` &middot; ${l.MrtWalkingMinutes} min to ${l.NearestMrt}` : ''}</div>
+      <div class="pop-meta">${escapeHtml(l.Neighbourhood ?? '')}${l.NearestMrt ? ` &middot; ${escapeHtml(l.MrtWalkingMinutes)} min to ${escapeHtml(l.NearestMrt)}` : ''}</div>
       ${dists ? `<ul class="pop-dist">${dists}</ul><small>straight-line distance</small>` : ''}
     </div>`
 }
@@ -77,7 +92,9 @@ function draw() {
       fillColor: '#e67e22',
       fillOpacity: 1,
     })
-      .bindPopup(`<strong>${d.MemberName ?? 'Commute destination'}</strong><br>${d.Address}`)
+      .bindPopup(
+        `<strong>${escapeHtml(d.MemberName ?? 'Commute destination')}</strong><br>${escapeHtml(d.Address)}`,
+      )
       .addTo(layer)
   })
 

@@ -21,19 +21,32 @@ const router = createRouter({
     { path: '/register', name: 'register', component: RegisterView, meta: { bare: true } },
     { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView, meta: { bare: true }, },
     { path: '/preferences', name: 'preferences', component: PreferencesView, meta: { bare: true, requiresAuth: true },},
-    // App pages (with sidebar)
-    { path: '/home', name: 'home', component: HomeView },
+    // App pages (with sidebar). Every one of these reads or writes something
+    // that belongs to a signed-in user or their group, so all of them require
+    // auth: F-REQ-002 and F-REQ-003 both promise the session is what protects
+    // a group's preferences and decisions. The guard was lifted during early
+    // layout work and is now back on.
+    { path: '/home', name: 'home', component: HomeView, meta: { requiresAuth: true } },
     {
       path: '/profile',
       name: 'profile',
       component: ProfileView,
       meta: { requiresAuth: true },
     },
-    { path: '/listings', name: 'listings', component: ListingsView },
-    { path: '/groups/:groupId', name: 'group-details', component: GroupDetailsView, },
-    { path: '/group-summary', name: 'group summary', component: GroupSummaryView},
-    { path: '/shortlist', name: 'shortlist', component: ShortlistView} //i removed the meta: { requiresAuth: true } from this route to allow access without authentication for now so we can see the layout for all
-    //later we can add it back in once we have the authentication flow set up -yp
+    { path: '/listings', name: 'listings', component: ListingsView, meta: { requiresAuth: true } },
+    {
+      path: '/groups/:groupId',
+      name: 'group-details',
+      component: GroupDetailsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/group-summary',
+      name: 'group summary',
+      component: GroupSummaryView,
+      meta: { requiresAuth: true },
+    },
+    { path: '/shortlist', name: 'shortlist', component: ShortlistView, meta: { requiresAuth: true } },
   ],
 })
 

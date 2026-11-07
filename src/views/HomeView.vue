@@ -8,7 +8,7 @@ import { onAuthChange } from '@/services/authService'
 import { getListings } from '@/services/listings'
 import { useGroupScoring } from '@/services/useGroupScoring'
 import {createGroup as createGroupInFirestore, getUserGroups, joinGroupByInviteCode,} from '@/services/groupService.js'
-import { refreshGroups, setActiveGroup } from '@/services/activeGroup'
+import { activeGroupId, refreshGroups, setActiveGroup } from '@/services/activeGroup'
 
 const router = useRouter()
 
@@ -40,6 +40,10 @@ getListings()
 
 const { scoredById, canScore } = useGroupScoring(allListings)
 
+// Photo URLs that failed to load, so the gradient shows instead of a broken
+// image icon. Vue tracks Set mutations, so add() re-renders.
+const brokenImages = ref(new Set())
+
 const picks = computed(() => {
   const available = allListings.value.filter((l) => l.IsAvailable)
   const ranked = canScore.value
@@ -55,6 +59,7 @@ const picks = computed(() => {
     price: `$${listing.MonthlyRent.toLocaleString('en-SG')}`,
     area: listing.Neighbourhood ?? listing.Region ?? '',
     match: score,
+    image: listing.ImageURL ?? null,
     tone: ['', 'alt', 'cool'][index],
   }))
 })
@@ -173,6 +178,13 @@ function viewGroupDetails() {
 
   const groupId = selectedGroup.value.id
 
+  // Opening a group is also how you switch to it. Browse and Shortlist score
+  // against one group at a time, and until this call existed the only way the
+  // active group was ever set was by creating one — so a user in several
+  // groups was stuck scoring against whichever Firestore happened to return
+  // first, with no way to change it and nothing on screen saying which.
+  setActiveGroup(selectedGroup.value)
+
   closeDialog()
 
   router.push({
@@ -239,6 +251,7 @@ onUnmounted(unsubscribeAuth)
               v-for="group in groups"
               :key="group.id"
               :group="group"
+              :active="group.id === activeGroupId"
               @view-group="openGroupPreview"
             />
           </div>
@@ -261,7 +274,17 @@ onUnmounted(unsubscribeAuth)
           Agree your group's preferences to see which listings actually fit.
         </p>
         <article v-for="pick in picks" :key="pick.id" class="pick">
-          <div class="thumb" :class="pick.tone" aria-hidden="true"></div>
+          <!-- The gradient is the fallback, not the design: 99.co photo URLs
+               are signed and expire, so a dead one falls back to it. -->
+          <div class="thumb" :class="pick.tone" aria-hidden="true">
+            <img
+              v-if="pick.image && !brokenImages.has(pick.id)"
+              :src="pick.image"
+              alt=""
+              loading="lazy"
+              @error="brokenImages.add(pick.id)"
+            />
+          </div>
           <div class="pick-body">
             <div class="between" style="align-items: flex-start">
               <h3>{{ pick.title }}</h3>
@@ -430,7 +453,8 @@ onUnmounted(unsubscribeAuth)
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-.pick .thumb { width: 64px; min-height: 64px; }
+.pick .thumb { width: 64px; min-height: 64px; overflow: hidden; border-radius: 8px; }
+.pick .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pick-body { flex: 1; min-width: 0; padding: 0.65rem 0.8rem; display: grid; gap: 2px; }
 .price { color: var(--red); font-weight: 700; font-size: 13px; }
 .price span { font-weight: 400; font-size: 11px; }

@@ -1,6 +1,9 @@
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '../firebase'
 import { haversineKm } from './geo'
+import { getToken, resetToken } from './onemapToken'
+
+// Re-exported so callers that rotate the token do not need to know which
+// module owns it.
+export { resetToken }
 
 /**
  * Door-to-door public-transport times from OneMap (SLA).
@@ -26,37 +29,6 @@ const ESTIMATE_FIXED_MINUTES = 10
 const ESTIMATE_MINUTES_PER_KM = 3.2
 
 /* ---------------- token ---------------- */
-
-// The OneMap routing API needs a token (valid ~3 days). Never put the OneMap
-// account password in the client: it would ship in the bundle. Two supported
-// sources, in order:
-//   1. Firestore config/onemap { token }  — set by hand in the console,
-//      readable by signed-in users, writable by nobody. Rotating it needs no
-//      redeploy.
-//   2. VITE_ONEMAP_TOKEN in .env         — simpler, but the token is bundled.
-// Both expose a short-lived, routing-only token rather than credentials.
-let tokenPromise = null
-
-async function readToken() {
-  try {
-    const snap = await getDoc(doc(db, 'config', 'onemap'))
-    const token = snap.exists() ? snap.data().token : null
-    if (token) return token
-  } catch {
-    // Unreadable config (rules, offline) just falls through to the env var.
-  }
-  return import.meta.env.VITE_ONEMAP_TOKEN || null
-}
-
-function getToken() {
-  if (!tokenPromise) tokenPromise = readToken()
-  return tokenPromise
-}
-
-/** Call after rotating the token so the next request picks it up. */
-export function resetToken() {
-  tokenPromise = null
-}
 
 /* ---------------- reference departure ---------------- */
 

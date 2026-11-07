@@ -22,7 +22,22 @@ const tone = computed(() => {
 })
 
 const rent = computed(() => `$${props.listing.MonthlyRent.toLocaleString()}`)
-const availableFrom = computed(() => props.listing.AvailableDate || 'Not listed')
+
+// Most of the imported corpus carries no bedroom count and no availability
+// date. Printing an empty count ("\u00b7 bedrooms \u00b7") or "From Not listed"
+// reads as a broken template, so an unknown field is named as unknown and an
+// unknown date simply drops out of the line.
+const metaLine = computed(() => {
+  const beds = Number(props.listing.Bedrooms)
+  const parts = [props.listing.PropertyType || 'Property type not listed']
+  parts.push(
+    Number.isFinite(beds) && beds > 0
+      ? `${beds} bedroom${beds === 1 ? '' : 's'}`
+      : 'Bedrooms not listed',
+  )
+  if (props.listing.AvailableDate) parts.push(`From ${props.listing.AvailableDate}`)
+  return parts.join(' \u00b7 ')
+})
 </script>
 
 <template>
@@ -53,7 +68,7 @@ const availableFrom = computed(() => props.listing.AvailableDate || 'Not listed'
         <AppIcon name="pin" :size="11" /> {{ listing.Neighbourhood }}
       </p>
       <p class="small muted">
-        {{ listing.PropertyType }} · {{ listing.Bedrooms }} bedrooms · From {{ availableFrom }}
+        {{ metaLine }}
       </p>
       <p v-if="listing.NearestMrt" class="small muted">
         {{ listing.MrtWalkingMinutes }} min walk to {{ listing.NearestMrt }}

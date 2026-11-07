@@ -13,6 +13,8 @@ import { watchGroupPreference } from '@/services/groupPreferencesService'
 import { rankShortlist, scoreListings } from '@/services/listingScoring'
 import { commuteKey, commuteMatrix, hasEstimates } from '@/services/routingService'
 import CommuteChart from '@/components/listings/CommuteChart.vue'
+import ListingMap from '@/components/listings/ListingMap.vue'
+import ChartTooltip from '@/components/listings/ChartTooltip.vue'
 import ScoreBreakdown from '@/components/listings/ScoreBreakdown.vue'
 
 import {
@@ -33,8 +35,6 @@ const activeTab = ref('shortlist')
 const comparisonView = ref('chart')
 
 // Rough Singapore bounds, used to place real coordinates on the overview map.
-const SG = { north: 1.47, south: 1.22, west: 103.6, east: 104.05 }
-const clampPct = (n) => `${Math.min(95, Math.max(5, n * 100)).toFixed(1)}%`
 
 // The current user's information
 const currentUserId = ref('')
@@ -178,6 +178,17 @@ const commuteMembers = computed(() =>
     })),
 )
 
+// Commute destinations as ListingMap draws them: an orange marker per member,
+// so the group can see the shortlist against the places they travel to.
+const mapDestinations = computed(() =>
+  commuteMembers.value.map((member) => ({
+    MemberName: member.name,
+    Address: member.destination?.Address ?? 'Commute destination',
+    Lat: member.destination.Lat,
+    Lng: member.destination.Lng,
+  })),
+)
+
 // Recomputed when the shortlist or the members change. routingService caches
 // results, so re-runs after the first are effectively free.
 watch(
@@ -229,20 +240,21 @@ function toShortlistItem(l) {
     title: l.Title,
     price: l.MonthlyRent,
     area: l.Neighbourhood,
+    image: l.ImageURL,
     areaSqm: l.AreaSqm, // Floor area in square metres
     beds: l.Bedrooms,
     available: l.IsAvailable,
     tone: ['', 'alt', 'cool'][n],
 
     match: scoreById.value.get(l.ListingID) ?? null,
-    mapPosition: l.Coordinates && {
-      left: clampPct((l.Coordinates.lng - SG.west) / (SG.east - SG.west)),
-      top: clampPct((SG.north - l.Coordinates.lat) / (SG.north - SG.south)),
-    },
     sampleVotes: 0,
     sampleComments: 0,
   }
 }
+
+// Photo URLs that failed to load, so the gradient shows through instead of a
+// broken image icon. Vue tracks Set mutations, so add() re-renders.
+const brokenImages = ref(new Set())
 
 const selectedListingId = ref('')
 const expandedCommentsId = ref('')
@@ -287,6 +299,61 @@ const comparisonListings = computed(() => {
   })
 })
 
+/**
+ * Axis labels that actually distinguish the bars.
+ *
+ * Every imported title opens with the same boilerplate — "Common Room (HDB)
+ * for Rent in …" — so truncating from the left labelled all five bars
+ * identically. Strip whatever prefix the shortlisted titles share and keep the
+ * part that differs, which is the address.
+ */
+function distinctLabels(titles) {
+  if (titles.length < 2) return titles.map((t) => t.trim())
+  let prefix = titles[0]
+  for (const title of titles.slice(1)) {
+    let i = 0
+    while (i < prefix.length && i < title.length && prefix[i] === title[i]) i += 1
+    prefix = prefix.slice(0, i)
+  }
+  // Back off to a word boundary so no label starts mid-word.
+  prefix = prefix.slice(0, prefix.lastIndexOf(' ') + 1)
+  return titles.map((title) => (title.slice(prefix.length) || title).trim())
+}
+
+const axisLabels = computed(() =>
+  distinctLabels(comparisonListings.value.map((l) => l.title || '')),
+)
+// Labels sit under bars spaced 560/n apart, so a fixed truncation that fits
+// five listings collides at eight. Fit the label to the slot instead: at
+// font-size 9 a character averages about 5.2px.
+const labelChars = computed(() => {
+  const n = Math.max(comparisonListings.value.length, 1)
+  return Math.min(18, Math.max(6, Math.floor(560 / n / 5.2)))
+})
+const truncate = (text, max = labelChars.value) =>
+  text.length > max ? `${text.slice(0, max - 1)}…` : text
+
+/**
+ * Group fit (F-REQ-020). Plotted first because it is the one quantity the
+ * group is actually deciding on; rent and votes are near-identical across a
+ * shortlist, so a rent chart alone separates nothing.
+ *
+ * The axis is an absolute 0-100, not scaled to the best candidate: a 62% must
+ * look like 62% whether or not something better is on the shortlist
+ * (NFR-REQ-06).
+ */
+const fitChartData = computed(() => {
+  const items = comparisonListings.value
+  if (!items.length) return []
+  return items.map((listing, index) => ({
+    ...listing,
+    label: axisLabels.value[index] ?? listing.title,
+    x: 80 + index * (560 / Math.max(items.length, 1)),
+    fitHeight: listing.match !== null ? (listing.match / 100) * 180 : 0,
+  }))
+})
+const hasAnyFit = computed(() => comparisonListings.value.some((l) => l.match !== null))
+
 // Scale the rent and vote values into chart positions.
 const chartData = computed(() => {
   const items = comparisonListings.value
@@ -294,15 +361,49 @@ const chartData = computed(() => {
   if (!items.length) return []
 
   const maxRent = Math.max(...items.map((l) => l.price), 1)
-  const maxVotes = Math.max(...items.map((l) => l.votes), 1)
 
   return items.map((listing, index) => ({
     ...listing,
+    label: axisLabels.value[index] ?? listing.title,
     x: 80 + index * (560 / Math.max(items.length, 1)),
     barHeight: (listing.price / maxRent) * 180,
-    voteY: 220 - (listing.votes / maxVotes) * 180,
   }))
 })
+
+/**
+ * Hover and keyboard-focus readout for both charts (one at a time). Position
+ * comes from the hit target's own box rather than the pointer, so a focused
+ * bar reads the same as a hovered one and the tooltip does not jitter.
+ */
+const hovered = ref(null)
+function showChartTip(chart, item, event) {
+  const wrapper = event.currentTarget.closest('.comparison-chart-wrapper')
+  if (!wrapper) return
+  const mark = event.currentTarget.getBoundingClientRect()
+  const box = wrapper.getBoundingClientRect()
+  const top = mark.top - box.top
+  // The readout carries a photo, so it is tall enough to be clipped by the
+  // card when a bar sits near the top of the plot. Drop it below the column
+  // when there is not room above.
+  const ESTIMATED_HEIGHT = 190
+  const TIP_HALF_WIDTH = 112
+  const below = top < ESTIMATED_HEIGHT
+  hovered.value = {
+    chart,
+    item,
+    below,
+    // Centred on the column, but kept inside the card: the first and last
+    // bars sit close enough to the edge that a 212px readout would hang off.
+    x: Math.min(
+      Math.max(mark.left - box.left + mark.width / 2, TIP_HALF_WIDTH),
+      Math.max(box.width - TIP_HALF_WIDTH, TIP_HALF_WIDTH),
+    ),
+    y: below ? mark.bottom - box.top + 8 : top,
+  }
+}
+function hideChartTip() {
+  hovered.value = null
+}
 
 // Votes on their own scale. Kept separate from chartData on purpose: one plot
 // with two scales makes unrelated quantities look comparable.
@@ -312,10 +413,57 @@ const voteChartData = computed(() => {
   const maxVotes = Math.max(...items.map((l) => l.votes), 1)
   return items.map((listing, index) => ({
     ...listing,
+    label: axisLabels.value[index] ?? listing.title,
     x: 80 + index * (560 / Math.max(items.length, 1)),
     voteHeight: (listing.votes / maxVotes) * 80,
   }))
 })
+
+// Nobody has voted yet: a row of zero-height bars says nothing, so say it.
+const hasAnyVotes = computed(() => comparisonListings.value.some((l) => l.votes > 0))
+
+/**
+ * Who actually voted for each listing.
+ *
+ * The avatar row on every card used to render a hardcoded ['AT','BL','CM','DK']
+ * — four invented members, identical on every card and in every group, sitting
+ * next to a vote counter showing the real number. The two contradicted each
+ * other. The data was already here: votes carry a userId and the group carries
+ * names.
+ */
+const initialsOf = (name) => {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return '?'
+  return parts.slice(0, 2).map((part) => part[0].toUpperCase()).join('')
+}
+
+// Colour follows the person, not their position in the row, so a member keeps
+// the same colour on every card however the votes are ordered.
+const AVATAR_TONES = 4
+const avatarTone = (uid) =>
+  [...String(uid)].reduce((sum, char) => sum + char.charCodeAt(0), 0) % AVATAR_TONES
+
+const MAX_AVATARS = 4
+
+const votersByListing = computed(() => {
+  const byListing = new Map()
+  groupVotes.value.forEach((vote) => {
+    if (!vote.listingId || !vote.userId) return
+    const voters = byListing.get(vote.listingId) ?? []
+    if (voters.some((voter) => voter.uid === vote.userId)) return
+    const member = scoringMembers.value.find((m) => m.uid === vote.userId)
+    voters.push({
+      uid: vote.userId,
+      name: member?.name || 'Group member',
+      initials: initialsOf(member?.name),
+      tone: avatarTone(vote.userId),
+    })
+    byListing.set(vote.listingId, voters)
+  })
+  return byListing
+})
+
+const votersFor = (listingId) => votersByListing.value.get(listingId) ?? []
 
 function hasUserVoted(listingId) {
   return groupVotes.value.some(
@@ -350,9 +498,12 @@ const enquiryListing = computed(
     ) ?? null,
 )
 
+// ListingMap emits the raw Housing_Listing record; the shortlist cards are
+// keyed by ListingID.
 function selectMapPin(listing) {
-  selectedListingId.value = listing.id
-  document.getElementById(`shortlist-${listing.id}`)?.scrollIntoView({
+  const id = listing.ListingID ?? listing.id
+  selectedListingId.value = id
+  document.getElementById(`shortlist-${id}`)?.scrollIntoView({
     behavior: 'smooth',
     block: 'center',
   })
@@ -501,36 +652,19 @@ async function confirmEnquiry() {
 
         <section class="location-section" aria-labelledby="location-overview-title">
           <h2 id="location-overview-title">Location Overview</h2>
-          <div
-            class="location-map"
-            :class="{ 'location-map--empty': !savedListings.length }"
-            role="group"
-            aria-label="Shortlisted listing locations overview"
-          >
-            <span class="road road--horizontal road--one" aria-hidden="true" />
-            <span class="road road--horizontal road--two" aria-hidden="true" />
-            <span class="road road--vertical road--one" aria-hidden="true" />
-            <span class="road road--vertical road--two" aria-hidden="true" />
-            <span class="map-label" aria-hidden="true">SINGAPORE</span>
-
-            <button
-              v-for="listing in savedListings"
-              :key="listing.id"
-              class="map-pin"
-              :class="{ 'map-pin--selected': selectedListingId === listing.id }"
-              :style="listing.mapPosition"
-              type="button"
-              :aria-label="listing.title"
-              @click="selectMapPin(listing)"
-            >
-              <span>{{ listing.match !== null ? `${listing.match}%` : formatRent(listing.price) }}</span>
-              <i aria-hidden="true" />
-            </button>
-            <p v-if="!savedListings.length" class="map-empty">
-              Save listings to see their locations here.
-            </p>
-          </div>
-          <p class="map-hint">Select a pin to highlight its listing below.</p>
+          <ListingMap
+            v-if="shortlistedListings.length"
+            :listings="shortlistedListings"
+            :destinations="mapDestinations"
+            @select="selectMapPin"
+          />
+          <p v-else class="map-empty">Save listings to see their locations here.</p>
+          <p v-if="shortlistedListings.length" class="map-hint">
+            Select a pin to highlight its listing below.
+            <template v-if="mapDestinations.length">
+              Orange markers are members' commute destinations.
+            </template>
+          </p>
         </section>
 
         <p v-if="storageError || groupError" class="error-message" role="alert">
@@ -552,6 +686,15 @@ async function confirmEnquiry() {
           >
             <div class="listing-main">
               <div class="listing-photo" :class="`listing-photo--${listing.tone || 'warm'}`">
+                <!-- The gradient behind this is the fallback, not the design:
+                     99.co photo URLs are signed and expire. -->
+                <img
+                  v-if="listing.image && !brokenImages.has(listing.id)"
+                  :src="listing.image"
+                  alt=""
+                  loading="lazy"
+                  @error="brokenImages.add(listing.id)"
+                />
                 <span v-if="!listing.available" class="availability">Unavailable</span>
               </div>
               <div class="listing-info">
@@ -579,18 +722,34 @@ async function confirmEnquiry() {
                 <p class="rent">{{ formatRent(listing.price) }}<span>/mo</span></p>
                 <p class="listing-meta">
                   <AppIcon name="pin" :size="12" />
-                  {{ listing.area }} · {{ listing.beds }} rooms
+                  {{ listing.area }} · {{ listing.beds > 0 ? `${listing.beds} rooms` : 'Bedrooms not listed' }}
                   <template v-if="addedByFor(listing.id)">
                     · added by {{ addedByFor(listing.id) }}
                   </template>
                 </p>
 
                 <div class="social-row">
-                  <div class="member-avatars" aria-label="Sample group members">
-                    <span v-for="(member, index) in ['AT', 'BL', 'CM', 'DK']" :key="member" :class="`member-avatar member-avatar--${index}`">
-                      {{ member }}
+                  <div
+                    v-if="votersFor(listing.id).length"
+                    class="member-avatars"
+                    :aria-label="`Voted for by ${votersFor(listing.id).map((voter) => voter.name).join(', ')}`"
+                  >
+                    <span
+                      v-for="voter in votersFor(listing.id).slice(0, MAX_AVATARS)"
+                      :key="voter.uid"
+                      :class="`member-avatar member-avatar--${voter.tone}`"
+                      :title="voter.name"
+                    >
+                      {{ voter.initials }}
+                    </span>
+                    <span
+                      v-if="votersFor(listing.id).length > MAX_AVATARS"
+                      class="member-avatar member-avatar--more"
+                    >
+                      +{{ votersFor(listing.id).length - MAX_AVATARS }}
                     </span>
                   </div>
+                  <span v-else class="small muted">No votes yet</span>
                   <button
                     class="vote-button"
                     type="button"
@@ -602,9 +761,9 @@ async function confirmEnquiry() {
                       ? unvoteForProperty(listing.id)
                       : voteForProperty(listing.id)"
                   >
-                    <AppIcon name="thumbs-up" :size="12" />
-                    {{ hasUserVoted(listing.id) ? 'Voted' : 'Vote' }}
-                    ({{ getVoteCount(listing.id) }})
+                    <AppIcon v-if="hasUserVoted(listing.id)" name="check" :size="13" />
+                    {{ hasUserVoted(listing.id) ? 'Voted' : 'Vote for this' }}
+                    <span class="vote-count">{{ getVoteCount(listing.id) }}</span>
                   </button>
                 </div>
               </div>
@@ -724,14 +883,93 @@ async function confirmEnquiry() {
           </button>
         </div>
 
+        <!-- Group fit: the chart the shortlist is actually decided on. -->
+        <div
+          v-if="comparisonView === 'chart' && comparisonListings.length"
+          class="comparison-chart-wrapper"
+        >
+          <h3 class="chart-subhead">Group fit</h3>
+          <p class="chart-note">
+            How well each listing meets the preferences your group agreed. The axis is a
+            fixed 0–100%, so a listing's bar does not change when others are added or removed.
+          </p>
+          <div class="comparison-chart-scroll">
+            <svg
+              viewBox="0 0 680 280"
+              class="comparison-chart"
+              role="img"
+              aria-label="Group match percentage of each shortlisted property"
+            >
+              <line x1="55" y1="220" x2="640" y2="220" stroke="#ddd" />
+              <!-- A fixed reference at 100%, so the bars are read against the
+                   scale rather than against each other. -->
+              <line x1="55" y1="40" x2="640" y2="40" stroke="#ddd" stroke-dasharray="4 4" />
+              <text x="50" y="43" text-anchor="end" font-size="9" fill="currentColor">100%</text>
+
+              <g v-for="item in fitChartData" :key="`f-${item.id}`">
+                <rect
+                  v-if="item.match !== null"
+                  :x="item.x - 18"
+                  :y="220 - item.fitHeight"
+                  width="36"
+                  :height="item.fitHeight"
+                  rx="4"
+                  fill="#12916a"
+                />
+                <text
+                  :x="item.x"
+                  :y="210 - item.fitHeight"
+                  text-anchor="middle"
+                  font-size="10"
+                  fill="currentColor"
+                >
+                  {{ item.match !== null ? `${item.match}%` : 'No data' }}
+                </text>
+                <text :x="item.x" y="238" text-anchor="middle" font-size="9" fill="currentColor">
+                  {{ truncate(item.label) }}
+                </text>
+                <rect
+                  class="bar-hit"
+                  :x="item.x - 26"
+                  y="30"
+                  width="52"
+                  height="190"
+                  tabindex="0"
+                  role="button"
+                  :aria-label="`${item.title}, ${item.match !== null ? `${item.match}% group match` : 'no group match data'}`"
+                  @pointerenter="showChartTip('fit', item, $event)"
+                  @pointerleave="hideChartTip"
+                  @focus="showChartTip('fit', item, $event)"
+                  @blur="hideChartTip"
+                />
+              </g>
+            </svg>
+          </div>
+          <p v-if="!hasAnyFit" class="chart-note">
+            No percentages yet — your group has not agreed its preferences, so there is
+            nothing to score these against.
+          </p>
+
+          <ChartTooltip
+            v-if="hovered && hovered.chart === 'fit'"
+            :item="hovered.item"
+            :x="hovered.x"
+            :y="hovered.y"
+            :below="hovered.below"
+            :value="hovered.item.match !== null ? `${hovered.item.match}%` : 'No data'"
+            unit="group fit"
+          />
+        </div>
+
         <!-- Chart View -->
         <div
           v-if="comparisonView === 'chart' && comparisonListings.length"
           class="comparison-chart-wrapper"
         >
+          <h3 class="chart-subhead">Monthly rent</h3>
           <p class="chart-note">
-            Rent and votes are shown on separate axes. Plotting them together
-            would invite comparing two scales that have nothing in common.
+            Rent, group fit and votes each get their own chart. Plotting them together
+            would invite comparing scales that have nothing in common.
           </p>
 
           <div class="comparison-chart-scroll">
@@ -756,7 +994,7 @@ async function confirmEnquiry() {
                   width="36"
                   :height="item.barHeight"
                   rx="4"
-                  fill="#c75b55"
+                  fill="#c05a21"
                 />
 
                 <text
@@ -776,16 +1014,43 @@ async function confirmEnquiry() {
                   font-size="9"
                   fill="currentColor"
                 >
-                  {{ item.title.length > 14 ? `${item.title.slice(0, 12)}...` : item.title }}
+                  {{ truncate(item.label) }}
                 </text>
+
+                <!-- Hit target: the whole column, not just the painted bar, so
+                     a short bar is as easy to reach as a tall one. -->
+                <rect
+                  class="bar-hit"
+                  :x="item.x - 26"
+                  y="30"
+                  width="52"
+                  height="190"
+                  tabindex="0"
+                  role="button"
+                  :aria-label="`${item.title}, $${item.price} per month`"
+                  @pointerenter="showChartTip('rent', item, $event)"
+                  @pointerleave="hideChartTip"
+                  @focus="showChartTip('rent', item, $event)"
+                  @blur="hideChartTip"
+                />
               </g>
 
 </svg>
           </div>
 
           <p class="chart-note">
-            Higher bars indicate higher monthly rent. The line indicates group votes.
+            Higher bars indicate higher monthly rent. Hover or tab to a bar for the full listing.
           </p>
+
+          <ChartTooltip
+            v-if="hovered && hovered.chart === 'rent'"
+            :item="hovered.item"
+            :x="hovered.x"
+            :y="hovered.y"
+            :below="hovered.below"
+            :value="`$${hovered.item.price.toLocaleString('en-SG')}`"
+            unit="per month"
+          />
         </div>
         <!-- Group votes: its own chart, because votes and dollars do not
              share a scale (F-REQ-018.6). -->
@@ -809,7 +1074,7 @@ async function confirmEnquiry() {
                   width="36"
                   :height="item.voteHeight"
                   rx="4"
-                  fill="#397c91"
+                  fill="#2f6bd4"
                 />
                 <text
                   :x="item.x"
@@ -821,11 +1086,38 @@ async function confirmEnquiry() {
                   {{ item.votes }}
                 </text>
                 <text :x="item.x" y="128" text-anchor="middle" font-size="9" fill="currentColor">
-                  {{ item.title.length > 14 ? `${item.title.slice(0, 12)}...` : item.title }}
+                  {{ truncate(item.label) }}
                 </text>
+                <rect
+                  class="bar-hit"
+                  :x="item.x - 26"
+                  y="20"
+                  width="52"
+                  height="90"
+                  tabindex="0"
+                  role="button"
+                  :aria-label="`${item.title}, ${item.votes} votes`"
+                  @pointerenter="showChartTip('votes', item, $event)"
+                  @pointerleave="hideChartTip"
+                  @focus="showChartTip('votes', item, $event)"
+                  @blur="hideChartTip"
+                />
               </g>
             </svg>
           </div>
+          <p v-if="!hasAnyVotes" class="chart-note">
+            Nobody has voted yet, so every bar is empty. Vote on a listing from its card above.
+          </p>
+
+          <ChartTooltip
+            v-if="hovered && hovered.chart === 'votes'"
+            :item="hovered.item"
+            :x="hovered.x"
+            :y="hovered.y"
+            :below="hovered.below"
+            :value="hovered.item.votes"
+            :unit="hovered.item.votes === 1 ? 'vote' : 'votes'"
+          />
         </div>
 
         <!-- Commute per member (F-REQ-017.5) -->
@@ -1067,143 +1359,13 @@ async function confirmEnquiry() {
   font-size: 13px;
 }
 
-.location-map {
-  position: relative;
-  height: 190px;
-  overflow: hidden;
-  border: 1px solid #dce5d5;
-  border-radius: 14px;
-  background-color: #edf0e5;
-  background-image:
-    linear-gradient(90deg, transparent 0 12%, #e3e5d7 12% 13.2%, transparent 13.2% 31%, #e3e5d7 31% 32.2%, transparent 32.2% 72%, #e3e5d7 72% 73.2%, transparent 73.2%),
-    linear-gradient(0deg, transparent 0 20%, #e0dfcf 20% 25%, transparent 25% 50%, #e0dfcf 50% 57%, transparent 57% 80%, #e0dfcf 80% 85%, transparent 85%);
-}
-
-.location-map::before,
-.location-map::after {
-  position: absolute;
-  content: '';
-  background: #d9d7c5;
-}
-
-.location-map::before {
-  top: 0;
-  bottom: 0;
-  left: 48%;
-  width: 9px;
-}
-
-.location-map::after {
-  top: 43%;
-  right: 0;
-  left: 0;
-  height: 8px;
-}
-
-.road {
-  position: absolute;
-  z-index: 1;
-  display: block;
-  background: #e3e5d7;
-}
-
-.road--horizontal {
-  right: 0;
-  left: 0;
-  height: 7px;
-}
-
-.road--horizontal.road--one {
-  top: 33%;
-}
-
-.road--horizontal.road--two {
-  top: 78%;
-}
-
-.road--vertical {
-  top: 0;
-  bottom: 0;
-  width: 7px;
-}
-
-.road--vertical.road--one {
-  left: 34%;
-}
-
-.road--vertical.road--two {
-  left: 66%;
-}
-
-.map-label {
-  position: absolute;
-  z-index: 1;
-  top: 52%;
-  left: 43%;
-  color: #c4c1ad;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-
-.map-pin {
-  position: absolute;
-  z-index: 2;
-  display: grid;
-  justify-items: center;
-  padding: 0;
-  transform: translate(-50%, -50%);
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.map-pin span {
-  padding: 3px 7px;
-  border: 1px solid #f1d5d5;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--red);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.map-pin i {
-  width: 2px;
-  height: 9px;
-  background: var(--red);
-}
-
-.map-pin i::after {
-  display: block;
-  width: 7px;
-  height: 7px;
-  margin: 5px 0 0 -2.5px;
-  border: 1px solid #fff;
-  border-radius: 50%;
-  background: var(--red);
-  content: '';
-}
-
-.map-pin--selected span {
-  background: var(--red);
-  color: #fff;
-  transform: scale(1.1);
-}
-
-.location-map--empty {
-  background-color: #f1f2ed;
-}
-
 .map-empty {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
   display: grid;
   place-items: center;
+  min-height: 160px;
   margin: 0;
-  background: rgb(237 240 229 / 58%);
+  border: 1px dashed var(--chip-line);
+  border-radius: 8px;
   color: #71806f;
   font-size: 12px;
 }
@@ -1245,6 +1407,7 @@ async function confirmEnquiry() {
 
 .listing-photo {
   position: relative;
+  overflow: hidden;
   flex: 0 0 102px;
   min-height: 102px;
   background:
@@ -1262,6 +1425,15 @@ async function confirmEnquiry() {
   background:
     linear-gradient(135deg, rgb(246 240 228 / 10%), rgb(34 34 34 / 35%)),
     linear-gradient(135deg, #a8b3b6 0%, #dce1dc 45%, #788b8a 100%);
+}
+
+.listing-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .availability {
@@ -1367,7 +1539,9 @@ async function confirmEnquiry() {
   border: 1px solid #fff;
   border-radius: 50%;
   color: #fff;
-  font-size: 6px;
+  /* Was 6px, which is below legible — fine while these were decoration, not
+     once they name the people who voted. */
+  font-size: 8px;
   font-weight: 700;
 }
 
@@ -1375,47 +1549,71 @@ async function confirmEnquiry() {
 .member-avatar--1 { background: #5089d6; }
 .member-avatar--2 { background: #49a886; }
 .member-avatar--3 { background: #e6a23b; }
+.member-avatar--more { background: #6b7280; }
 
+/* This is a decision, not a reaction — the thumbs-up read as a social "like"
+   and the grey pill did not look pressable at all. Solid green, full-size
+   label, and the verb spelled out. Green is #0f7d5b: at 5.1:1 against white
+   text it clears AA, which #12916a (3.97:1) does not. */
 .vote-button {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border: 1px solid #e4e2df;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #0f7d5b;
   border-radius: 999px;
-  background: #fff;
-  color: #606060;
-  font-size: 10px;
-}
-
-/* Default state: member has not voted */
-.vote-button {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-  transition: all 0.2s ease;
+  background: #0f7d5b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
 .vote-button:hover:not(:disabled) {
-  background: #e2e8f0;
-  border-color: #94a3b8;
+  background: #0d6e50;
+  border-color: #0d6e50;
 }
 
-/* Active state: member has voted */
+.vote-button:focus-visible {
+  outline: 2px solid #0d6e50;
+  outline-offset: 2px;
+}
+
+/* Voted: the action is done, so it stops competing for attention — but it is
+   still the control that undoes the vote, so it stays clearly a button. */
 .vote-button--active {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #86efac;
-  font-weight: 700;
+  background: #fff;
+  color: #0d6e50;
+  border-color: #0f7d5b;
 }
 
 .vote-button--active:hover:not(:disabled) {
-  background: #bbf7d0;
-  border-color: #4ade80;
+  background: #eaf6f1;
+  border-color: #0d6e50;
+}
+
+/* The tally rides along inside the button; a bare "(0)" looked like part of
+   the label rather than a count. */
+.vote-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 25%);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vote-button--active .vote-count {
+  background: #e3f1ec;
 }
 
 .vote-button:disabled {
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .sample-tag {
@@ -1792,11 +1990,29 @@ async function confirmEnquiry() {
 
 /* Property comparison chart */
 .comparison-chart-wrapper {
+  position: relative;
   padding: 18px;
   border: 1px solid var(--chip-line);
   border-radius: 12px;
   background: white;
 }
+
+/* Transparent column over each bar: the hit area is the whole column so a
+   short bar is as easy to reach as a tall one. */
+.bar-hit {
+  fill: transparent;
+  cursor: pointer;
+  outline: none;
+}
+.bar-hit:hover,
+.bar-hit:focus-visible {
+  fill: rgba(0, 0, 0, 0.04);
+}
+.bar-hit:focus-visible {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
 
 .comparison-chart-scroll {
   width: 100%;

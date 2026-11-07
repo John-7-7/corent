@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import ListingCard from '@/components/listings/ListingCard.vue'
@@ -7,11 +7,24 @@ import ListingMap from '@/components/listings/ListingMap.vue'
 import ScoreBreakdown from '@/components/listings/ScoreBreakdown.vue'
 import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
-import { activeGroupId } from '@/services/activeGroup'
+import { activeGroup, activeGroupId } from '@/services/activeGroup'
 import { useGroupScoring } from '@/services/useGroupScoring'
+import { nearbyAmenities } from '@/services/nearbyAmenitiesService'
+import { formatDistance } from '@/services/geo'
 
 const listings = ref([])
 const loading = ref(true)
+
+/**
+ * What is around the listing in the open dialog (OneMap Themes).
+ *
+ * Fetched when a dialog opens rather than for the whole grid: the theme points
+ * are island-wide and cached after the first listing, so this costs one
+ * request per category for the whole session, not one per listing. Context
+ * only — it does not feed the match percentage (see nearbyAmenitiesService).
+ */
+const nearby = ref([])
+const nearbyState = ref('idle') // idle | loading | ready | unavailable
 const error = ref(null)
 
 onMounted(async () => {
@@ -111,6 +124,18 @@ async function toggleSave(l) {
 /* ---------- details dialog ---------- */
 const selected = ref(null)
 
+watch(selected, async (listing) => {
+  nearby.value = []
+  if (!listing) return (nearbyState.value = 'idle')
+  nearbyState.value = 'loading'
+  const opened = listing.ListingID
+  const found = await nearbyAmenities(listing)
+  // The dialog may have moved on while the themes were loading.
+  if (selected.value?.ListingID !== opened) return
+  nearby.value = found
+  nearbyState.value = found.length ? 'ready' : 'unavailable'
+})
+
 // The scored result for the open listing, or null when there is nothing to
 // score against (no group, or the group has not agreed any preferences yet).
 const selectedScore = computed(() =>
@@ -122,11 +147,31 @@ const selectedScore = computed(() =>
   <div>
     <header class="page-head">
       <h1>Browse</h1>
-      <p>Browse listings and compare sample suitability scores</p>
+      <p>Browse listings and compare them against your group's agreed preferences</p>
     </header>
 
     <div class="content">
       <div class="stack-wide">
+        <!--
+          Without this, a missing group preference is invisible: the cards
+          simply carry no percentage and nothing says why. That is the one
+          failure mode of F-REQ-015 a user cannot diagnose on their own.
+        -->
+        <p v-if="!canScore" class="no-score-notice">
+          Match percentages are off because
+          <RouterLink class="link" to="/group-summary">your group hasn't agreed its preferences</RouterLink>
+          yet. Open a group on the Dashboard to switch which one these listings are scored against.
+        </p>
+        <!--
+          Named, not implied: members who are scoring against different groups
+          see different percentages and different shortlists, and the only way
+          to notice is to see the group on the page.
+        -->
+        <p v-else class="small muted scored-against">
+          Scored against <strong>{{ activeGroup?.name || 'your group' }}</strong>'s agreed preferences.
+          <RouterLink class="link" to="/group-summary">Change</RouterLink>
+        </p>
+
         <section class="card" aria-label="Filters">
           <div class="between wrap">
             <RouterLink class="link" to="/shortlist">Shortlist ({{ listingIds.length }})</RouterLink>
@@ -251,6 +296,25 @@ const selectedScore = computed(() =>
           <span v-if="!selected.Amenities?.length" class="small muted">None listed</span>
         </div>
 
+        <h3>What's nearby</h3>
+        <p class="small muted nearby-note">
+          Straight-line distance to the closest of each, from OneMap. Context for
+          comparing listings — it does not affect the match score.
+        </p>
+        <p v-if="nearbyState === 'loading'" class="small muted">Looking up the area…</p>
+        <ul v-else-if="nearbyState === 'ready'" class="nearby-list">
+          <li v-for="place in nearby" :key="place.key">
+            <span class="nearby-distance">{{ formatDistance(place.km) }}</span>
+            <span class="nearby-label">{{ place.label }}</span>
+            <span v-if="place.name" class="small muted nearby-name">{{ place.name }}</span>
+          </li>
+        </ul>
+        <!-- Never "nothing nearby": an empty result means we could not look,
+             not that the area is empty. -->
+        <p v-else class="small muted" style="margin-bottom: 1rem">
+          Nearby places are unavailable — the OneMap token may have expired.
+        </p>
+
         <h3>How it fits your group</h3>
         <ScoreBreakdown v-if="selectedScore" :result="selectedScore" />
         <p v-else class="small muted">
@@ -298,4 +362,33 @@ const selectedScore = computed(() =>
 .price.big { font-size: 22px; }
 .price.big span { font-size: 12px; font-weight: 400; }
 .listing-error { color: var(--red); font-size: 13px; }
+.scored-against { margin: 0; }
+.nearby-note { margin: 0 0 0.5rem; }
+.nearby-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+}
+.nearby-list li {
+  display: grid;
+  grid-template-columns: 58px auto 1fr;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 12px;
+}
+.nearby-distance { font-weight: 700; color: var(--text); text-align: right; }
+.nearby-label { color: var(--text); }
+.nearby-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.no-score-notice {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--red);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
 </style>

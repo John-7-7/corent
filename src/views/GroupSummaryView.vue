@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { activeGroupId, setActiveGroup } from '@/services/activeGroup'
 import GroupPreferencesCard from '../components/groups/GroupPreferencesCard.vue'
 import MemberRadarChart from '../components/groups/MemberRadarChart.vue'
 import PriorityRanking from '../components/groups/PriorityRanking.vue'
@@ -605,7 +606,14 @@ async function pickGroup(user) {
     return
   }
   if (groupId.value) return // a group was picked meanwhile
-  if (userGroups.value.length === 1) {
+  // Open the group the rest of the app is already working in. Without this the
+  // default was userGroups[0] — Firestore's arbitrary order — so a member could
+  // agree preferences for one group while Browse scored listings against
+  // another, and two members of the same group could land on different ones.
+  const active = userGroups.value.find((group) => group.id === activeGroupId.value)
+  if (active) {
+    router.replace({ query: { groupId: active.id } })
+  } else if (userGroups.value.length === 1) {
     router.replace({ query: { groupId: userGroups.value[0].id } })
   } else {
     loadState.value = userGroups.value.length ? 'choose-group' : 'no-group'
@@ -663,6 +671,15 @@ async function loadGroup(id) {
         users.value = data.users
         group.value = data
         loadState.value = 'ready'
+        // Agreeing preferences here is what makes a group the one you are
+        // working in, so Browse and Shortlist follow this choice rather than
+        // keeping a separate one of their own.
+        setActiveGroup({
+          id: data.GroupID,
+          name: data.GroupName,
+          memberIds,
+          members: (data.users || []).map((user) => ({ id: user.UserID, name: user.Username })),
+        })
       },
       fail,
     ),
