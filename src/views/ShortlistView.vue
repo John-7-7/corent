@@ -40,17 +40,10 @@ const comparisonView = ref('chart')
 const currentUserId = ref('')
 const currentUserDisplayName = ref('')
 const currentUserPhotoURL = ref('')
-const groupId = ref('')
-const currentUserInitials = computed(() => {
-  const displayName = currentUserDisplayName.value || 'CoRent member'
-  const parts = displayName.trim().split(/\s+/).filter(Boolean)
-  return parts.length > 1
-    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-    : displayName.slice(0, 2).toUpperCase()
-})
-
-// Properties shared by everyone in the group
-const groupListingIds = ref([])
+// Derived, never assigned: the active group is owned by activeGroup.js, and a
+// local copy is how this page drifted out of step with Browse in the first
+// place. Everything here — votes, enquiries, preferences — keys off this.
+const groupId = computed(() => activeGroupId.value ?? '')
 
 // Votes shared by everyone in the group
 const groupVotes = ref([])
@@ -79,6 +72,11 @@ let unsubscribePreference = null
 
 const unsubscribeAuth = onAuthChange((user) => {
   currentUserId.value = user?.uid ?? ''
+  // Auth is the only place the signed-in user's own photo is available;
+  // teammates' photos come off the group member record instead.
+  currentUserDisplayName.value =
+    user?.displayName || user?.email?.split('@')[0] || 'CoRent member'
+  currentUserPhotoURL.value = user?.photoURL || ''
 })
 
 getListings()
@@ -268,92 +266,6 @@ function toShortlistItem(l) {
 // broken image icon. Vue tracks Set mutations, so add() re-renders.
 const brokenImages = ref(new Set())
 
-    if (!user) {
-      groupError.value = 'Please log in to view your group shortlist.'
-      return
-    }
-
-    currentUserId.value = user.uid
-    currentUserDisplayName.value =
-      user.displayName || user.email?.split('@')[0] || 'CoRent member'
-    currentUserPhotoURL.value = user.photoURL || ''
-
-    // 2. Find the group this user belongs to
-    const groups = await getUserGroups(user.uid)
-
-    if (groups.length === 0) {
-      groupError.value = 'You are not currently in a group.'
-      return
-    }
-
-    groupId.value = groups[0].id
-    // Add any properties from the old local shortlist
-    // into the group's shared shortlist.
-    for (const listingId of listingIds.value) {
-      try {
-        await addGroupShortlist(
-          groupId.value,
-          listingId,
-          currentUserId.value,
-        )
-      } catch (error) {
-        console.error('Error adding property to group shortlist:', error)
-      }
-    }
-
-    // 3. Load all available property listings
-    const all = await getListings()
-    listings.value = all.map(toShortlistItem)
-
-    // 4. Listen for shared shortlist changes
-    unsubscribeShortlist = subscribeToGroupShortlist(
-      groupId.value,
-      (items) => {
-        groupListingIds.value = items.map((item) => item.listingId)
-      },
-      (error) => {
-        groupError.value = error.message
-      },
-    )
-
-    // 5. Listen for shared voting changes
-    unsubscribeVotes = subscribeToGroupVotes(
-      groupId.value,
-      (votes) => {
-        groupVotes.value = votes
-      },
-      (error) => {
-        groupError.value = error.message
-      },
-    )
-
-    // 6. Listen for enquiries submitted by the group
-    unsubscribeEnquiries = subscribeToGroupEnquiries(
-      groupId.value,
-      (items) => {
-        groupEnquiries.value = items
-      },
-      (error) => {
-        console.error('Error loading group enquiries:', error)
-      },
-    )
-  } catch (error) {
-    console.error('Error loading group shortlist:', error)
-    groupError.value = 'Unable to load your group shortlist.'
-  }
-})
-
-onUnmounted(() => {
-  if (unsubscribeShortlist) {
-    unsubscribeShortlist()
-  }
-
-  if (unsubscribeVotes) {
-    unsubscribeVotes()
-  }
-
-  if (unsubscribeEnquiries) unsubscribeEnquiries()
-})
 const selectedListingId = ref('')
 const expandedCommentsId = ref('')
 const enquiryDialogOpen = ref(false)
@@ -535,13 +447,21 @@ const initialsOf = (name) => {
   return parts.slice(0, 2).map((part) => part[0].toUpperCase()).join('')
 }
 
-// Colour follows the person, not their position in the row, so a member keeps
-// the same colour on every card however the votes are ordered.
-const AVATAR_TONES = 4
-const avatarTone = (uid) =>
-  [...String(uid)].reduce((sum, char) => sum + char.charCodeAt(0), 0) % AVATAR_TONES
-
 const MAX_AVATARS = 4
+
+/**
+ * A voter's photo.
+ *
+ * Firebase Auth only exposes photoURL for whoever is signed in, so that is the
+ * one person we can always picture. Everyone else depends on the copy
+ * groupService stores on the member record at join time — members who joined
+ * before that existed have none and show initials instead.
+ */
+function photoFor(uid) {
+  if (uid === currentUserId.value) return currentUserPhotoURL.value || ''
+  const member = activeGroup.value?.members?.find((entry) => entry.id === uid)
+  return member?.photo || ''
+}
 
 const votersByListing = computed(() => {
   const byListing = new Map()
@@ -550,11 +470,15 @@ const votersByListing = computed(() => {
     const voters = byListing.get(vote.listingId) ?? []
     if (voters.some((voter) => voter.uid === vote.userId)) return
     const member = scoringMembers.value.find((m) => m.uid === vote.userId)
+    const name =
+      vote.userId === currentUserId.value
+        ? currentUserDisplayName.value || member?.name || 'You'
+        : member?.name || 'Group member'
     voters.push({
       uid: vote.userId,
-      name: member?.name || 'Group member',
-      initials: initialsOf(member?.name),
-      tone: avatarTone(vote.userId),
+      name,
+      initials: initialsOf(name),
+      photo: photoFor(vote.userId),
     })
     byListing.set(vote.listingId, voters)
   })
@@ -828,17 +752,27 @@ async function confirmEnquiry() {
 
                 <div class="social-row">
                   <div
-                    v-if="hasUserVoted(listing.id)"
+                    v-if="votersFor(listing.id).length"
                     class="member-avatars"
-                    :aria-label="`${currentUserDisplayName} voted`"
+                    :aria-label="`Voted for by ${votersFor(listing.id).map((voter) => voter.name).join(', ')}`"
                   >
-                    <img
-                      v-if="currentUserPhotoURL"
-                      class="member-avatar"
-                      :src="currentUserPhotoURL"
-                      alt=""
-                    />
-                    <span v-else class="member-avatar">{{ currentUserInitials }}</span>
+                    <template v-for="voter in votersFor(listing.id).slice(0, MAX_AVATARS)" :key="voter.uid">
+                      <img
+                        v-if="voter.photo && !brokenImages.has(voter.uid)"
+                        class="member-avatar"
+                        :src="voter.photo"
+                        :title="voter.name"
+                        alt=""
+                        @error="brokenImages.add(voter.uid)"
+                      />
+                      <span v-else class="member-avatar" :title="voter.name">{{ voter.initials }}</span>
+                    </template>
+                    <span
+                      v-if="votersFor(listing.id).length > MAX_AVATARS"
+                      class="member-avatar member-avatar--more"
+                    >
+                      +{{ votersFor(listing.id).length - MAX_AVATARS }}
+                    </span>
                   </div>
                   <span v-else class="small muted">No votes yet</span>
                   <button
@@ -1618,14 +1552,20 @@ async function confirmEnquiry() {
 
 .member-avatars {
   display: flex;
+  /* Overlapped, so several voters stay compact beside the vote button. */
+  padding-left: 2px;
 }
+.member-avatars > * + * { margin-left: -6px; }
+.member-avatar--more { background: #6b7280; }
 
 .member-avatar {
   display: grid;
   width: 22px;
   height: 22px;
   place-items: center;
-  border: 1px solid var(--line);
+  /* White ring rather than --line: the avatars overlap, so the border is what
+     separates one face from the next. */
+  border: 1.5px solid #fff;
   border-radius: 50%;
   background: var(--red);
   color: #fff;

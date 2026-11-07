@@ -23,6 +23,11 @@ function createMember(user) {
       user.email?.split('@')[0] ||
       'Group member',
     email: user.email || '',
+    // Stored because Firebase Auth only ever hands the client the signed-in
+    // user's photoURL. Without a copy on the group record there is no way to
+    // show a teammate's picture beside their vote. Members who joined before
+    // this have no photo and fall back to initials.
+    photo: user.photoURL || '',
     preferencesReady: false,
   }
 }
