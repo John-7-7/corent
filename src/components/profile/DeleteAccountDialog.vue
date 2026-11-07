@@ -112,8 +112,7 @@ function confirm() {
   max-width: 400px;
   padding: 24px;
   border-radius: 14px;
-  background: var(--cr-surface);
-  backdrop-filter: var(--cr-glass-blur);
+  background: var(--cr-modal-surface);
   box-shadow: 0 20px 50px rgb(0 0 0 / 20%);
   color: var(--cr-text);
 }

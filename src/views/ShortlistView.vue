@@ -38,7 +38,19 @@ const comparisonView = ref('chart')
 
 // The current user's information
 const currentUserId = ref('')
-const groupId = computed(() => activeGroupId.value ?? '')
+const currentUserDisplayName = ref('')
+const currentUserPhotoURL = ref('')
+const groupId = ref('')
+const currentUserInitials = computed(() => {
+  const displayName = currentUserDisplayName.value || 'CoRent member'
+  const parts = displayName.trim().split(/\s+/).filter(Boolean)
+  return parts.length > 1
+    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    : displayName.slice(0, 2).toUpperCase()
+})
+
+// Properties shared by everyone in the group
+const groupListingIds = ref([])
 
 // Votes shared by everyone in the group
 const groupVotes = ref([])
@@ -256,6 +268,92 @@ function toShortlistItem(l) {
 // broken image icon. Vue tracks Set mutations, so add() re-renders.
 const brokenImages = ref(new Set())
 
+    if (!user) {
+      groupError.value = 'Please log in to view your group shortlist.'
+      return
+    }
+
+    currentUserId.value = user.uid
+    currentUserDisplayName.value =
+      user.displayName || user.email?.split('@')[0] || 'CoRent member'
+    currentUserPhotoURL.value = user.photoURL || ''
+
+    // 2. Find the group this user belongs to
+    const groups = await getUserGroups(user.uid)
+
+    if (groups.length === 0) {
+      groupError.value = 'You are not currently in a group.'
+      return
+    }
+
+    groupId.value = groups[0].id
+    // Add any properties from the old local shortlist
+    // into the group's shared shortlist.
+    for (const listingId of listingIds.value) {
+      try {
+        await addGroupShortlist(
+          groupId.value,
+          listingId,
+          currentUserId.value,
+        )
+      } catch (error) {
+        console.error('Error adding property to group shortlist:', error)
+      }
+    }
+
+    // 3. Load all available property listings
+    const all = await getListings()
+    listings.value = all.map(toShortlistItem)
+
+    // 4. Listen for shared shortlist changes
+    unsubscribeShortlist = subscribeToGroupShortlist(
+      groupId.value,
+      (items) => {
+        groupListingIds.value = items.map((item) => item.listingId)
+      },
+      (error) => {
+        groupError.value = error.message
+      },
+    )
+
+    // 5. Listen for shared voting changes
+    unsubscribeVotes = subscribeToGroupVotes(
+      groupId.value,
+      (votes) => {
+        groupVotes.value = votes
+      },
+      (error) => {
+        groupError.value = error.message
+      },
+    )
+
+    // 6. Listen for enquiries submitted by the group
+    unsubscribeEnquiries = subscribeToGroupEnquiries(
+      groupId.value,
+      (items) => {
+        groupEnquiries.value = items
+      },
+      (error) => {
+        console.error('Error loading group enquiries:', error)
+      },
+    )
+  } catch (error) {
+    console.error('Error loading group shortlist:', error)
+    groupError.value = 'Unable to load your group shortlist.'
+  }
+})
+
+onUnmounted(() => {
+  if (unsubscribeShortlist) {
+    unsubscribeShortlist()
+  }
+
+  if (unsubscribeVotes) {
+    unsubscribeVotes()
+  }
+
+  if (unsubscribeEnquiries) unsubscribeEnquiries()
+})
 const selectedListingId = ref('')
 const expandedCommentsId = ref('')
 const enquiryDialogOpen = ref(false)
@@ -730,24 +828,17 @@ async function confirmEnquiry() {
 
                 <div class="social-row">
                   <div
-                    v-if="votersFor(listing.id).length"
+                    v-if="hasUserVoted(listing.id)"
                     class="member-avatars"
-                    :aria-label="`Voted for by ${votersFor(listing.id).map((voter) => voter.name).join(', ')}`"
+                    :aria-label="`${currentUserDisplayName} voted`"
                   >
-                    <span
-                      v-for="voter in votersFor(listing.id).slice(0, MAX_AVATARS)"
-                      :key="voter.uid"
-                      :class="`member-avatar member-avatar--${voter.tone}`"
-                      :title="voter.name"
-                    >
-                      {{ voter.initials }}
-                    </span>
-                    <span
-                      v-if="votersFor(listing.id).length > MAX_AVATARS"
-                      class="member-avatar member-avatar--more"
-                    >
-                      +{{ votersFor(listing.id).length - MAX_AVATARS }}
-                    </span>
+                    <img
+                      v-if="currentUserPhotoURL"
+                      class="member-avatar"
+                      :src="currentUserPhotoURL"
+                      alt=""
+                    />
+                    <span v-else class="member-avatar">{{ currentUserInitials }}</span>
                   </div>
                   <span v-else class="small muted">No votes yet</span>
                   <button
@@ -1527,34 +1618,22 @@ async function confirmEnquiry() {
 
 .member-avatars {
   display: flex;
-  padding-left: 1px;
 }
 
 .member-avatar {
   display: grid;
-  width: 17px;
-  height: 17px;
-  margin-left: -2px;
+  width: 22px;
+  height: 22px;
   place-items: center;
-  border: 1px solid #fff;
+  border: 1px solid var(--line);
   border-radius: 50%;
+  background: var(--red);
   color: #fff;
-  /* Was 6px, which is below legible — fine while these were decoration, not
-     once they name the people who voted. */
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
+  object-fit: cover;
 }
 
-.member-avatar--0 { background: #cf343c; }
-.member-avatar--1 { background: #5089d6; }
-.member-avatar--2 { background: #49a886; }
-.member-avatar--3 { background: #e6a23b; }
-.member-avatar--more { background: #6b7280; }
-
-/* This is a decision, not a reaction — the thumbs-up read as a social "like"
-   and the grey pill did not look pressable at all. Solid green, full-size
-   label, and the verb spelled out. Green is #0f7d5b: at 5.1:1 against white
-   text it clears AA, which #12916a (3.97:1) does not. */
 .vote-button {
   display: inline-flex;
   align-items: center;

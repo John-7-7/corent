@@ -13,6 +13,7 @@
   --cr-border-strong: var(--chip-line, #dcd8d4);
   --cr-bg: var(--bg, #f6f5f4);
   --cr-surface: var(--glass, rgb(255 255 255 / 55%));
+  --cr-modal-surface: var(--modal-surface, #fff);
   --cr-track: #e5e5e5;
   --cr-warning: var(--warn, #8a5a00);
   --cr-warning-soft: var(--warn-tint, #fdf1d6);
