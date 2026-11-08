@@ -1,682 +1,322 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import BaseIcon from '../components/profile/BaseIcon.vue'
-import DeleteAccountDialog from '../components/profile/DeleteAccountDialog.vue'
-import FieldMessage from '../components/profile/FieldMessage.vue'
-import {
-  changeAccountPassword,
-  deleteAccount,
-  getCurrentUser,
-  onAuthChange,
-  signOutUser,
-  updateAccountName,
-  usesPasswordSignIn,
-} from '../services/authService'
-import '../components/profile/theme.css'
+// TODO: profile creation and preference aggregation
+import AppIcon from '@/components/AppIcon.vue' 
+// Static sample data only. Wire these to your form state later.
+const singleSelectGroupsTop = [
+  { title: 'Property Type', options: ['HDB', 'Condo', 'Landed', 'Any'], selected: 'Condo' },
+  { title: 'Lease Duration', options: ['6 months', '12 months', '24 months', 'Flexible'], selected: '12 months' },
+]
+const singleSelectGroupsBottom = [
+  { title: 'Furnishing Level', options: ['Unfurnished', 'Partially Furnished', 'Fully Furnished', 'Any'], selected: 'Fully Furnished' },
+  { title: 'Cooking Access', options: ['Kitchen Access Required', 'No Cooking Needed', 'No Preference'], selected: 'Kitchen Access Required' },
+  { title: 'Aircon Coverage', options: ['Aircon in All Rooms', 'Common Areas Only', 'Not Required'], selected: 'Aircon in All Rooms' },
+  { title: 'Smoking Preference', options: ['Smoking Allowed', 'Non-Smoking Only', 'No Preference'], selected: 'Non-Smoking Only' },
+  { title: 'Study Environment', options: ['Quiet Study Space Needed', 'Sociable Household OK', 'No Preference'], selected: 'Quiet Study Space Needed' },
+  { title: 'Guest Policy', options: ['Guests Welcome', 'Limited Guests', 'No Guests Preferred'], selected: 'Limited Guests' },
+]
+const amenities = [
+  { label: 'WiFi', icon: 'wifi', on: true },
+  { label: 'Aircon', icon: 'aircon', on: true },
+  { label: 'Pet-friendly', icon: 'paw', on: false },
+  { label: 'Gym', icon: 'gym', on: false },
+  { label: 'Pool', icon: 'pool', on: false },
+  { label: 'Parking', icon: 'car', on: false },
+  { label: 'Laundry', icon: 'laundry', on: false },
+  { label: 'Balcony', icon: 'sun', on: false },
+]
+const locations = [
+  { label: 'Any location', on: false, any: true },
+  { label: 'Tampines', on: false },
+  { label: 'Bukit Timah', on: false },
+  { label: 'Queenstown', on: true },
+  { label: 'Bugis', on: false },
+  { label: 'Clementi', on: true },
+  { label: 'Bishan', on: false },
+  { label: 'Jurong', on: false },
+  { label: 'Punggol', on: false },
+]
 
-const router = useRouter()
-const user = ref(null)
-const profileName = ref('')
-const nameDialogOpen = ref(false)
-const passwordDialogOpen = ref(false)
-const deleteDialogOpen = ref(false)
-const signOutDialogOpen = ref(false)
-const name = ref('')
-const currentPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
-const nameError = ref('')
-const passwordError = ref('')
-const deleteError = ref('')
-const actionError = ref('')
-const savingName = ref(false)
-const changingPassword = ref(false)
-const deleting = ref(false)
-const signingOut = ref(false)
-let unsubscribeAuth = null
-
-const displayName = computed(
-  () =>
-    profileName.value ||
-    user.value?.displayName ||
-    user.value?.email?.split('@')[0] ||
-    'CoRent member',
-)
-const initials = computed(() => {
-  const parts = displayName.value.trim().split(/\s+/).filter(Boolean)
-  return parts.length > 1
-    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-    : displayName.value.slice(0, 2).toUpperCase()
-})
-const passwordAccount = computed(() => usesPasswordSignIn(user.value))
-
-function describeError(error) {
-  switch (error?.code) {
-    case 'auth/wrong-password':
-    case 'auth/invalid-credential':
-      return 'The current password is incorrect.'
-    case 'auth/weak-password':
-      return 'Choose a stronger password and try again.'
-    case 'auth/requires-recent-login':
-      return 'Please sign out and sign in again before changing this setting.'
-    case 'auth/too-many-requests':
-      return 'Too many attempts. Please wait a moment and try again.'
-    case 'auth/network-request-failed':
-      return 'Network error. Check your connection and try again.'
-    case 'permission-denied':
-      return "You don't have permission to delete this data. Please sign in again."
-    case 'unavailable':
-      return 'You appear to be offline. Check your connection and try again.'
-    default:
-      return error?.message || 'Something went wrong. Please try again.'
-  }
-}
-
-function openNameDialog() {
-  name.value = displayName.value
-  nameError.value = ''
-  nameDialogOpen.value = true
-}
-
-async function saveName() {
-  nameError.value = ''
-  savingName.value = true
-  try {
-    await updateAccountName(name.value)
-    profileName.value = name.value.trim()
-    nameDialogOpen.value = false
-  } catch (error) {
-    nameError.value = describeError(error)
-  } finally {
-    savingName.value = false
-  }
-}
-
-async function savePassword() {
-  passwordError.value = ''
-  if (newPassword.value.length < 8 || !/[A-Z]/.test(newPassword.value) || !/\d/.test(newPassword.value)) {
-    passwordError.value = 'Use at least 8 characters, including an uppercase letter and a number.'
-    return
-  }
-  if (newPassword.value !== confirmPassword.value) {
-    passwordError.value = 'The new passwords do not match.'
-    return
-  }
-
-  changingPassword.value = true
-  try {
-    await changeAccountPassword(currentPassword.value, newPassword.value)
-    passwordDialogOpen.value = false
-    currentPassword.value = ''
-    newPassword.value = ''
-    confirmPassword.value = ''
-  } catch (error) {
-    passwordError.value = describeError(error)
-  } finally {
-    changingPassword.value = false
-  }
-}
-
-async function onSignOut() {
-  actionError.value = ''
-  signingOut.value = true
-  try {
-    await signOutUser()
-    signOutDialogOpen.value = false
-    await router.replace({ name: 'login' })
-  } catch (error) {
-    actionError.value = describeError(error)
-  } finally {
-    signingOut.value = false
-  }
-}
-
-async function onDeleteAccount(password) {
-  deleteError.value = ''
-  deleting.value = true
-  try {
-    await deleteAccount(password)
-    await router.replace({ name: 'login' })
-  } catch (error) {
-    deleteError.value = describeError(error)
-  } finally {
-    deleting.value = false
-  }
-}
-
-function onUserChange(nextUser) {
-  if (!nextUser) {
-    router.replace({ name: 'login', query: { redirect: '/profile' } })
-    return
-  }
-  user.value = nextUser
-  profileName.value = nextUser?.displayName || ''
-}
-
-onMounted(async () => {
-  await getCurrentUser()
-  unsubscribeAuth = onAuthChange(onUserChange)
-})
-
-onBeforeUnmount(() => unsubscribeAuth?.())
+// Set to true to preview the delete-account confirmation dialog.
+const showDeleteDialog = false
 </script>
 
 <template>
-  <main class="profile-page">
-    <section class="profile-card" aria-label="Profile">
-      <div class="avatar" aria-hidden="true">{{ initials }}</div>
-      <div class="profile-identity">
-        <h1>{{ displayName }}</h1>
-        <p>{{ user?.email || 'Signed-in CoRent account' }}</p>
-        <span class="account-tag">CoRent account</span>
-      </div>
-      <button class="edit-profile" type="button" @click="openNameDialog">
-        <BaseIcon name="edit" :size="14" />
-        Edit
-      </button>
-    </section>
+  <div>
+    <header class="page-head">
+      <h1>Profile</h1>
+      <p>Your account and rental preferences</p>
+    </header>
 
-    <section class="settings-card" aria-labelledby="security-title">
-      <h2 id="security-title" class="section-label">Security and preferences</h2>
-      <button
-        v-if="passwordAccount"
-        class="setting-row"
-        type="button"
-        @click="passwordDialogOpen = true"
-      >
-        <span class="setting-icon"><BaseIcon name="lock" :size="18" /></span>
-        <span class="setting-copy">
-          <strong>Change Password</strong>
-          <span>Update your account password</span>
-        </span>
-        <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
-      </button>
-      <div v-else class="setting-row setting-row--static">
-        <span class="setting-icon"><BaseIcon name="lock" :size="18" /></span>
-        <span class="setting-copy">
-          <strong>Password managed by your sign-in provider</strong>
-          <span>Change your password with your provider</span>
-        </span>
-      </div>
-      <button
-        class="setting-row"
-        type="button"
-        @click="router.push({ path: '/preferences', query: { edit: '1' } })"
-      >
-        <span class="setting-icon"><BaseIcon name="edit" :size="18" /></span>
-        <span class="setting-copy">
-          <strong>Edit Preferences</strong>
-          <span>Update your rental preferences</span>
-        </span>
-        <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
-      </button>
-    </section>
+    <div class="content">
+      <div class="profile-grid">
+        <!-- ===== Left: forms ===== -->
+        <form class="forms" novalidate @submit.prevent>
+          <!-- Account -->
+          <section class="card" aria-labelledby="acc-title">
+            <h2 id="acc-title">Account</h2>
+            <div class="grid-2" style="margin-top: 0.8rem">
+              <div class="field">
+                <label for="acc-email">Email</label>
+                <input id="acc-email" class="input" type="email" value="alice@example.com" disabled />
+              </div>
+              <div class="field">
+                <label for="acc-username">Username</label>
+                <input id="acc-username" class="input" type="text" value="alice_tan" />
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="pw-current">Current password</label>
+                <input id="pw-current" class="input" type="password" autocomplete="current-password" />
+              </div>
+              <span></span>
+              <div class="field">
+                <label for="pw-new">New password</label>
+                <input id="pw-new" class="input" type="password" autocomplete="new-password" />
+              </div>
+              <div class="field">
+                <label for="pw-confirm">Confirm new password</label>
+                <input id="pw-confirm" class="input" type="password" autocomplete="new-password" />
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn btn-sm" type="button">Save username</button>
+              <button class="btn btn-sm" type="button">Change password</button>
+              <button class="btn btn-sm" type="button" style="margin-left: auto">Log out</button>
+            </div>
+          </section>
 
-    <button
-      class="action-card"
-      type="button"
-      :disabled="signingOut"
-      @click="signOutDialogOpen = true; actionError = ''"
-    >
-      <span class="setting-icon"><BaseIcon name="log-out" :size="18" /></span>
-      <span class="setting-copy"><strong>{{ signingOut ? 'Logging out…' : 'Log Out' }}</strong></span>
-      <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
-    </button>
+          <!-- Budget -->
+          <section class="card" aria-labelledby="budget-title">
+            <div class="between">
+              <h2 id="budget-title">Budget Range</h2>
+              <strong class="red value-text">$1,500 to $3,100<span>/mo</span></strong>
+            </div>
+            <div class="slider" role="img" aria-label="Budget from $1,500 to $3,100 per month">
+              <span class="slider-fill" style="left: 13.3%; width: 21.4%"></span>
+              <span class="slider-thumb" style="left: 13.3%"></span>
+              <span class="slider-thumb" style="left: 34.7%"></span>
+            </div>
+            <div class="slider-scale"><span>$500</span><span>$8,000</span></div>
+          </section>
 
-    <button
-      class="action-card action-card--danger"
-      type="button"
-      @click="deleteDialogOpen = true"
-    >
-      <span class="setting-icon"><BaseIcon name="trash" :size="18" /></span>
-      <span class="setting-copy">
-        <strong>Delete Account</strong>
-        <span>Permanently remove your account and all data</span>
-      </span>
-      <BaseIcon class="row-chevron" name="chevron-right" :size="16" />
-    </button>
+          <!-- Commute -->
+          <section class="card" aria-labelledby="commute-title">
+            <div class="between">
+              <h2 id="commute-title">Max Commute</h2>
+              <strong class="red value-text">30 min</strong>
+            </div>
+            <div class="slider" role="img" aria-label="Maximum commute 30 minutes">
+              <span class="slider-fill" style="left: 0; width: 29.4%"></span>
+              <span class="slider-thumb" style="left: 29.4%"></span>
+            </div>
+            <div class="slider-scale"><span>5 min</span><span>90 min</span></div>
+          </section>
 
-    <DeleteAccountDialog
-      :open="deleteDialogOpen"
-      :busy="deleting"
-      :error="deleteError"
-      :requires-password="passwordAccount"
-      @close="deleteDialogOpen = false; deleteError = ''"
-      @confirm="onDeleteAccount"
-    />
+          <!-- Bedrooms -->
+          <section class="card" aria-labelledby="beds-title">
+            <div class="between" style="align-items: flex-start">
+              <div>
+                <h2 id="beds-title">Bedrooms</h2>
+                <p class="card-sub">Min to max bedrooms required</p>
+              </div>
+              <button class="chip" type="button">Any</button>
+            </div>
+            <div class="beds">
+              <div>
+                <p class="eyebrow">Min</p>
+                <div class="stepper">
+                  <button class="step-btn" type="button" aria-label="Decrease minimum"><AppIcon name="minus" :size="12" /></button>
+                  <span class="value">3</span>
+                  <button class="step-btn plus" type="button" aria-label="Increase minimum"><AppIcon name="plus" :size="12" /></button>
+                </div>
+              </div>
+              <div class="beds-divider" aria-hidden="true"></div>
+              <div>
+                <p class="eyebrow">Max</p>
+                <div class="stepper">
+                  <button class="step-btn" type="button" aria-label="Decrease maximum"><AppIcon name="minus" :size="12" /></button>
+                  <span class="value">4</span>
+                  <button class="step-btn plus" type="button" aria-label="Increase maximum"><AppIcon name="plus" :size="12" /></button>
+                </div>
+              </div>
+            </div>
+          </section>
 
-    <Teleport to="body">
-      <div
-        v-if="signOutDialogOpen"
-        class="modal-backdrop"
-        @click.self="!signingOut && (signOutDialogOpen = false)"
-        @keydown.esc="!signingOut && (signOutDialogOpen = false)"
-      >
-        <section
-          class="modal-card confirm-modal"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="sign-out-title"
-          aria-describedby="sign-out-description"
-        >
-          <h2 id="sign-out-title">Log out of CoRent?</h2>
-          <p id="sign-out-description">
-            You’ll need to log in again to access your account and preferences.
-          </p>
-          <FieldMessage v-if="actionError">{{ actionError }}</FieldMessage>
-          <div class="modal-actions">
-            <button
-              type="button"
-              class="modal-cancel"
-              :disabled="signingOut"
-              @click="signOutDialogOpen = false"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              class="modal-danger"
-              :disabled="signingOut"
-              @click="onSignOut"
-            >
-              {{ signingOut ? 'Logging out…' : 'Log Out' }}
-            </button>
-          </div>
-        </section>
-      </div>
+          <!-- Move-in -->
+          <section class="card" aria-labelledby="move-title">
+            <h2 id="move-title">Move-in Date</h2>
+            <input class="input" type="date" value="2026-12-01" aria-labelledby="move-title" style="margin-top: 0.7rem" />
+          </section>
 
-      <div v-if="nameDialogOpen" class="modal-backdrop" @click.self="nameDialogOpen = false">
-        <form class="modal-card" aria-labelledby="name-title" @submit.prevent="saveName">
-          <h2 id="name-title">Edit profile</h2>
-          <label for="profile-name">Name</label>
-          <input id="profile-name" v-model="name" maxlength="80" autocomplete="name" required />
-          <FieldMessage v-if="nameError">{{ nameError }}</FieldMessage>
-          <div class="modal-actions">
-            <button type="button" class="modal-cancel" :disabled="savingName" @click="nameDialogOpen = false">
-              Cancel
-            </button>
-            <button type="submit" class="modal-save" :disabled="savingName">
-              {{ savingName ? 'Saving…' : 'Save' }}
-            </button>
-          </div>
+          <!-- Property type, lease -->
+          <section v-for="g in singleSelectGroupsTop" :key="g.title" class="card" :aria-label="g.title">
+            <h2>{{ g.title }}</h2>
+            <div class="chips">
+              <button
+                v-for="o in g.options"
+                :key="o"
+                type="button"
+                class="chip"
+                :class="{ on: o === g.selected }"
+                :aria-pressed="o === g.selected"
+              >
+                {{ o }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Co-tenants -->
+          <section class="card between" aria-labelledby="co-title">
+            <div>
+              <h2 id="co-title">Co-tenants</h2>
+              <p class="card-sub">Number of people you expect to share with</p>
+            </div>
+            <div class="stepper">
+              <button class="step-btn" type="button" aria-label="Fewer co-tenants"><AppIcon name="minus" :size="12" /></button>
+              <span class="value">3</span>
+              <button class="step-btn plus" type="button" aria-label="More co-tenants"><AppIcon name="plus" :size="12" /></button>
+            </div>
+          </section>
+
+          <!-- Lifestyle single-selects -->
+          <section v-for="g in singleSelectGroupsBottom" :key="g.title" class="card" :aria-label="g.title">
+            <h2>{{ g.title }}</h2>
+            <div class="chips">
+              <button
+                v-for="o in g.options"
+                :key="o"
+                type="button"
+                class="chip"
+                :class="{ on: o === g.selected }"
+                :aria-pressed="o === g.selected"
+              >
+                {{ o }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Amenities -->
+          <section class="card" aria-labelledby="amen-title">
+            <h2 id="amen-title">Amenities</h2>
+            <div class="chips">
+              <button
+                v-for="a in amenities"
+                :key="a.label"
+                type="button"
+                class="chip"
+                :class="{ on: a.on }"
+                :aria-pressed="a.on"
+              >
+                <AppIcon :name="a.icon" :size="11" />
+                {{ a.label }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Locations -->
+          <section class="card" aria-labelledby="loc-title">
+            <h2 id="loc-title">Preferred Locations</h2>
+            <p class="card-sub">Select all neighbourhoods you'd consider</p>
+            <div class="chips">
+              <button
+                v-for="l in locations"
+                :key="l.label"
+                type="button"
+                class="chip"
+                :class="{ 'on-dark': l.on }"
+                :aria-pressed="l.on"
+              >
+                <AppIcon v-if="!l.any" name="pin" :size="11" />
+                {{ l.label }}
+              </button>
+            </div>
+          </section>
+
+          <button class="btn btn-primary btn-block" type="submit">Save Preferences</button>
+
+          <!-- Delete account -->
+          <section class="card danger" aria-labelledby="del-title">
+            <h2 id="del-title">Delete account</h2>
+            <p class="card-sub" style="margin-bottom: 0.8rem">
+              Permanently removes your profile and preferences. Any group you're in keeps going without you.
+            </p>
+            <button class="btn btn-danger btn-sm" type="button">Delete account</button>
+          </section>
         </form>
-      </div>
 
-      <div v-if="passwordDialogOpen" class="modal-backdrop" @click.self="passwordDialogOpen = false">
-        <form class="modal-card" aria-labelledby="password-title" @submit.prevent="savePassword">
-          <h2 id="password-title">Change password</h2>
-          <label for="current-password">Current password</label>
-          <input
-            id="current-password"
-            v-model="currentPassword"
-            type="password"
-            autocomplete="current-password"
-            required
-          />
-          <label for="new-password">New password</label>
-          <input
-            id="new-password"
-            v-model="newPassword"
-            type="password"
-            autocomplete="new-password"
-            required
-          />
-          <label for="confirm-password">Confirm new password</label>
-          <input
-            id="confirm-password"
-            v-model="confirmPassword"
-            type="password"
-            autocomplete="new-password"
-            required
-          />
-          <FieldMessage v-if="passwordError">{{ passwordError }}</FieldMessage>
-          <div class="modal-actions">
-            <button
-              type="button"
-              class="modal-cancel"
-              :disabled="changingPassword"
-              @click="passwordDialogOpen = false"
-            >
-              Cancel
-            </button>
-            <button type="submit" class="modal-save" :disabled="changingPassword">
-              {{ changingPassword ? 'Updating…' : 'Update password' }}
-            </button>
+        <!-- ===== Right: summary ===== -->
+        <aside class="card summary" aria-label="Profile summary">
+          <p class="eyebrow">Profile summary</p>
+          <dl>
+            <div><dt>Budget</dt><dd>$1,500 to $3,100/mo</dd></div>
+            <div><dt>Commute</dt><dd>up to 30 min</dd></div>
+            <div><dt>Bedrooms</dt><dd>3 to 4</dd></div>
+            <div><dt>Property</dt><dd>Condo</dd></div>
+            <div><dt>Lease</dt><dd>12 months</dd></div>
+            <div><dt>Co-tenants</dt><dd>3 people</dd></div>
+          </dl>
+          <p class="summary-label">Amenities</p>
+          <div class="chips tight">
+            <span class="tag tag-red">WiFi</span>
+            <span class="tag tag-red">Aircon</span>
           </div>
-        </form>
+          <p class="summary-label">Locations</p>
+          <div class="chips tight">
+            <span class="tag">Clementi</span>
+            <span class="tag">Queenstown</span>
+          </div>
+        </aside>
       </div>
-    </Teleport>
-  </main>
+    </div>
+
+    <!-- Delete confirmation dialog -->
+    <div v-if="showDeleteDialog" class="modal-backdrop">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+        <h2 id="dlg-title" style="font-size: 16px">Are you sure you want to delete your account?</h2>
+        <p class="muted" style="margin: 0.5rem 0 1rem">This cannot be undone. Enter your password to confirm.</p>
+        <div class="field">
+          <label for="dlg-pw">Password</label>
+          <input id="dlg-pw" class="input" type="password" autocomplete="current-password" />
+        </div>
+        <div class="row" style="justify-content: flex-end">
+          <button class="btn" type="button">Cancel</button>
+          <button class="btn btn-primary" type="button">Yes, I'm sure</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.profile-page {
+.profile-grid {
   display: grid;
-  gap: 12px;
-  width: min(100% - 32px, 620px);
-  margin: 24px auto;
-  color: var(--cr-text);
-  font-family: var(--cr-font);
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 1rem;
+  max-width: 820px;
+  margin: 0 auto;
+  align-items: start;
 }
+.forms { display: flex; flex-direction: column; gap: 0.75rem; }
+.value-text { font-size: 13px; }
+.value-text span { font-weight: 500; font-size: 10px; color: var(--muted); }
 
-.profile-card,
-.settings-card,
-.action-card {
-  overflow: hidden;
-  border: 1px solid var(--cr-border);
-  border-radius: 18px;
-  background: var(--cr-surface);
-  box-shadow: var(--cr-shadow-card);
-}
+.beds { display: flex; align-items: center; gap: 1.25rem; margin-top: 0.8rem; }
+.beds .eyebrow { margin-bottom: 0.4rem; }
+.beds-divider { width: 1px; align-self: stretch; background: var(--line); }
 
-.profile-card {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  min-height: 124px;
-  padding: 20px 22px;
-  box-sizing: border-box;
-}
+.danger { border-color: #f0c9c9; }
 
-.avatar {
-  display: grid;
-  flex: 0 0 70px;
-  place-items: center;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: var(--cr-accent);
-  color: #fff;
-  font-size: 25px;
-  font-weight: 700;
-}
+.summary { position: sticky; top: 1rem; }
+.summary dl { margin: 0.7rem 0 0.9rem; display: grid; gap: 0.5rem; }
+.summary dl div { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 12px; }
+.summary dt { color: var(--muted); }
+.summary dd { margin: 0; font-weight: 600; text-align: right; }
+.summary-label { font-size: 11px; color: var(--muted); margin-top: 0.75rem; }
+.chips.tight { margin-top: 0.4rem; }
 
-.profile-identity {
-  flex: 1;
-  min-width: 0;
-}
-
-.profile-identity h1 {
-  margin: 0 0 3px;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.profile-identity p {
-  margin: 0 0 10px;
-  color: var(--cr-muted);
-  font-size: 14px;
-  overflow-wrap: anywhere;
-}
-
-.account-tag {
-  display: inline-block;
-  padding: 4px 11px;
-  border-radius: 999px;
-  background: var(--cr-accent-soft);
-  color: var(--cr-accent);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.edit-profile {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 0 8px 8px;
-  border: 0;
-  background: transparent;
-  color: var(--cr-accent);
-  font: 600 13px var(--cr-font);
-  cursor: pointer;
-}
-
-.settings-card {
-  padding-top: 2px;
-}
-
-.section-label {
-  margin: 0;
-  padding: 17px 18px 12px;
-  color: #999;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.setting-row,
-.action-card {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 70px;
-  gap: 14px;
-  padding: 12px 18px;
-  border: 0;
-  border-top: 1px solid #f0efee;
-  background: var(--cr-surface);
-  color: inherit;
-  text-align: left;
-  font: inherit;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.setting-row:hover:not(.setting-row--static),
-.action-card:hover:not(:disabled) {
-  background: #fcfbfb;
-}
-
-.setting-row:disabled,
-.edit-profile:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-.setting-row--static {
-  cursor: default;
-}
-
-.setting-icon {
-  display: grid;
-  flex: 0 0 40px;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 13px;
-  background: #f4f4f4;
-  color: #555;
-}
-
-.setting-copy {
-  display: grid;
-  flex: 1;
-  min-width: 0;
-  gap: 3px;
-}
-
-.setting-copy strong {
-  font-size: 14px;
-  font-weight: 650;
-}
-
-.setting-copy > span {
-  color: var(--cr-muted);
-  font-size: 13px;
-}
-
-.row-chevron {
-  color: #c7c7c7;
-}
-
-.action-card {
-  min-height: 72px;
-  border: 1px solid var(--cr-border);
-  border-radius: 18px;
-  box-shadow: var(--cr-shadow-card);
-}
-
-.action-card .setting-icon {
-  background: #f4f4f4;
-}
-
-.action-card--danger {
-  border-color: #f1d8d8;
-  color: var(--cr-error);
-}
-
-.action-card--danger .setting-icon {
-  background: var(--cr-error-soft);
-  color: var(--cr-error);
-}
-
-.action-card--danger .setting-copy > span {
-  color: var(--cr-muted);
-}
-
-.action-card--danger .row-chevron {
-  color: #e79a9a;
-}
-
-.action-card:disabled,
-.edit-profile:disabled {
-  cursor: wait;
-  opacity: 0.65;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 110;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  background: rgb(17 17 17 / 45%);
-}
-
-.modal-card {
-  display: grid;
-  width: min(100%, 380px);
-  gap: 10px;
-  padding: 22px;
-  border-radius: 14px;
-  background: rgb(255 255 255 / 96%);
-  color: var(--cr-text);
-  backdrop-filter: var(--cr-glass-blur);
-  box-shadow: 0 20px 50px rgb(0 0 0 / 20%);
-  font-family: var(--cr-font);
-}
-
-.modal-card h2 {
-  margin: 0 0 4px;
-  font-size: 17px;
-}
-
-.modal-card label {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.modal-card input {
-  box-sizing: border-box;
-  width: 100%;
-  height: 40px;
-  padding: 0 11px;
-  border: 1px solid var(--cr-border-strong);
-  border-radius: 8px;
-  font: 13px var(--cr-font);
-}
-
-.modal-card input:focus-visible,
-button:focus-visible {
-  outline: none;
-  box-shadow: var(--cr-focus-ring);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.modal-actions button {
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 8px;
-  font: 600 13px var(--cr-font);
-  cursor: pointer;
-}
-
-.modal-actions button:disabled {
-  cursor: wait;
-  opacity: 0.6;
-}
-
-.modal-cancel {
-  border: 1px solid var(--cr-border-strong);
-  background: #fff;
-  color: var(--cr-text);
-}
-
-.modal-save {
-  border: 1px solid var(--cr-accent);
-  background: var(--cr-accent);
-  color: #fff;
-}
-
-.confirm-modal > p {
-  margin: 0;
-  color: #55596f;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.modal-danger {
-  border: 1px solid var(--cr-error) !important;
-  background: var(--cr-error);
-  color: #fff;
-}
-
-@media (max-width: 480px) {
-  .profile-page {
-    width: min(100% - 24px, 620px);
-    margin-top: 16px;
-    gap: 10px;
-  }
-
-  .profile-card {
-    gap: 12px;
-    min-height: 112px;
-    padding: 16px;
-  }
-
-  .avatar {
-    flex-basis: 58px;
-    width: 58px;
-    height: 58px;
-    font-size: 21px;
-  }
-
-  .profile-identity h1 {
-    font-size: 16px;
-  }
-
-  .profile-identity p {
-    font-size: 12px;
-  }
-
-  .edit-profile {
-    font-size: 12px;
-  }
-
-  .setting-row,
-  .action-card {
-    gap: 11px;
-    padding-right: 14px;
-    padding-left: 14px;
-  }
+@media (max-width: 860px) {
+  .profile-grid { grid-template-columns: 1fr; }
+  .summary { position: static; order: -1; }
 }
 </style>
