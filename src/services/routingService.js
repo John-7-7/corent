@@ -71,7 +71,7 @@ function persistCache() {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(Object.fromEntries(memoryCache)))
   } catch {
-    // Over quota or blocked — keep serving from memory.
+    // Over quota or blocked, keep serving from memory.
   }
 }
 
@@ -129,6 +129,10 @@ function parseItinerary(payload, from, to) {
           mode: leg.mode ?? null,
           route: leg.route || leg.routeShortName || null,
           minutes: toMinutes(leg.duration),
+          // Encoded path of this leg, for drawing the route on the map.
+          geometry: leg.legGeometry?.points ?? null,
+          fromName: leg.from?.name ?? null,
+          toName: leg.to?.name ?? null,
         }))
       : [],
     source: 'onemap',
@@ -137,7 +141,7 @@ function parseItinerary(payload, from, to) {
 
 /**
  * Travel time from `from` to `to` by public transport.
- * Always resolves — never rejects — so one bad pair cannot break a dashboard.
+ * Always resolves (never rejects), so one bad pair cannot break a dashboard.
  *
  * @returns {Promise<{minutes:number, source:'onemap'|'estimate', ...}>}
  */
@@ -164,7 +168,7 @@ export async function routeCommute(from, to, departure = referenceDeparture()) {
 
   try {
     const response = await fetch(`${ROUTE_URL}?${params}`, {
-      // OneMap takes the raw token — no "Bearer " prefix.
+      // OneMap takes the raw token, no "Bearer " prefix.
       headers: { Authorization: token },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
@@ -292,4 +296,26 @@ export function cachedCommuteMatrix(listings, members, departure = referenceDepa
 /** True once any result in the matrix came from an estimate, not OneMap. */
 export function hasEstimates(matrix) {
   return [...matrix.values()].some((entry) => entry.source === 'estimate')
+}
+
+/* ---------------- route shape, for the map ---------------- */
+
+/**
+ * routeCommute(), but guaranteed to carry each leg's path (legs[].geometry)
+ * when OneMap answered, so the Shortlist map can draw the journey.
+ *
+ * Results cached before paths were kept hold times only. Such an entry is
+ * dropped and fetched once more; the richer result then replaces it in the
+ * shared cache, so commute times and routes stay one and the same answer.
+ */
+export async function routeWithGeometry(from, to, departure = referenceDeparture()) {
+  if (from?.lat && to?.lat) {
+    loadCache()
+    const key = cacheKey(from, to, departure)
+    const cached = memoryCache.get(key)
+    const hasPaths =
+      Array.isArray(cached?.legs) && cached.legs.every((leg) => 'geometry' in leg)
+    if (cached?.source === 'onemap' && !hasPaths) memoryCache.delete(key)
+  }
+  return routeCommute(from, to, departure)
 }

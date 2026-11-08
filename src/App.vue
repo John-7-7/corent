@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import AppSidebar from '@/components/AppSidebar.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import TopBar from '@/components/TopBar.vue'
 
 const route = useRoute()
 // Routes marked meta.bare render full screen, with no sidebar.
@@ -13,7 +14,9 @@ const bare = computed(() => !!route.meta.bare)
   <RouterView v-if="bare" />
   <div v-else class="shell">
     <AppSidebar />
-    <main class="shell-main">
+    <main class="shell-main" style="position: relative">
+      <!-- Active group, notifications and account, top right of every page. -->
+      <TopBar />
       <RouterView />
     </main>
   </div>

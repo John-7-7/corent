@@ -13,7 +13,7 @@ import { cachedCommuteMatrix } from './routingService'
  * showing hundreds of listings cannot route them all. The Shortlist page does
  * its own routing because it holds few enough to afford it, and because the
  * cache is shared, a listing routed there carries its measured commute here
- * too — so the same listing shows the same percentage everywhere.
+ * too, so the same listing shows the same percentage everywhere.
  *
  * @param listings a ref or computed holding the listing records to score
  */

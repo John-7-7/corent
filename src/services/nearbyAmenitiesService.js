@@ -4,7 +4,7 @@ import { getToken, resetToken } from './onemapToken'
 /**
  * Neighbourhood amenities near a listing, from OneMap's Themes service.
  *
- * SCOPE — read this before wiring it into scoring. These are amenities *around*
+ * SCOPE: read this before wiring it into scoring. These are amenities *around*
  * a listing: the nearest hawker centre, the park down the road. They are
  * NOT the eight amenity preferences in the member profile (wifi, aircon,
  * pet-friendly, gym, pool, parking, laundry, balcony), which are features of
@@ -12,9 +12,9 @@ import { getToken, resetToken } from './onemapToken'
  * for those, so this does not satisfy it and deliberately does not feed the
  * match percentage. It is context shown beside a listing, nothing more.
  * Scoring on it would mean the group first agreeing which amenities matter and
- * what counts as near — a decision nobody has made.
+ * what counts as near, a decision nobody has made.
  *
- * COST — a theme is fetched ONCE for the whole island and the distances are
+ * COST: a theme is fetched ONCE for the whole island and the distances are
  * worked out locally, so adding a category costs one request no matter how
  * many listings are on screen. This is the opposite of routingService, where
  * every (listing, member) pair is its own request.
@@ -32,8 +32,8 @@ const SG_EXTENTS = '1.144,103.535,1.494,104.502'
  *
  * Verified against getAllThemesInfo on 2026-11-07 (166 themes); re-check with
  * `node scripts/onemap-themes.mjs <token>`. These were matched by name
- * pattern before, which silently picked "Park Facilities" — a layer of park
- * fixtures whose rows are called NOTICEBOARD — instead of parks. Explicit
+ * pattern before, which silently picked "Park Facilities", a layer of park
+ * fixtures whose rows are called NOTICEBOARD, instead of parks. Explicit
  * names cannot drift like that; a name that disappears is skipped, not faked.
  */
 export const AMENITY_CATEGORIES = [
@@ -49,8 +49,8 @@ export const AMENITY_CATEGORIES = [
  * Asked for and not available. Recorded so nobody spends an afternoon looking
  * again, and so the report can say what the data does and does not cover.
  *
- *   supermarket — OneMap has no supermarket or grocery theme at all.
- *   clinic      — no general GP theme. The closest are moh_hospitals,
+ *   supermarket: OneMap has no supermarket or grocery theme at all.
+ *   clinic:      no general GP theme. The closest are moh_hospitals,
  *                 vaccination_polyclinics and votg_phpc (PHPC clinics, a
  *                 pandemic-response subset, not every GP). A pharmacy is the
  *                 honest everyday proxy, so that is what is shown.
@@ -125,8 +125,8 @@ const pointCache = new Map() // queryName -> [{ lat, lng, name }]
 /**
  * A label worth showing.
  *
- * Some themes put a feature type in NAME rather than a place name — the parks
- * layer returns rows called "NOTICEBOARD" — which tells the reader nothing.
+ * Some themes put a feature type in NAME rather than a place name, the parks
+ * layer returns rows called "NOTICEBOARD", which tells the reader nothing.
  * A name earns its place only if it reads like one, meaning it has lower-case
  * letters in it; otherwise fall through, and failing that show no name at all
  * rather than shouting a field value.
@@ -169,7 +169,7 @@ async function themePoints(queryName, token) {
 /**
  * Nearest amenity of each category to one listing.
  *
- * @returns [{ key, label, name, km }] — only categories with a real match.
+ * @returns [{ key, label, name, km }], only categories with a real match.
  *          An empty array means no token, no themes, or no coordinates; it
  *          never means "nothing nearby", so the UI must not phrase it that way.
  */

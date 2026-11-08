@@ -44,7 +44,7 @@ export const SCORED_CRITERIA = [
  * than buried.
  */
 export const PENDING_GROUP_DECISION = [
-  { key: 'commute', reason: 'Per member only — no group-level limit is agreed.' },
+  { key: 'commute', reason: 'Per member only. No group-level limit is agreed.' },
   { key: 'moveIn', reason: 'No listing in the current corpus carries AvailableDate.' },
   {
     key: 'amenities',
@@ -99,7 +99,7 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
   const rows = []
   const profile = member.profile || {}
 
-  // Budget — the group rents together, so what matters is each member's share.
+  // Budget: the group rents together, so what matters is each member's share.
   const household = toNumber(groupPref?.HouseholdSize) || member.householdSize || null
   const perPersonCap =
     toNumber(groupPref?.BudgetPerPersonMax) ||
@@ -132,7 +132,7 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
     ),
   )
 
-  // Property type — 'Any' means the group did not constrain it, not a mismatch.
+  // Property type: 'Any' means the group did not constrain it, not a mismatch.
   const wantedType = groupPref?.PropertyType
   rows.push(
     row(
@@ -143,7 +143,7 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
     ),
   )
 
-  // Bedrooms — a shortfall costs a third per missing room; a surplus is fine.
+  // Bedrooms: a shortfall costs a third per missing room; a surplus is fine.
   const bedsRaw = toNumber(listing.Bedrooms)
   // Some exports use -1 for "not stated"; treat any non-positive count as unknown.
   const beds = bedsRaw !== null && bedsRaw > 0 ? bedsRaw : null
@@ -164,7 +164,7 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
     ),
   )
 
-  // Commute — per member, against that member's own limit. An estimate is not a
+  // Commute: per member, against that member's own limit. An estimate is not a
   // measurement, so it scores null: counting it would make the same listing
   // score differently depending on whether the OneMap token happened to work
   // (NFR-REQ-06), and AC4 already says unknown data is not a failure.
@@ -178,12 +178,12 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
       measured
         ? `${measured} min against a ${limit} min limit`
         : commute?.source === 'estimate'
-          ? 'Estimated only — not counted'
+          ? 'Estimated only, not counted'
           : 'No commute destination set',
     ),
   )
 
-  // Furnishing — the only member amenity preference the listing data supports.
+  // Furnishing: the only member amenity preference the listing data supports.
   const want = profile.FurnishingLevel
   const has = listingFurnishing(listing)
   rows.push(
@@ -195,7 +195,7 @@ export function scoreForMember(listing, groupPref, member, commute = null) {
     ),
   )
 
-  // Move-in date — no listing carries AvailableDate today, so this is always
+  // Move-in date: no listing carries AvailableDate today, so this is always
   // insufficient data. Kept because F-REQ-015 asks for it.
   rows.push(row('moveIn', 'Move-in date', null, 'Availability date not listed'))
 
@@ -249,7 +249,7 @@ export function scoreListing(listing, groupPref, members, matrix = new Map()) {
   }
 }
 
-/** Scores every listing. Pure and synchronous — run the commute matrix first. */
+/** Scores every listing. Pure and synchronous, run the commute matrix first. */
 export function scoreListings(listings, groupPref, members, matrix = new Map()) {
   return listings.map((listing) => scoreListing(listing, groupPref, members, matrix))
 }

@@ -5,7 +5,7 @@ import { ref, watch } from 'vue'
  * Hover and keyboard-focus readout shared by the shortlist comparison charts.
  *
  * Extracted rather than repeated: the three charts answer different questions,
- * but the reader wants the same context off each of them — which property is
+ * but the reader wants the same context off each of them, which property is
  * this, what does it cost, and what does it look like.
  */
 const props = defineProps({

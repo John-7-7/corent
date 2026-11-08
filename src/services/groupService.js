@@ -179,7 +179,7 @@ export async function joinGroupByInviteCode(inviteCode, user) {
 
 // Everything stored under a group. Firestore does not delete subcollections
 // with their parent, so deleting a group has to remove these itself.
-const GROUP_SUBCOLLECTIONS = ['shortlist', 'votes', 'listingVotes', 'enquiries']
+const GROUP_SUBCOLLECTIONS = ['shortlist', 'votes', 'listingVotes', 'enquiries', 'listingComments']
 const BATCH_LIMIT = 450
 
 async function deleteInBatches(references) {
@@ -191,14 +191,18 @@ async function deleteInBatches(references) {
 }
 
 // A member who leaves takes their ballots with them, so their preference votes
-// and listing votes stop counting towards the group's results.
+// and listing votes stop counting towards the group's results. Their listing
+// comments go too.
 async function removeMemberVotes(groupId, userId) {
-  const ownListingVotes = await getDocs(
-    query(collection(db, 'groups', groupId, 'listingVotes'), where('userId', '==', userId)),
+  const [ownListingVotes, ownComments] = await Promise.all(
+    ['listingVotes', 'listingComments'].map((name) =>
+      getDocs(query(collection(db, 'groups', groupId, name), where('userId', '==', userId))),
+    ),
   )
   await deleteInBatches([
     doc(db, 'groups', groupId, 'votes', userId),
     ...ownListingVotes.docs.map((voteDoc) => voteDoc.ref),
+    ...ownComments.docs.map((commentDoc) => commentDoc.ref),
   ])
 }
 

@@ -16,7 +16,7 @@ import { db } from '@/firebase'
  * `{groupId}_{listingId}` and be read with a query filtered on groupId. That
  * cannot be secured. Firestore checks a list query against the rule before
  * running it, and a rule that has to get() the group document to learn whether
- * you are a member is not something it can verify in advance — so the query is
+ * you are a member is not something it can verify in advance, so the query is
  * refused outright once real rules are deployed. Under the group, membership
  * is provable from the path alone and no document lookup is needed.
  *

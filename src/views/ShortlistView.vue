@@ -12,11 +12,21 @@ import { submitEnquiry, subscribeToGroupEnquiries, } from '@/services/enquirySer
 import { getMemberProfiles } from '@/services/groupSummaryService'
 import { watchGroupPreference } from '@/services/groupPreferencesService'
 import { rankShortlist, scoreListings } from '@/services/listingScoring'
-import { commuteKey, commuteMatrix, hasEstimates } from '@/services/routingService'
+import { commuteKey, commuteMatrix, hasEstimates, routeWithGeometry } from '@/services/routingService'
+import { subscribeToGroupComments } from '@/services/commentService'
+import { decodePolyline } from '@/services/polyline'
+import { estimateTransitRoute } from '@/services/transitEstimate'
 import CommuteChart from '@/components/listings/CommuteChart.vue'
 import ListingMap from '@/components/listings/ListingMap.vue'
 import ChartTooltip from '@/components/listings/ChartTooltip.vue'
 import ScoreBreakdown from '@/components/listings/ScoreBreakdown.vue'
+import ListingComments from '@/components/listings/ListingComments.vue'
+import MemberAvatar from '@/components/MemberAvatar.vue'
+import DecisionFunnel from '@/components/shortlist/DecisionFunnel.vue'
+import WhatIfBudget from '@/components/shortlist/WhatIfBudget.vue'
+import RentSplit from '@/components/shortlist/RentSplit.vue'
+import CompareListings from '@/components/shortlist/CompareListings.vue'
+import { householdSize } from '@/components/shortlist/groupFilters'
 
 import {
   voteForListing,
@@ -43,7 +53,7 @@ const currentUserDisplayName = ref('')
 const currentUserPhotoURL = ref('')
 // Derived, never assigned: the active group is owned by activeGroup.js, and a
 // local copy is how this page drifted out of step with Browse in the first
-// place. Everything here — votes, enquiries, preferences — keys off this.
+// place. Everything here (votes, enquiries, preferences) keys off this.
 const groupId = computed(() => activeGroupId.value ?? '')
 
 // Votes shared by everyone in the group
@@ -66,10 +76,14 @@ const commuteLoading = ref(false)
 // Which shortlist card has its score breakdown open.
 const expandedScoreId = ref('')
 
+// Comments on every listing in the group, live (one listener for all cards).
+const groupComments = ref([])
+
 // Store the Firestore listeners so we can stop them later
 let unsubscribeVotes = null
 let unsubscribeEnquiries = null
 let unsubscribePreference = null
+let unsubscribeComments = null
 
 const unsubscribeAuth = onAuthChange((user) => {
   currentUserId.value = user?.uid ?? ''
@@ -93,7 +107,8 @@ function stopGroupListeners() {
   unsubscribeVotes?.()
   unsubscribeEnquiries?.()
   unsubscribePreference?.()
-  unsubscribeVotes = unsubscribeEnquiries = unsubscribePreference = null
+  unsubscribeComments?.()
+  unsubscribeVotes = unsubscribeEnquiries = unsubscribePreference = unsubscribeComments = null
 }
 
 // Re-subscribe whenever the active group changes (or the user leaves it).
@@ -104,8 +119,20 @@ watch(
     groupVotes.value = []
     groupEnquiries.value = []
     groupPreference.value = null
+    groupComments.value = []
     groupError.value = ''
     if (!id) return
+
+    // Listen for the group's comments on listings
+    unsubscribeComments = subscribeToGroupComments(
+      id,
+      (items) => {
+        groupComments.value = items
+      },
+      (error) => {
+        console.error('Error loading comments:', error)
+      },
+    )
 
     // Listen for shared voting changes
     unsubscribeVotes = subscribeToGroupVotes(
@@ -193,6 +220,7 @@ const commuteMembers = computed(() =>
 // so the group can see the shortlist against the places they travel to.
 const mapDestinations = computed(() =>
   commuteMembers.value.map((member) => ({
+    uid: member.id,
     MemberName: member.name,
     Address: member.destination?.Address ?? 'Commute destination',
     Lat: member.destination.Lat,
@@ -320,8 +348,8 @@ const comparisonListings = computed(() => {
 /**
  * Axis labels that actually distinguish the bars.
  *
- * Every imported title opens with the same boilerplate — "Common Room (HDB)
- * for Rent in …" — so truncating from the left labelled all five bars
+ * Every imported title opens with the same boilerplate, "Common Room (HDB)
+ * for Rent in …", so truncating from the left labelled all five bars
  * identically. Strip whatever prefix the shortlisted titles share and keep the
  * part that differs, which is the address.
  */
@@ -443,8 +471,8 @@ const hasAnyVotes = computed(() => comparisonListings.value.some((l) => l.votes 
 /**
  * Who actually voted for each listing.
  *
- * The avatar row on every card used to render a hardcoded ['AT','BL','CM','DK']
- * — four invented members, identical on every card and in every group, sitting
+ * The avatar row on every card used to render a hardcoded ['AT','BL','CM','DK']:
+ * four invented members, identical on every card and in every group, sitting
  * next to a vote counter showing the real number. The two contradicted each
  * other. The data was already here: votes carry a userId and the group carries
  * names.
@@ -462,7 +490,7 @@ const MAX_AVATARS = 4
  *
  * Firebase Auth only exposes photoURL for whoever is signed in, so that is the
  * one person we can always picture. Everyone else depends on the copy
- * groupService stores on the member record at join time — members who joined
+ * groupService stores on the member record at join time, members who joined
  * before that existed have none and show initials instead.
  */
 function photoFor(uid) {
@@ -645,12 +673,175 @@ async function confirmEnquiry() {
     enquiryError.value = 'Unable to submit your enquiry. Please try again.'
   }
 }
+
+/* ---------------- comments ---------------- */
+
+const commentsByListing = computed(() => {
+  const byListing = new Map()
+  groupComments.value.forEach((comment) => {
+    const list = byListing.get(comment.listingId) ?? []
+    list.push(comment)
+    byListing.set(comment.listingId, list)
+  })
+  return byListing
+})
+const commentsFor = (listingId) => commentsByListing.value.get(listingId) ?? []
+const commentCounts = computed(() =>
+  Object.fromEntries([...commentsByListing.value].map(([id, list]) => [id, list.length])),
+)
+
+/* ---------------- Rent split, Compare and Analytics extras ---------------- */
+
+const TAB_HEADINGS = {
+  shortlist: 'Shortlist',
+  analytics: 'Analytics',
+  rent: 'Rent split',
+  compare: 'Compare',
+}
+const TAB_SUBTITLES = {
+  analytics: "Compare your group's shortlisted properties.",
+  rent: 'Work out who pays what before you commit.',
+  compare: 'Put shortlisted listings side by side.',
+}
+
+const memberCount = computed(() => activeGroup.value?.memberIds?.length || 1)
+const people = computed(() => householdSize(groupPreference.value, memberCount.value))
+
+// Raw Housing_Listing records in the same ranked order as the cards.
+const rankedRecords = computed(() => {
+  const byId = new Map(rawListings.value.map((l) => [l.ListingID, l]))
+  return rankedListings.value.map((l) => byId.get(l.id)).filter(Boolean)
+})
+const voteCounts = computed(() =>
+  Object.fromEntries(savedListings.value.map((l) => [l.id, getVoteCount(l.id)])),
+)
+const enquiredIds = computed(() => groupEnquiries.value.map((enquiry) => enquiry.listingId))
+const splitMembers = computed(() => scoringMembers.value.map(({ uid, name }) => ({ uid, name })))
+
+/* ---------------- commute routes on the map ---------------- */
+
+// The listing whose routes are drawn. Follows the selected card or pin; the
+// dropdown above the map can pick one directly or hide routes.
+const routeListingId = ref('')
+watch(selectedListingId, (id) => {
+  if (id) routeListingId.value = id
+})
+
+const mapRoutes = ref([])
+const routesLoading = ref(false)
+let routeRequest = 0
+
+function legLabel(leg) {
+  if (leg.mode === 'WALK') return 'Walk'
+  if (leg.mode === 'BUS') return leg.route ? `Bus ${leg.route}` : 'Bus'
+  if (leg.mode === 'TRAM') return leg.route ? `${leg.route} LRT` : 'LRT'
+  return leg.route ? `${leg.route} line` : 'MRT'
+}
+
+// Show the top-ranked listing's routes straight away, unless the user chose
+// "Don't show routes".
+const routesHidden = ref(false)
+watch(
+  () => rankedListings.value[0]?.id,
+  (firstId) => {
+    if (firstId && !routeListingId.value && !routesHidden.value) routeListingId.value = firstId
+  },
+  { immediate: true },
+)
+function onRoutePick(event) {
+  routesHidden.value = event.target.value === ''
+}
+
+// Why routes are estimated, in words, so a missing OneMap token is visible.
+const ROUTE_REASONS = {
+  'no-token': 'no OneMap token is set up',
+  'token-expired': 'the OneMap token has expired',
+  timeout: 'OneMap took too long to answer',
+  network: 'OneMap could not be reached',
+  'no-route': 'OneMap found no public transport route',
+  'missing-coordinates': 'a location is missing its coordinates',
+}
+const routeNotice = computed(() => {
+  const estimated = mapRoutes.value.filter((route) => route.estimated)
+  if (!estimated.length) return ''
+  const reason = estimated[0].reason ?? ''
+  const why = ROUTE_REASONS[reason] ?? (reason.startsWith('http-') ? `OneMap returned an error (${reason.slice(5)})` : 'OneMap routing is unavailable')
+  return `Live routing is unavailable because ${why}, so these routes are estimated from the MRT and LRT network (dashed). Bus routes appear once OneMap routing works.`
+})
+
+watch(
+  () => [routeListingId.value, commuteMembers.value.map((m) => m.id).join('|'), rawListings.value.length],
+  async ([listingId]) => {
+    const request = ++routeRequest
+    const listing = rawListings.value.find((l) => l.ListingID === listingId)
+    if (!listing?.Coordinates?.lat || !commuteMembers.value.length) {
+      mapRoutes.value = []
+      return
+    }
+    routesLoading.value = true
+    try {
+      const routes = await Promise.all(
+        commuteMembers.value.map(async (member) => {
+          const to = { lat: member.destination.Lat, lng: member.destination.Lng }
+          const result = await routeWithGeometry(listing.Coordinates, to)
+          const estimated = result.source !== 'onemap' || !result.legs?.some((leg) => leg.geometry)
+          if (estimated) {
+            // OneMap could not route it: estimate over the MRT/LRT network
+            // instead of drawing one straight line.
+            const network = estimateTransitRoute(listing.Coordinates, to, listing.NearestMrt)
+            return {
+              memberId: member.id,
+              memberName: member.name,
+              listingTitle: listing.Title,
+              minutes: network?.minutes ?? result.minutes,
+              estimated: true,
+              reason: result.reason ?? 'no-route',
+              legs: network
+                ? network.legs.map((leg) => ({ ...leg, label: leg.label ?? legLabel(leg) }))
+                : [
+                    {
+                      mode: 'ESTIMATE',
+                      label: 'Estimated',
+                      minutes: result.minutes,
+                      points: [
+                        [listing.Coordinates.lat, listing.Coordinates.lng],
+                        [to.lat, to.lng],
+                      ],
+                    },
+                  ],
+            }
+          }
+          return {
+            memberId: member.id,
+            memberName: member.name,
+            listingTitle: listing.Title,
+            minutes: result.minutes,
+            estimated,
+            legs: result.legs.map((leg) => ({
+                  mode: leg.mode,
+                  label: legLabel(leg),
+                  minutes: leg.minutes,
+                  points: decodePolyline(leg.geometry),
+                })),
+          }
+        }),
+      )
+      // A newer selection has already started; this answer is stale.
+      if (request === routeRequest) mapRoutes.value = routes
+    } catch (error) {
+      console.error('Error loading commute routes:', error)
+      if (request === routeRequest) mapRoutes.value = []
+    } finally {
+      if (request === routeRequest) routesLoading.value = false
+    }
+  },
+)
 </script>
 
 <template>
   <div>
     <header class="page-head">
-      <h1>{{ activeTab === 'shortlist' ? 'Shortlist' : 'Analytics' }}</h1>
+      <h1>{{ TAB_HEADINGS[activeTab] }}</h1>
 
       <p v-if="activeTab === 'shortlist'">
         {{ savedListings.length }}
@@ -661,7 +852,7 @@ async function confirmEnquiry() {
       </p>
 
       <p v-else>
-        Compare your group's shortlisted properties.
+        {{ TAB_SUBTITLES[activeTab] }}
       </p>
     </header>
 
@@ -684,6 +875,24 @@ async function confirmEnquiry() {
         <AppIcon name="chart" :size="14" />
         Analytics
       </button>
+
+      <button
+        type="button"
+        :class="{ 'shortlist-tab--active': activeTab === 'rent' }"
+        @click="activeTab = 'rent'"
+      >
+        <AppIcon name="users" :size="14" />
+        Rent split
+      </button>
+
+      <button
+        type="button"
+        :class="{ 'shortlist-tab--active': activeTab === 'compare' }"
+        @click="activeTab = 'compare'"
+      >
+        <AppIcon name="compare" :size="14" />
+        Compare
+      </button>
     </nav>
 
     <main v-if="activeTab === 'shortlist'" class="content">
@@ -700,18 +909,36 @@ async function confirmEnquiry() {
         </aside>
 
         <section class="location-section" aria-labelledby="location-overview-title">
-          <h2 id="location-overview-title">Location Overview</h2>
+          <div class="map-head">
+            <h2 id="location-overview-title">Location Overview</h2>
+            <label v-if="shortlistedListings.length && commuteMembers.length" class="route-picker">
+              <span>Commute routes from</span>
+              <select v-model="routeListingId" @change="onRoutePick">
+                <option value="">Don't show routes</option>
+                <option v-for="listing in rankedListings" :key="listing.id" :value="listing.id">
+                  {{ listing.title }}
+                </option>
+              </select>
+              <span v-if="routesLoading" class="route-loading" role="status">Loading routes…</span>
+            </label>
+          </div>
           <ListingMap
             v-if="shortlistedListings.length"
             :listings="shortlistedListings"
             :destinations="mapDestinations"
+            :routes="mapRoutes"
+            :selected-listing-id="routeListingId"
+            :current-user-id="currentUserId"
             @select="selectMapPin"
           />
           <p v-else class="map-empty">Save listings to see their locations here.</p>
+          <p v-if="routeNotice" class="route-notice" role="status">{{ routeNotice }}</p>
           <p v-if="shortlistedListings.length" class="map-hint">
             Select a pin to highlight its listing below.
             <template v-if="mapDestinations.length">
-              Orange markers are members' commute destinations.
+              Red pins are members' commute destinations; selecting a listing draws
+              everyone's weekday 08:30 route from it. The target button recentres
+              on your destination.
             </template>
           </p>
         </section>
@@ -792,7 +1019,9 @@ async function confirmEnquiry() {
                         alt=""
                         @error="brokenImages.add(voter.uid)"
                       />
-                      <span v-else class="member-avatar" :title="voter.name">{{ voter.initials }}</span>
+                      <span v-else class="member-avatar" :title="voter.name">
+                        <MemberAvatar :uid="voter.uid" />
+                      </span>
                     </template>
                     <span
                       v-if="votersFor(listing.id).length > MAX_AVATARS"
@@ -854,11 +1083,20 @@ async function confirmEnquiry() {
               :aria-expanded="expandedCommentsId === listing.id"
               @click="expandedCommentsId = expandedCommentsId === listing.id ? '' : listing.id"
             >
-              <span><AppIcon name="message" :size="13" /> {{ listing.sampleComments }} comments</span>
+              <span>
+                <AppIcon name="message" :size="13" />
+                {{ commentCounts[listing.id] ?? 0 }}
+                {{ (commentCounts[listing.id] ?? 0) === 1 ? 'comment' : 'comments' }}
+              </span>
               <AppIcon class="comments-chevron" :class="{ 'comments-chevron--open': expandedCommentsId === listing.id }" name="chevron" :size="14" />
             </button>
-            <div v-if="expandedCommentsId === listing.id" class="comments-panel">
-              Sample comment count only. Group comments are not connected yet.
+            <div v-if="expandedCommentsId === listing.id" class="comments-panel" @click.stop>
+              <ListingComments
+                :group-id="groupId"
+                :listing-id="listing.id"
+                :listing-title="listing.title"
+                :comments="commentsFor(listing.id)"
+              />
             </div>
           </article>
 
@@ -904,9 +1142,54 @@ async function confirmEnquiry() {
       </section>
     </main>
 
+    <!-- Rent split tab -->
+    <main v-else-if="activeTab === 'rent'" class="content">
+      <div class="wide-layout">
+        <RentSplit
+          :listings="rankedRecords"
+          :members="splitMembers"
+          :current-user-id="currentUserId"
+          :initial-listing-id="selectedListingId"
+        />
+      </div>
+    </main>
+
+    <!-- Compare tab -->
+    <main v-else-if="activeTab === 'compare'" class="content">
+      <div class="wide-layout">
+        <CompareListings
+          :listings="rankedRecords"
+          :scored-by-id="scoredById"
+          :commutes="commutes"
+          :commute-members="commuteMembers"
+          :vote-counts="voteCounts"
+          :enquired-ids="enquiredIds"
+          :comment-counts="commentCounts"
+          :people="people"
+        />
+      </div>
+    </main>
+
     <!-- Analytics tab -->
     <main v-else class="content">
       <section class="analytics-layout">
+        <DecisionFunnel
+          :listings="rawListings"
+          :group-preference="groupPreference"
+          :member-count="memberCount"
+          :shortlisted-ids="listingIds"
+          :votes="memberVotes"
+          :enquiries="groupEnquiries"
+          :is-group-mode="isGroupMode"
+          @go="activeTab = $event"
+        />
+
+        <WhatIfBudget
+          :listings="rawListings"
+          :group-preference="groupPreference"
+          :member-count="memberCount"
+          :shortlisted-ids="listingIds"
+        />
 
         <div class="analytics-heading">
           <h2>Property Comparison</h2>
@@ -998,7 +1281,7 @@ async function confirmEnquiry() {
             </svg>
           </div>
           <p v-if="!hasAnyFit" class="chart-note">
-            No percentages yet — your group has not agreed its preferences, so there is
+            No percentages yet: your group has not agreed its preferences, so there is
             nothing to score these against.
           </p>
 
@@ -1224,7 +1507,7 @@ async function confirmEnquiry() {
                   {{
                     groupPreference?.HouseholdSize
                       ? formatRent(Math.round(listing.price / groupPreference.HouseholdSize))
-                      : '—'
+                      : '-'
                   }}
                 </td>
                 <td>{{ listing.votes }}</td>
@@ -1236,7 +1519,7 @@ async function confirmEnquiry() {
                   <template v-else>No data</template>
                 </td>
                 <td>{{ listing.beds ?? 'Not listed' }}</td>
-                <td>{{ listing.region ?? '—' }}</td>
+                <td>{{ listing.region ?? '-' }}</td>
                 <td>
                   {{ listing.areaSqm ? `${listing.areaSqm} sqm` : 'N/A' }}
                 </td>
@@ -1626,7 +1909,7 @@ async function confirmEnquiry() {
   outline-offset: 2px;
 }
 
-/* Voted: the action is done, so it stops competing for attention — but it is
+/* Voted: the action is done, so it stops competing for attention, but it is
    still the control that undoes the vote, so it stays clearly a button. */
 .vote-button--active {
   background: #fff;
@@ -1893,6 +2176,56 @@ async function confirmEnquiry() {
   color: #287a3e;
   font-size: 11px;
   font-weight: 600;
+}
+
+/* Rent split and Compare use the full width. */
+.wide-layout {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+}
+
+/* Route picker above the map */
+.map-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+.map-head h2 {
+  margin: 0;
+}
+.route-picker {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.route-picker select {
+  max-width: 280px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--chip-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-size: 12px;
+}
+.route-loading {
+  color: var(--red-dark);
+}
+.route-notice {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--warn-tint);
+  color: var(--warn);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 /* Shortlist and Analytics tabs */

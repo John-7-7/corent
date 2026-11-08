@@ -16,11 +16,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Housing_Listing — the rental corpus (F-REQ-014). Served from a bundled
+    // Housing_Listing: the rental corpus (F-REQ-014). Served from a bundled
     // JSON today (listings.js, USE_LOCAL), so this rule is not exercised yet;
     // it is here so that flipping that switch does not hand whoever does it a
     // silently empty Browse. The corpus is reference data: readable by any
-    // signed-in user, never written from the client — it is loaded by the
+    // signed-in user, never written from the client; it is loaded by the
     // import script with admin credentials.
     match /Housing_Listing/{listingId} {
       allow read: if request.auth != null;
@@ -76,7 +76,7 @@ service cloud.firestore {
       // Only the last member, as they leave.
       allow delete: if isLastMember();
 
-      // groups/{groupId}/shortlist/{listingId} — one doc per saved listing, so
+      // groups/{groupId}/shortlist/{listingId}: one doc per saved listing, so
       // two members saving the same property converge instead of duplicating.
       match /shortlist/{listingId} {
         allow read: if isMember();
@@ -90,11 +90,11 @@ service cloud.firestore {
         // Any member may remove any entry; addedByName keeps it accountable.
         allow delete: if isMember();
 
-        // Entries are add/remove only — no edits in place.
+        // Entries are add/remove only, no edits in place.
         allow update: if false;
       }
 
-      // groups/{groupId}/votes/{uid} — one ballot per member, holding their
+      // groups/{groupId}/votes/{uid}: one ballot per member, holding their
       // preference votes and ready flags (groupSummaryService.js). Not the same
       // thing as listingVotes below: these settle the group's search filters,
       // not which property to enquire about.
@@ -114,7 +114,7 @@ service cloud.firestore {
         allow delete: if (isMember() && request.auth.uid == uid) || isLastMember();
       }
 
-      // groups/{groupId}/listingVotes/{uid}_{listingId} — one vote per member
+      // groups/{groupId}/listingVotes/{uid}_{listingId}: one vote per member
       // per listing (groupShortlistService.js).
       match /listingVotes/{voteId} {
         allow read: if isMember();
@@ -128,7 +128,7 @@ service cloud.firestore {
         allow update: if false;
       }
 
-      // groups/{groupId}/enquiries/{listingId} — one enquiry per group per
+      // groups/{groupId}/enquiries/{listingId}: one enquiry per group per
       // listing (enquiryService.js, F-REQ-019), read as a whole collection.
       //
       // This used to be a top-level `enquiries` collection read by a query on
@@ -145,9 +145,32 @@ service cloud.firestore {
         allow update: if false;
         allow delete: if isLastMember();
       }
+
+      // groups/{groupId}/listingComments/{commentId}: members' comments on
+      // listings (commentService.js). Posted as yourself only, never edited.
+      match /listingComments/{commentId} {
+        allow read: if isMember();
+        allow create: if isMember()
+          && request.resource.data.keys().hasOnly(
+            ['listingId', 'userId', 'authorName', 'authorPhotoURL', 'text', 'createdAt'])
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.listingId is string
+          && request.resource.data.authorName is string
+          && request.resource.data.authorName.size() <= 100
+          && request.resource.data.authorPhotoURL is string
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        // Your own comment (also how leaving the group removes yours), or
+        // anyone's when the last member deletes the group.
+        allow delete: if (isMember() && resource.data.userId == request.auth.uid)
+          || isLastMember();
+      }
     }
 
-    // Group_Preferences/{groupId} — the group's agreed search filters plus each
+    // Group_Preferences/{groupId}: the group's agreed search filters plus each
     // member's priority ranking (groupPreferencesService.js, F-REQ-013). The
     // document id is the group id, so membership is checked against it directly.
     match /Group_Preferences/{groupId} {

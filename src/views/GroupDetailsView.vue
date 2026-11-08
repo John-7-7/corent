@@ -5,6 +5,7 @@ import { onAuthChange } from '@/services/authService'
 import {getGroupById, leaveGroup, } from '@/services/groupService'
 import { forgetGroup } from '@/services/activeGroup'
 import { confirmAction } from '@/composables/useConfirm'
+import MemberAvatar from '@/components/MemberAvatar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -148,18 +149,6 @@ async function handleLeaveGroup() {
   }
 }
 
-function getInitials(name) {
-  if (!name?.trim()) return '?'
-
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-}
-
 function getPreferenceStatus(member) {
   if (member.preferencesReady === true) return 'Preferences ready'
   if (member.preferencesReady === false) return 'Preferences pending'
@@ -245,7 +234,7 @@ onUnmounted(unsubscribeAuth)
             class="member"
           >
             <span class="avatar" aria-hidden="true">
-              {{ getInitials(member.name) }}
+              <MemberAvatar :uid="member.id" :photo="member.photo || ''" />
             </span>
 
             <div class="member-info">

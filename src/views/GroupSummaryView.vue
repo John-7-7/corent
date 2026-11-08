@@ -1,7 +1,8 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { activeGroupId, setActiveGroup } from '@/services/activeGroup'
+import { activeGroupId, availableGroups, setActiveGroup } from '@/services/activeGroup'
+import MemberAvatar from '@/components/MemberAvatar.vue'
 import GroupPreferencesCard from '../components/groups/GroupPreferencesCard.vue'
 import MemberRadarChart from '../components/groups/MemberRadarChart.vue'
 import PriorityRanking from '../components/groups/PriorityRanking.vue'
@@ -623,7 +624,7 @@ async function pickGroup(user) {
   }
   if (groupId.value) return // a group was picked meanwhile
   // Open the group the rest of the app is already working in. Without this the
-  // default was userGroups[0] — Firestore's arbitrary order — so a member could
+  // default was userGroups[0] (Firestore's arbitrary order), so a member could
   // agree preferences for one group while Browse scored listings against
   // another, and two members of the same group could land on different ones.
   const active = userGroups.value.find((group) => group.id === activeGroupId.value)
@@ -709,6 +710,21 @@ async function loadGroup(id) {
   )
 }
 watch(groupId, loadGroup, { immediate: true })
+
+// Switching the active group from the top bar moves this page to that group.
+// Only a change from one group to another counts: the first value arriving
+// while the app loads must not override a group opened by link.
+watch(activeGroupId, (id, previous) => {
+  if (previous && id && groupId.value && id !== groupId.value) {
+    router.replace({ query: { groupId: id } })
+  }
+})
+
+// Members' photos, where the shared group record holds one.
+const photoOf = (uid) =>
+  availableGroups.value
+    .find((entry) => entry.id === group.value?.GroupID)
+    ?.members?.find((member) => member.id === uid)?.photo || ''
 onBeforeUnmount(() => {
   if (priorityTimer) savePriorities()
   stopWatching()
@@ -758,6 +774,13 @@ const saveMessage = computed(
   <div>
     <header class="page-head">
       <h1>Group Summary</h1>
+      <p>
+        <template v-if="group">
+          Agreeing preferences for <strong>{{ group.GroupName || 'your group' }}</strong>.
+          Switch groups from the top right.
+        </template>
+        <template v-else>Agree your group's preferences together.</template>
+      </p>
     </header>
 
     <div class="content">
@@ -802,7 +825,7 @@ const saveMessage = computed(
                         : 'Compatibility score not calculated'
                     "
                   >
-                    <span>{{ compatibility ? `${compatibility.score}%` : '—' }}</span>
+                    <span>{{ compatibility ? `${compatibility.score}%` : '-' }}</span>
                   </div>
                   <div>
                     <h3>Overall compatibility</h3>
@@ -856,7 +879,9 @@ const saveMessage = computed(
                     aria-controls="member-preferences"
                     @click="selectMember(member.uid)"
                   >
-                    <span class="member-avatar" aria-hidden="true">{{ member.initials }}</span>
+                    <span class="member-avatar" aria-hidden="true">
+                      <MemberAvatar :uid="member.uid" :photo="photoOf(member.uid)" />
+                    </span>
                     <span class="member-name">{{ member.name }}</span>
                   </button>
                 </div>
@@ -1104,8 +1129,8 @@ const saveMessage = computed(
                     <td v-for="member in members" :key="member.uid" class="match-cell">
                       {{
                         member.uid === viewer.uid
-                          ? '—'
-                          : `${memberComparisons.find((item) => item.uid === member.uid)?.score ?? '—'}%`
+                          ? '-'
+                          : `${memberComparisons.find((item) => item.uid === member.uid)?.score ?? '-'}%`
                       }}
                     </td>
                   </tr>

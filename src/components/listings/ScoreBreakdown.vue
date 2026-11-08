@@ -49,7 +49,7 @@ const isPending = (key) => pendingKeys.has(key)
   <figure class="sb">
     <figcaption class="sb-head">
       <div class="sb-score">
-        <span class="sb-num">{{ headline != null ? `${headline}%` : '—' }}</span>
+        <span class="sb-num">{{ headline != null ? `${headline}%` : '-' }}</span>
         <span class="sb-cap">
           {{ view === 'group' ? 'group fit' : 'fit for this member' }}
           <template v-if="rank"> · ranked #{{ rank }}</template>
@@ -82,7 +82,7 @@ const isPending = (key) => pendingKeys.has(key)
             v-if="row.score != null"
             class="sb-bar"
             :style="{ width: `${row.score}%` }"
-            :title="`${row.label}: ${row.score}% — ${row.detail}`"
+            :title="`${row.label}: ${row.score}% (${row.detail})`"
           ></span>
           <span v-else class="sb-unknown" aria-label="Insufficient data"></span>
         </span>

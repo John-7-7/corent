@@ -169,7 +169,7 @@ function viewGroupDetails() {
 
   // Opening a group is also how you switch to it. Browse and Shortlist score
   // against one group at a time, and until this call existed the only way the
-  // active group was ever set was by creating one — so a user in several
+  // active group was ever set was by creating one, so a user in several
   // groups was stuck scoring against whichever Firestore happened to return
   // first, with no way to change it and nothing on screen saying which.
   setActiveGroup(selectedGroup.value)
@@ -208,7 +208,7 @@ onUnmounted(unsubscribeAuth)
 <template>
   <div>
     <header class="page-head">
-      <h1>Dashboard</h1>
+      <h1>Home</h1>
       <p>Welcome back, {{ firstName }}.</p>
     </header>
 

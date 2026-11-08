@@ -1,5 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import ListingComments from '@/components/listings/ListingComments.vue'
+import { onAuthChange } from '@/services/authService'
 import { RouterLink } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import ListingCard from '@/components/listings/ListingCard.vue'
@@ -22,7 +24,7 @@ const loading = ref(true)
  * Fetched when a dialog opens rather than for the whole grid: the theme points
  * are island-wide and cached after the first listing, so this costs one
  * request per category for the whole session, not one per listing. Context
- * only — it does not feed the match percentage (see nearbyAmenitiesService).
+ * only; it does not feed the match percentage (see nearbyAmenitiesService).
  */
 const nearby = ref([])
 const nearbyState = ref('idle') // idle | loading | ready | unavailable
@@ -61,8 +63,66 @@ const bedOptions = computed(() =>
   [...new Set(listings.value.map((l) => l.Bedrooms).filter(Boolean))].sort((a, b) => a - b),
 )
 
+/* ---------- search ---------- */
+// Matches the listing name, block number, street, postal code, neighbourhood,
+// region and MRT station, plus initials ("AMK" finds Ang Mo Kio, "TKM" finds
+// Tanjong Katong MRT) and common Singapore street abbreviations.
+const search = ref('')
+
+const ABBREVIATIONS = {
+  ave: ['avenue'], st: ['street'], rd: ['road'], dr: ['drive'], cres: ['crescent'],
+  cl: ['close'], ctrl: ['central'], ctr: ['centre', 'center'], nth: ['north'], sth: ['south'],
+  upp: ['upper'], jln: ['jalan'], bt: ['bukit'], kg: ['kampong'], tg: ['tanjong'],
+  pk: ['park'], ter: ['terrace'], hts: ['heights'], gdns: ['gardens'], pl: ['place'],
+  lor: ['lorong'], mt: ['mount'], blvd: ['boulevard'], sq: ['square'], ind: ['industrial'],
+}
+
+const initialsOf = (text) =>
+  String(text ?? '')
+    .split(/[\s\-/@(),.]+/)
+    .filter((word) => /^[a-z]/i.test(word))
+    .map((word) => word[0])
+    .join('')
+    .toLowerCase()
+
+// Built once per load, so typing stays instant over hundreds of listings.
+const searchIndex = computed(
+  () =>
+    new Map(
+      listings.value.map((l) => {
+        const street = String(l.Address ?? '').replace(/^\s*(blk|block)?\s*\d+[a-z]?\s+/i, '')
+        const text = [l.Title, l.Address, l.PostalCode, l.Neighbourhood, l.Region, l.NearestMrt, l.PropertyType]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+        const initials = [l.Neighbourhood, street, l.NearestMrt, l.Title].map(initialsOf).filter(Boolean)
+        return [l.ListingID, { text, initials }]
+      }),
+    ),
+)
+
+const searchTokens = computed(() =>
+  search.value
+    .toLowerCase()
+    .replace(/\b(blk|block)\b\.?/g, ' ')
+    .split(/[\s,]+/)
+    .filter(Boolean),
+)
+
+function matchesSearch(listing) {
+  if (!searchTokens.value.length) return true
+  const entry = searchIndex.value.get(listing.ListingID)
+  if (!entry) return false
+  // Every word typed has to match something (AND), in any order.
+  return searchTokens.value.every((token) => {
+    const options = [token, ...(ABBREVIATIONS[token] ?? [])]
+    if (options.some((option) => entry.text.includes(option))) return true
+    return /^[a-z]{2,}$/.test(token) && entry.initials.some((initials) => initials.startsWith(token))
+  })
+}
+
 const filtersActive = computed(() =>
-  region.value !== 'Any' || type.value !== 'Any' || beds.value !== 'Any' || maxRent.value,
+  region.value !== 'Any' || type.value !== 'Any' || beds.value !== 'Any' || maxRent.value || search.value.trim(),
 )
 
 function clearFilters() {
@@ -70,11 +130,13 @@ function clearFilters() {
   type.value = 'Any'
   beds.value = 'Any'
   maxRent.value = null
+  search.value = ''
 }
 
 const filtered = computed(() => {
   const out = listings.value.filter(
     (l) =>
+      matchesSearch(l) &&
       (region.value === 'Any' || l.Region === region.value) &&
       (type.value === 'Any' || l.PropertyType === type.value) &&
       (beds.value === 'Any' || l.Bedrooms === Number(beds.value)) &&
@@ -99,6 +161,7 @@ const destinations = computed(() =>
   scoringMembers.value
     .filter((member) => member.profile?.CommuteDestination?.Lat)
     .map((member) => ({
+      uid: member.uid,
       MemberName: member.name,
       Address: member.profile.CommuteDestination.Address,
       Lat: member.profile.CommuteDestination.Lat,
@@ -106,9 +169,14 @@ const destinations = computed(() =>
     })),
 )
 
+// Who is signed in, so the map's recenter button can go to their destination.
+const currentUserId = ref('')
+const stopAuth = onAuthChange((user) => (currentUserId.value = user?.uid ?? ''))
+onUnmounted(() => stopAuth?.())
+
 /* ---------- shortlist (F-REQ-016) ---------- */
 // Persisted in localStorage and shared with ShortlistView. Swap shortlistService
-// for Selected_Listing once groups exist — the component API below does not change.
+// for Selected_Listing once groups exist, the component API below does not change.
 const { listingIds, storageError, toggleShortlist, isShortlisted } = useShortlist()
 const actionError = ref('')
 const isSaved = (l) => isShortlisted(l.ListingID)
@@ -189,6 +257,21 @@ const selectedScore = computed(() =>
             <RouterLink class="link" to="/shortlist">Shortlist ({{ listingIds.length }})</RouterLink>
           </div>
 
+          <div class="search-bar" role="search">
+            <AppIcon name="search" :size="16" />
+            <label class="sr-only" for="f-search">Search listings</label>
+            <input
+              id="f-search"
+              v-model="search"
+              type="search"
+              autocomplete="off"
+              placeholder="Search by name, block, street, postal code, MRT or initials (e.g. AMK, 560440)"
+            />
+            <button v-if="search" type="button" class="search-clear" aria-label="Clear search" @click="search = ''">
+              <AppIcon name="x" :size="14" />
+            </button>
+          </div>
+
           <div class="filters">
             <div class="field">
               <label for="f-region">Region</label>
@@ -255,6 +338,7 @@ const selectedScore = computed(() =>
           v-else-if="view === 'map'"
           :listings="filtered"
           :destinations="destinations"
+          :current-user-id="currentUserId"
           @select="selected = $event"
         />
 
@@ -311,7 +395,7 @@ const selectedScore = computed(() =>
         <h3>What's nearby</h3>
         <p class="small muted nearby-note">
           Straight-line distance to the closest of each, from OneMap. Context for
-          comparing listings — it does not affect the match score.
+          comparing listings. It does not affect the match score.
         </p>
         <p v-if="nearbyState === 'loading'" class="small muted">Looking up the area…</p>
         <ul v-else-if="nearbyState === 'ready'" class="nearby-list">
@@ -324,7 +408,7 @@ const selectedScore = computed(() =>
         <!-- Never "nothing nearby": an empty result means we could not look,
              not that the area is empty. -->
         <p v-else class="small muted" style="margin-bottom: 1rem">
-          Nearby places are unavailable — the OneMap token may have expired.
+          Nearby places are unavailable. The OneMap token may have expired.
         </p>
 
         <h3>How it fits your group</h3>
@@ -338,6 +422,13 @@ const selectedScore = computed(() =>
             Summary page and a match score appears here.
           </template>
         </p>
+
+        <h3 style="margin: 1rem 0 0.5rem">Group comments</h3>
+        <ListingComments
+          :group-id="activeGroupId ?? ''"
+          :listing-id="selected.ListingID"
+          :listing-title="selected.Title"
+        />
 
         <p v-if="selected.OriginalSourceURL" class="small" style="margin: 0.9rem 0">
           <a class="link" :href="selected.OriginalSourceURL" target="_blank" rel="noopener noreferrer">
@@ -376,6 +467,43 @@ const selectedScore = computed(() =>
 .listing-error { color: var(--red); font-size: 13px; }
 .scored-against { margin: 0; }
 .nearby-note { margin: 0 0 0.5rem; }
+.search-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0.75rem 0;
+  padding: 0 12px;
+  border: 1px solid var(--chip-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+}
+.search-bar:focus-within {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-tint);
+}
+.search-bar input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+.search-bar input::-webkit-search-cancel-button { display: none; }
+.search-clear {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--text);
+  cursor: pointer;
+}
 .nearby-list {
   margin: 0 0 1rem;
   padding: 0;

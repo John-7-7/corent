@@ -9,14 +9,14 @@ import { onAuthChange } from './authService'
 // lives here instead of being threaded through every view.
 //
 // This is the single source of truth for the signed-in user's groups. Every
-// group here has exactly the shape groupService returns — { id, ...the
-// Firestore document } — and the list is kept live with a listener, so a member
+// group here has exactly the shape groupService returns ({ id, ...the
+// Firestore document }), and the list is kept live with a listener, so a member
 // joining or leaving shows up on every page without a reload. Pages read from
 // here rather than keeping their own copy: separate copies in different shapes
 // is how the active group used to lose its members' photos and outlive a group
 // the user had left.
 //
-// A null group is a valid state (signed out, or signed in with no group yet) —
+// A null group is a valid state (signed out, or signed in with no group yet):
 // callers fall back to personal, device-local behaviour.
 
 const STORAGE_KEY = 'corent-active-group'
