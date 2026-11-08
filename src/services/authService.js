@@ -113,9 +113,29 @@ export async function deleteAccount(password) {
 
   await reauthenticate(user, password)
   const groups = await getUserGroups(user.uid)
+
+  // Try every group, so one failure does not hide how the others went. Data
+  // that cannot be tidied up does not block it: the account is going anyway.
+  const failed = []
   for (const group of groups) {
-    await leaveGroup(group.id, user.uid)
+    try {
+      await leaveGroup(group.id, user.uid, { force: true })
+    } catch {
+      failed.push(group.name || 'a group')
+    }
   }
+  // Stop before deleting anything else: an account still listed in a group
+  // would block that group's decisions. Running delete again picks up where
+  // this left off, because groups already left are no longer listed.
+  if (failed.length) {
+    const left = groups.length - failed.length
+    throw new Error(
+      `Your account was not deleted, because you could not be removed from ${failed.join(', ')}.` +
+        (left ? ` You have already left ${left} other group${left === 1 ? '' : 's'}.` : '') +
+        ' Please try again.',
+    )
+  }
+
   await deletePreferences(user.uid)
   await deleteUser(user)
 }

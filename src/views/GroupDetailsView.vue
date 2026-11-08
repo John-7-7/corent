@@ -2,7 +2,7 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthChange } from '@/services/authService'
-import {getGroupById, leaveGroup, } from '@/services/groupService'
+import { CLEANUP_FAILED, getGroupById, leaveGroup } from '@/services/groupService'
 import { forgetGroup } from '@/services/activeGroup'
 import { confirmAction } from '@/composables/useConfirm'
 import MemberAvatar from '@/components/MemberAvatar.vue'
@@ -17,6 +17,8 @@ const copying = ref(false)
 const copyFeedback = ref('')
 const currentUserId = ref('')
 const leavingGroup = ref(false)
+// Shown beside the button, so a failed leave keeps the group on screen to retry.
+const leaveError = ref('')
 
 const memberCount = computed(() => {
   return group.value?.memberCount ?? members.value.length
@@ -127,22 +129,38 @@ async function handleLeaveGroup() {
   if (!confirmed) return
 
   leavingGroup.value = true
-  error.value = ''
+  leaveError.value = ''
 
   try {
-    await leaveGroup(group.value.id, currentUserId.value)
+    try {
+      await leaveGroup(group.value.id, currentUserId.value)
+    } catch (cleanupError) {
+      if (cleanupError?.code !== CLEANUP_FAILED) throw cleanupError
+      // Some of the user's data could not be removed. Say so, and let them
+      // choose between trying again later and leaving it behind.
+      const leaveAnyway = await confirmAction({
+        title: 'Some data could not be removed',
+        message: `${cleanupError.message} You can try again later, or leave now and leave that data behind.`,
+        confirmLabel: isLastMember ? 'Delete group anyway' : 'Leave anyway',
+      })
+      if (!leaveAnyway) {
+        leaveError.value = cleanupError.message
+        return
+      }
+      await leaveGroup(group.value.id, currentUserId.value, { force: true })
+    }
     // Stop Browse and Shortlist using this group straight away; without this
     // they kept listening to it and showed a permissions error.
     forgetGroup(group.value.id)
 
     // Return the user to Home after successfully leaving.
     router.push('/home')
-  } catch (leaveError) {
-    console.error('Error leaving group:', leaveError)
+  } catch (leaveFailure) {
+    console.error('Error leaving group:', leaveFailure)
 
-    error.value =
-      leaveError instanceof Error
-        ? leaveError.message
+    leaveError.value =
+      leaveFailure instanceof Error
+        ? leaveFailure.message
         : 'Unable to leave the group.'
   } finally {
     leavingGroup.value = false
@@ -270,6 +288,7 @@ onUnmounted(unsubscribeAuth)
       >
         View Group Summary
       </button>
+      <p v-if="leaveError" class="leave-error" role="alert">{{ leaveError }}</p>
       <button
         class="leave-button"
         type="button"
@@ -484,6 +503,16 @@ onUnmounted(unsubscribeAuth)
 
 .text-link {
   color: var(--red, #ed003b);
+}
+
+.leave-error {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fdecec;
+  color: #b42318;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .leave-button {

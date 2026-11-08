@@ -88,6 +88,9 @@ export function forgetGroup(groupId) {
 
 let unsubscribeGroups = null
 let currentUser = null
+// Counts listener updates, so a one-off refresh that finishes after a newer
+// live update can tell it is stale and leave the live list alone.
+let snapshotCount = 0
 
 function watchUserGroups(user) {
   unsubscribeGroups?.()
@@ -105,6 +108,7 @@ function watchUserGroups(user) {
   unsubscribeGroups = onSnapshot(
     query(collection(db, 'groups'), where('memberIds', 'array-contains', user.uid)),
     (snapshot) => {
+      snapshotCount += 1
       availableGroups.value = snapshot.docs.map((groupDoc) => ({
         id: groupDoc.id,
         ...groupDoc.data(),
@@ -136,8 +140,13 @@ export function startActiveGroupTracking() {
  */
 export async function refreshGroups(user = currentUser) {
   if (!user) return
+  const countBefore = snapshotCount
   try {
-    availableGroups.value = await getUserGroups(user.uid)
+    const groups = await getUserGroups(user.uid)
+    // The listener has already delivered something newer, or the user changed
+    // while this was loading: the fetched list is out of date, so drop it.
+    if (snapshotCount !== countBefore || currentUser?.uid !== user.uid) return
+    availableGroups.value = groups
   } catch (error) {
     groupsError.value =
       error instanceof Error ? error.message : 'Unable to load the groups you belong to.'

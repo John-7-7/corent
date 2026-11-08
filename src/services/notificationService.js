@@ -1,4 +1,4 @@
-import { collection, doc, onSnapshot } from 'firebase/firestore'
+import { collection, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
 
 import { db } from '@/firebase'
 import { subscribeToGroupComments } from './commentService'
@@ -115,4 +115,68 @@ export function subscribeToProfileUpdates(uid, callback, onError) {
     },
     onError,
   )
+}
+
+/**
+ * What the user has read, and the member lists used to spot joins and leaves,
+ * so they follow the user between devices. Stored at
+ * User_Preferences/{uid}/Private/Notifications, which the rules already keep
+ * owner-only (the same place as the private budget):
+ *
+ *   Seen        keys of notifications already read (latest 500)
+ *   Since       when the user first opened the app; older activity is read
+ *   Members     { groupId: { uid: name } } as last seen
+ *   MembersLog  join and leave events worked out from Members
+ *   Profiles    { uid: ms } when each teammate's profile was first seen
+ *   SavedAt     ms, to tell which copy is newer than this browser's
+ */
+const notificationStateRef = (uid) => doc(db, 'User_Preferences', uid, 'Private', 'Notifications')
+
+/** @returns {Promise<object|null>} the saved state, or null if there is none */
+export async function loadNotificationState(uid) {
+  const snapshot = await getDoc(notificationStateRef(uid))
+  if (!snapshot.exists()) return null
+  const data = snapshot.data()
+  return {
+    seen: data.Seen ?? [],
+    since: data.Since ?? null,
+    members: data.Members ?? {},
+    membersLog: data.MembersLog ?? [],
+    profiles: data.Profiles ?? {},
+    savedAt: data.SavedAt ?? 0,
+  }
+}
+
+export function saveNotificationState(uid, state) {
+  return setDoc(notificationStateRef(uid), {
+    Seen: state.seen,
+    Since: state.since,
+    Members: state.members,
+    MembersLog: state.membersLog,
+    Profiles: state.profiles,
+    SavedAt: state.savedAt,
+    UpdatedAt: serverTimestamp(),
+  })
+}
+
+/**
+ * Combines this browser's copy with the saved one: everything read anywhere
+ * stays read, the earliest start wins, and the newer copy's member lists are
+ * the baseline so a join seen on another device is not announced twice.
+ */
+export function mergeNotificationStates(local, remote) {
+  if (!remote) return local
+  const [older, newer] = (remote.savedAt ?? 0) > (local.savedAt ?? 0) ? [local, remote] : [remote, local]
+  const log = new Map([...older.membersLog, ...newer.membersLog].map((event) => [event.key, event]))
+  const profiles = { ...remote.profiles }
+  for (const [id, at] of Object.entries(local.profiles)) profiles[id] = Math.min(at, profiles[id] ?? at)
+  const starts = [local.since, remote.since].filter((value) => typeof value === 'number')
+  return {
+    seen: [...new Set([...older.seen, ...newer.seen])].slice(-500),
+    since: starts.length ? Math.min(...starts) : null,
+    members: { ...older.members, ...newer.members },
+    membersLog: [...log.values()].sort((a, b) => b.at - a.at).slice(0, 50),
+    profiles,
+    savedAt: Math.max(local.savedAt ?? 0, remote.savedAt ?? 0),
+  }
 }

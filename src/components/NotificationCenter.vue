@@ -6,7 +6,13 @@ import MemberAvatar from '@/components/MemberAvatar.vue'
 import { onAuthChange } from '@/services/authService'
 import { availableGroups, setActiveGroup } from '@/services/activeGroup'
 import { getListings } from '@/services/listings'
-import { subscribeToGroupActivity, subscribeToProfileUpdates } from '@/services/notificationService'
+import {
+  loadNotificationState,
+  mergeNotificationStates,
+  saveNotificationState,
+  subscribeToGroupActivity,
+  subscribeToProfileUpdates,
+} from '@/services/notificationService'
 
 /**
  * The message icon in the top bar: a red count of what teammates have done in
@@ -17,8 +23,9 @@ import { subscribeToGroupActivity, subscribeToProfileUpdates } from '@/services/
  *   member joined · member left
  *
  * Your own actions never notify you. What you have read, and the member lists
- * used to spot joins and leaves, are kept in this browser (localStorage), so no
- * new Firestore fields are needed.
+ * used to spot joins and leaves, are saved to your private Firestore document
+ * (User_Preferences/{uid}/Private/Notifications) so they follow you between
+ * devices, with a copy in this browser for a fast start.
  */
 const router = useRouter()
 const uid = ref('')
@@ -28,6 +35,8 @@ const RECENT_DAYS = 14
 const MAX_ITEMS = 40
 
 /* ---------- per-user storage ---------- */
+// Kept in this browser for a fast start, and in Firestore so it follows the
+// user to other devices (notificationService: loadNotificationState).
 const storageKey = (name) => `corent-notify-${name}:${uid.value}`
 function readStore(name, fallback) {
   try {
@@ -41,7 +50,7 @@ function writeStore(name, value) {
   try {
     localStorage.setItem(storageKey(name), JSON.stringify(value))
   } catch {
-    // Private mode or storage full: notifications still work for this visit.
+    // Private mode or storage full: the Firestore copy still has it.
   }
 }
 
@@ -49,35 +58,102 @@ const seen = ref(new Set())
 // Activity from before you first opened the app counts as read, so the first
 // visit is not a wall of old notifications.
 const since = ref(Date.now())
+const memberSnapshot = ref({}) // groupId -> { uid: name }, as last seen
 const memberEvents = ref([]) // joins and leaves, which have no stored record
+// When each teammate's profile was first seen; only later saves are news.
+const profileBaseline = ref({})
+// False until the saved state has loaded. Joins, leaves and profile baselines
+// wait for it, so a stale copy in this browser cannot invent events.
+const ready = ref(false)
+
+function currentState(savedAt = Date.now()) {
+  return {
+    seen: [...seen.value].slice(-500),
+    since: since.value,
+    members: memberSnapshot.value,
+    membersLog: memberEvents.value,
+    profiles: profileBaseline.value,
+    savedAt,
+  }
+}
+
+let saveTimer = null
+let pendingSave = null
+function flushSave() {
+  clearTimeout(saveTimer)
+  saveTimer = null
+  pendingSave?.()
+  pendingSave = null
+}
+// Saves locally straight away and to Firestore shortly after, batching bursts.
+function persist() {
+  if (!ready.value || !uid.value) return
+  const id = uid.value
+  const state = currentState()
+  writeStore('seen', state.seen)
+  writeStore('since', state.since)
+  writeStore('members', state.members)
+  writeStore('members-log', state.membersLog)
+  writeStore('profiles', state.profiles)
+  writeStore('saved-at', state.savedAt)
+  clearTimeout(saveTimer)
+  pendingSave = () =>
+    saveNotificationState(id, state).catch((error) =>
+      console.error('Could not save notification state:', error),
+    )
+  saveTimer = setTimeout(flushSave, 1500)
+}
 
 watch(
   uid,
-  (id) => {
+  async (id) => {
+    flushSave()
+    ready.value = false
     if (!id) return
-    seen.value = new Set(readStore('seen', []))
+    const local = {
+      seen: readStore('seen', []),
+      since: readStore('since', null),
+      members: readStore('members', {}),
+      membersLog: readStore('members-log', []),
+      profiles: readStore('profiles', {}),
+      savedAt: readStore('saved-at', 0),
+    }
     // Carry over enquiries already read with the earlier enquiry-only icon.
     try {
       JSON.parse(localStorage.getItem(`corent-seen-enquiries:${id}`) || '[]').forEach((key) => {
         const [groupId, enquiryId] = key.split('/')
-        seen.value.add(`${groupId}/enquiry/${enquiryId}`)
+        local.seen.push(`${groupId}/enquiry/${enquiryId}`)
       })
     } catch {
       /* nothing to carry over */
     }
-    since.value = readStore('since', null) ?? Date.now()
-    writeStore('since', since.value)
-    memberEvents.value = readStore('members-log', [])
+    let state = local
+    try {
+      state = mergeNotificationStates(local, await loadNotificationState(id))
+    } catch (error) {
+      // Offline or refused: carry on with this browser's copy.
+      console.error('Could not load notification state:', error)
+    }
+    if (uid.value !== id) return // signed out or switched while loading
+    seen.value = new Set(state.seen)
+    since.value = state.since ?? Date.now()
+    memberSnapshot.value = state.members
+    memberEvents.value = state.membersLog
+    profileBaseline.value = state.profiles
+    ready.value = true
+    persist()
   },
   { immediate: true },
 )
+const onPageHide = () => flushSave()
+window.addEventListener('pagehide', onPageHide)
 
 /* ---------- joins and leaves ---------- */
 watch(
-  [availableGroups, uid],
-  ([groups, me]) => {
-    if (!me) return
-    const snapshot = readStore('members', {})
+  [availableGroups, uid, ready],
+  ([groups, me, isReady]) => {
+    if (!me || !isReady) return
+    const snapshot = memberSnapshot.value
     // Groups not loaded yet keep their last known members, so a page load
     // never forgets who was there.
     const next = { ...snapshot }
@@ -100,12 +176,13 @@ watch(
       }
       next[group.id] = current
     }
-    writeStore('members', next)
+    const changed = JSON.stringify(next) !== JSON.stringify(snapshot)
+    memberSnapshot.value = next
     if (fresh.length) {
       memberEvents.value = [...fresh, ...memberEvents.value].slice(0, 50)
-      writeStore('members-log', memberEvents.value)
       fresh.forEach(announce)
     }
+    if (changed || fresh.length) persist()
   },
   { immediate: true },
 )
@@ -151,9 +228,6 @@ watch(
 
 /* ---------- teammates' own preferences ---------- */
 const profileEvents = ref({}) // uid -> event
-// When each teammate's profile was first seen; only later saves are news.
-const profileBaseline = ref({})
-watch(uid, (id) => (profileBaseline.value = id ? readStore('profiles', {}) : {}), { immediate: true })
 const profileStops = new Map()
 const profilePrimed = new Set()
 
@@ -163,18 +237,21 @@ const teammates = computed(() => {
   ids.delete(uid.value)
   return ids
 })
+// Nobody is watched until the saved baselines have loaded.
+const watchedTeammates = computed(() => (ready.value ? teammates.value : new Set()))
 watch(
-  () => [...teammates.value].sort().join('|'),
+  () => [...watchedTeammates.value].sort().join('|'),
   () => {
     for (const [id, stop] of profileStops) {
-      if (teammates.value.has(id)) continue
+      if (watchedTeammates.value.has(id)) continue
       stop()
       profileStops.delete(id)
+      profilePrimed.delete(id)
       const rest = { ...profileEvents.value }
       delete rest[id]
       profileEvents.value = rest
     }
-    for (const id of teammates.value) {
+    for (const id of watchedTeammates.value) {
       if (profileStops.has(id)) continue
       profileStops.set(
         id,
@@ -186,7 +263,7 @@ watch(
             // is the starting point, not news. Later saves are.
             if (event && !(id in profileBaseline.value)) {
               profileBaseline.value = { ...profileBaseline.value, [id]: event.at }
-              writeStore('profiles', profileBaseline.value)
+              persist()
             }
             profileEvents.value = { ...profileEvents.value, [id]: event }
             if (profilePrimed.has(id) && event && event.key !== previous?.key) announceEvent(event)
@@ -202,6 +279,8 @@ watch(
 
 onBeforeUnmount(() => {
   stopAuth?.()
+  flushSave()
+  window.removeEventListener('pagehide', onPageHide)
   groupStops.forEach((stop) => stop())
   profileStops.forEach((stop) => stop())
 })
@@ -309,7 +388,7 @@ const root = ref(null)
 function markAllSeen() {
   notifications.value.forEach((n) => seen.value.add(n.key))
   seen.value = new Set(seen.value)
-  writeStore('seen', [...seen.value].slice(-500))
+  persist()
 }
 function toggle() {
   open.value = !open.value
@@ -328,7 +407,7 @@ function openNotification(n) {
   close()
   toasts.value = toasts.value.filter((t) => t.item.key !== n.key)
   seen.value.add(n.key)
-  writeStore('seen', [...seen.value].slice(-500))
+  persist()
   if (n.tab === 'group' && group) router.push(`/groups/${group.id}`)
   else router.push(n.tab === 'summary' ? '/group-summary' : '/shortlist')
 }

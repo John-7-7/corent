@@ -190,40 +190,61 @@ async function deleteInBatches(references) {
   }
 }
 
+// Runs every clean-up step even if one fails, and names the ones that did, so a
+// single refused collection does not stop the rest from being removed.
+async function runCleanup(steps) {
+  const results = await Promise.allSettled(Object.values(steps).map((step) => step()))
+  return Object.keys(steps).filter((_, index) => results[index].status === 'rejected')
+}
+
+const ownDocs = (groupId, name, userId) =>
+  getDocs(query(collection(db, 'groups', groupId, name), where('userId', '==', userId))).then(
+    (snapshot) => snapshot.docs.map((item) => item.ref),
+  )
+
 // A member who leaves takes their ballots with them, so their preference votes
 // and listing votes stop counting towards the group's results. Their listing
 // comments go too.
-async function removeMemberVotes(groupId, userId) {
-  const [ownListingVotes, ownComments] = await Promise.all(
-    ['listingVotes', 'listingComments'].map((name) =>
-      getDocs(query(collection(db, 'groups', groupId, name), where('userId', '==', userId))),
-    ),
-  )
-  await deleteInBatches([
-    doc(db, 'groups', groupId, 'votes', userId),
-    ...ownListingVotes.docs.map((voteDoc) => voteDoc.ref),
-    ...ownComments.docs.map((commentDoc) => commentDoc.ref),
-  ])
+function removeMemberVotes(groupId, userId) {
+  return runCleanup({
+    'preference votes': () => deleteInBatches([doc(db, 'groups', groupId, 'votes', userId)]),
+    'listing votes': async () => deleteInBatches(await ownDocs(groupId, 'listingVotes', userId)),
+    comments: async () => deleteInBatches(await ownDocs(groupId, 'listingComments', userId)),
+  })
 }
 
 // The last member leaving deletes the group, so remove everything stored under
 // it and its agreed preferences too, rather than leaving them orphaned.
-async function deleteGroupData(groupId) {
-  const snapshots = await Promise.all(
-    GROUP_SUBCOLLECTIONS.map((name) => getDocs(collection(db, 'groups', groupId, name))),
-  )
-  await deleteInBatches([
-    ...snapshots.flatMap((snapshot) => snapshot.docs.map((item) => item.ref)),
-    doc(db, 'Group_Preferences', groupId),
-  ])
+function deleteGroupData(groupId) {
+  return runCleanup({
+    ...Object.fromEntries(
+      GROUP_SUBCOLLECTIONS.map((name) => [
+        name,
+        async () =>
+          deleteInBatches(
+            (await getDocs(collection(db, 'groups', groupId, name))).docs.map((item) => item.ref),
+          ),
+      ]),
+    ),
+    'agreed preferences': () => deleteInBatches([doc(db, 'Group_Preferences', groupId)]),
+  })
 }
+
+/** Thrown by leaveGroup when the user's data could not all be removed first. */
+export const CLEANUP_FAILED = 'group/cleanup-failed'
 
 /**
  * Removes the user from a group. If they were its last member the group is
  * deleted along with all of its data.
- * @returns {Promise<{ deleted: boolean }>}
+ *
+ * The user's data is removed first, while they are still a member, because
+ * the rules only let members do it. If any of it cannot be removed, nothing
+ * changes and an error with code CLEANUP_FAILED is thrown (error.failed lists
+ * what was left), so the caller can tell the user and offer to retry. Pass
+ * { force: true } to leave anyway once the user has agreed.
+ * @returns {Promise<{ deleted: boolean, leftBehind: string[] }>}
  */
-export async function leaveGroup(groupId, userId) {
+export async function leaveGroup(groupId, userId, { force = false } = {}) {
   if (!groupId || !userId) {
     throw new Error('Group and user information is required.')
   }
@@ -241,13 +262,21 @@ export async function leaveGroup(groupId, userId) {
     throw new Error('You are not a member of this group.')
   }
 
-  // Tidy up while still a member, because the rules only let members do it.
-  // This is best effort: leaving must still work if it fails.
-  try {
-    if (memberIdsBefore.length === 1) await deleteGroupData(groupId)
-    else await removeMemberVotes(groupId, userId)
-  } catch (error) {
-    console.warn('Could not tidy up group data before leaving:', error)
+  const isLast = memberIdsBefore.length === 1
+  const leftBehind = isLast
+    ? await deleteGroupData(groupId)
+    : await removeMemberVotes(groupId, userId)
+
+  if (leftBehind.length && !force) {
+    const what = leftBehind.join(', ')
+    const error = new Error(
+      isLast
+        ? `Some of the group's data (${what}) could not be deleted, so the group has not been deleted yet.`
+        : `Your ${what} could not be removed from the group, so you have not left it yet.`,
+    )
+    error.code = CLEANUP_FAILED
+    error.failed = leftBehind
+    throw error
   }
 
   let deleted = false
@@ -289,5 +318,5 @@ export async function leaveGroup(groupId, userId) {
     })
   })
 
-  return { deleted }
+  return { deleted, leftBehind }
 }
