@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import BaseIcon from '../components/profile/BaseIcon.vue'
 import DeleteAccountDialog from '../components/profile/DeleteAccountDialog.vue'
 import FieldMessage from '../components/profile/FieldMessage.vue'
+import MemberAvatar from '../components/MemberAvatar.vue'
 import {
   changeAccountPassword,
   deleteAccount,
@@ -43,12 +44,6 @@ const displayName = computed(
     user.value?.email?.split('@')[0] ||
     'CoRent member',
 )
-const initials = computed(() => {
-  const parts = displayName.value.trim().split(/\s+/).filter(Boolean)
-  return parts.length > 1
-    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-    : displayName.value.slice(0, 2).toUpperCase()
-})
 const passwordAccount = computed(() => usesPasswordSignIn(user.value))
 
 function describeError(error) {
@@ -163,9 +158,15 @@ onBeforeUnmount(() => unsubscribeAuth?.())
 </script>
 
 <template>
+  <header class="page-head">
+    <h1>Profile</h1>
+    <p>Manage your account and rental preferences.</p>
+  </header>
   <main class="profile-page">
     <section class="profile-card" aria-label="Profile">
-      <div class="avatar" aria-hidden="true">{{ initials }}</div>
+      <div class="avatar" aria-hidden="true">
+        <MemberAvatar :uid="user?.uid || ''" :photo="user?.photoURL || ''" />
+      </div>
       <div class="profile-identity">
         <h1>{{ displayName }}</h1>
         <p>{{ user?.email || 'Signed-in CoRent account' }}</p>

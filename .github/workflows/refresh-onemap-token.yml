@@ -1,6 +1,6 @@
 # Keeps Firestore config/onemap holding a live OneMap token.
 #
-# OneMap tokens last about three days, so this runs every two — one spare day
+# OneMap tokens last about three days, so this runs every two, one spare day
 # if a run fails. Without it, commute times silently degrade to straight-line
 # estimates a few days after anyone last rotated the token by hand.
 #

@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import BudgetVote from './BudgetVote.vue'
 import OptionVote from './OptionVote.vue'
+import MemberAvatar from '../MemberAvatar.vue'
 
 const props = defineProps({
   memberCount: { type: Number, default: 0 },
@@ -248,7 +249,7 @@ const readyLabel = (voting) =>
                   class="mini-avatar"
                   :style="{ background: memberFor(uid)?.color }"
                   :title="memberFor(uid)?.name"
-                  >{{ memberFor(uid)?.initials }}</span
+                  ><MemberAvatar :uid="uid" /></span
                 >
               </span>
               <span class="ready-count">{{ selected.voting.ready.length }}/{{ memberCount }}</span>

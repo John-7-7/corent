@@ -6,7 +6,7 @@
  *
  * nearbyAmenitiesService.js matches its wanted categories against these names
  * at runtime rather than hardcoding queryName values, so this script is how
- * you check what is actually available — and which categories are being
+ * you check what is actually available, and which categories are being
  * skipped because nothing matched.
  */
 import fs from 'fs'

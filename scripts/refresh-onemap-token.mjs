@@ -5,8 +5,8 @@
  *
  * OneMap tokens last about three days, which is short enough that doing this
  * by hand means it will eventually be expired at the worst moment. The app
- * degrades rather than breaks when that happens — routingService falls back to
- * straight-line estimates and labels them — but estimates do not count towards
+ * degrades rather than breaks when that happens, routingService falls back to
+ * straight-line estimates and labels them, but estimates do not count towards
  * the match percentage, so the numbers quietly get worse.
  *
  * Reads from the environment, never from a file in the repo:

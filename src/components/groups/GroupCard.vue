@@ -1,5 +1,6 @@
 <script setup>
 import AppIcon from '@/components/AppIcon.vue'
+import MemberAvatar from '@/components/MemberAvatar.vue'
 
 defineProps({
   group: {
@@ -30,6 +31,16 @@ const emit = defineEmits(['view-group'])
         <span v-else class="preview-label">Rental group</span>
       </div>
       <p class="group-meta">
+        <span v-if="group.members?.length" class="face-stack" aria-hidden="true">
+          <span
+            v-for="member in group.members.slice(0, 5)"
+            :key="member.id"
+            class="face"
+            :title="member.name"
+          >
+            <MemberAvatar :uid="member.id" :photo="member.photo || ''" />
+          </span>
+        </span>
         {{ group.memberCount }} {{ group.memberCount === 1 ? 'member' : 'members' }}
         <span aria-hidden="true">·</span>
         Invite code <strong>{{ group.inviteCode }}</strong>
@@ -48,6 +59,16 @@ const emit = defineEmits(['view-group'])
 
 <style scoped>
 .group-card.is-active { border-color: var(--red); }
+.face-stack { display: inline-flex; margin-right: 6px; vertical-align: middle; }
+.face {
+  width: 22px;
+  height: 22px;
+  margin-left: -6px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #e6e9fd, #fbe9f1);
+}
+.face:first-child { margin-left: 0; }
 .preview-label.is-active {
   background: var(--red-tint);
   color: var(--red);

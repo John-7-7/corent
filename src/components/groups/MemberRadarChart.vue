@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import MemberAvatar from '../MemberAvatar.vue'
 
 // Each corner compares one preference with mine: the outer edge is me.
 const props = defineProps({
@@ -129,7 +130,7 @@ const home = computed(() => {
 
       <div class="head">
         <span class="avatar" :style="{ '--member': member.color }" aria-hidden="true">
-          {{ member.initials }}
+          <MemberAvatar :uid="member.uid" />
         </span>
         <strong class="name">{{ member.name }}</strong>
         <span class="match" :class="{ 'is-unknown': member.score == null }">
@@ -183,7 +184,7 @@ const home = computed(() => {
           class="axis-label"
         >
           <title>
-            {{ corner.label }}: {{ corner.word }}{{ corner.brief ? ` — ${corner.brief}` : '' }}
+            {{ corner.label }}: {{ corner.word }}{{ corner.brief ? `, ${corner.brief}` : '' }}
           </title>
           {{ corner.label }}
           <tspan :x="corner.at.x" dy="4.2" class="axis-word" :class="`tone-${corner.tone}`">

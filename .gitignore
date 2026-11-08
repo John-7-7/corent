@@ -42,7 +42,7 @@ __screenshots__/
 .env*.bak
 
 # Firebase service-account keys. These grant full admin access to the
-# database, bypassing firestore.rules entirely — they belong in GitHub
+# database, bypassing firestore.rules entirely, they belong in GitHub
 # Actions secrets, never in the repository.
 *-firebase-adminsdk-*.json
 serviceAccountKey.json

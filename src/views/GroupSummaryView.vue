@@ -1,7 +1,8 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { activeGroupId, setActiveGroup } from '@/services/activeGroup'
+import { activeGroupId, availableGroups, setActiveGroup } from '@/services/activeGroup'
+import MemberAvatar from '@/components/MemberAvatar.vue'
 import GroupPreferencesCard from '../components/groups/GroupPreferencesCard.vue'
 import MemberRadarChart from '../components/groups/MemberRadarChart.vue'
 import PriorityRanking from '../components/groups/PriorityRanking.vue'
@@ -39,6 +40,7 @@ import {
 } from '../services/groupSummaryService.js'
 import { getCurrentUser } from '../services/authService.js'
 import { getUserGroups } from '../services/groupService.js'
+import { confirmAction } from '../composables/useConfirm.js'
 
 // /group-summary?groupId=<id> loads that group. Without an ID it opens your
 // only group, or lets you pick one.
@@ -137,13 +139,28 @@ function raiseIssue(key, message) {
   issues.value[key] = issue
   saveNow({ Issues: { [key]: issue } })
 }
-function resolveIssue(key) {
+const factorLabel = (key) =>
+  groupPreferenceRows.value.find((row) => row.key === key)?.label || 'this preference'
+async function resolveIssue(key) {
   if (!viewerIsMember.value || !issues.value[key] || !canDecide(issues.value[key])) return
+  const confirmed = await confirmAction({
+    title: 'Mark this issue as resolved?',
+    message: `The issue raised on ${factorLabel(key)} will be removed for everyone in the group, and the agreed result stays as it is.`,
+    confirmLabel: 'Mark resolved',
+  })
+  if (!confirmed || !issues.value[key]) return
   delete issues.value[key]
   saveNow({ Issues: { [key]: null } })
 }
-function startVote(key) {
+async function startVote(key) {
   if (!viewerIsMember.value || !issues.value[key] || !canDecide(issues.value[key])) return
+  const confirmed = await confirmAction({
+    title: `Start a new vote on ${factorLabel(key)}?`,
+    message:
+      "The group's agreed result will be cleared and every member will need to vote and confirm again.",
+    confirmLabel: 'Clear result and start vote',
+  })
+  if (!confirmed || !issues.value[key]) return
   delete finalised.value[group.value?.GroupID]?.[key]
   issues.value[key] = { ...issues.value[key], open: false }
   rounds.value[key] = (rounds.value[key] || 0) + 1
@@ -607,7 +624,7 @@ async function pickGroup(user) {
   }
   if (groupId.value) return // a group was picked meanwhile
   // Open the group the rest of the app is already working in. Without this the
-  // default was userGroups[0] — Firestore's arbitrary order — so a member could
+  // default was userGroups[0] (Firestore's arbitrary order), so a member could
   // agree preferences for one group while Browse scored listings against
   // another, and two members of the same group could land on different ones.
   const active = userGroups.value.find((group) => group.id === activeGroupId.value)
@@ -673,13 +690,10 @@ async function loadGroup(id) {
         loadState.value = 'ready'
         // Agreeing preferences here is what makes a group the one you are
         // working in, so Browse and Shortlist follow this choice rather than
-        // keeping a separate one of their own.
-        setActiveGroup({
-          id: data.GroupID,
-          name: data.GroupName,
-          memberIds,
-          members: (data.users || []).map((user) => ({ id: user.UserID, name: user.Username })),
-        })
+        // keeping a separate one of their own. Select it by ID only: the shared
+        // store keeps the full group record, and writing this page's reshaped
+        // copy over it used to drop members' photos and the invite code.
+        setActiveGroup(data.GroupID)
       },
       fail,
     ),
@@ -696,6 +710,21 @@ async function loadGroup(id) {
   )
 }
 watch(groupId, loadGroup, { immediate: true })
+
+// Switching the active group from the top bar moves this page to that group.
+// Only a change from one group to another counts: the first value arriving
+// while the app loads must not override a group opened by link.
+watch(activeGroupId, (id, previous) => {
+  if (previous && id && groupId.value && id !== groupId.value) {
+    router.replace({ query: { groupId: id } })
+  }
+})
+
+// Members' photos, where the shared group record holds one.
+const photoOf = (uid) =>
+  availableGroups.value
+    .find((entry) => entry.id === group.value?.GroupID)
+    ?.members?.find((member) => member.id === uid)?.photo || ''
 onBeforeUnmount(() => {
   if (priorityTimer) savePriorities()
   stopWatching()
@@ -745,6 +774,13 @@ const saveMessage = computed(
   <div>
     <header class="page-head">
       <h1>Group Summary</h1>
+      <p>
+        <template v-if="group">
+          Agreeing preferences for <strong>{{ group.GroupName || 'your group' }}</strong>.
+          Switch groups from the top right.
+        </template>
+        <template v-else>Agree your group's preferences together.</template>
+      </p>
     </header>
 
     <div class="content">
@@ -789,7 +825,7 @@ const saveMessage = computed(
                         : 'Compatibility score not calculated'
                     "
                   >
-                    <span>{{ compatibility ? `${compatibility.score}%` : '—' }}</span>
+                    <span>{{ compatibility ? `${compatibility.score}%` : '-' }}</span>
                   </div>
                   <div>
                     <h3>Overall compatibility</h3>
@@ -843,7 +879,9 @@ const saveMessage = computed(
                     aria-controls="member-preferences"
                     @click="selectMember(member.uid)"
                   >
-                    <span class="member-avatar" aria-hidden="true">{{ member.initials }}</span>
+                    <span class="member-avatar" aria-hidden="true">
+                      <MemberAvatar :uid="member.uid" :photo="photoOf(member.uid)" />
+                    </span>
                     <span class="member-name">{{ member.name }}</span>
                   </button>
                 </div>
@@ -1091,8 +1129,8 @@ const saveMessage = computed(
                     <td v-for="member in members" :key="member.uid" class="match-cell">
                       {{
                         member.uid === viewer.uid
-                          ? '—'
-                          : `${memberComparisons.find((item) => item.uid === member.uid)?.score ?? '—'}%`
+                          ? '-'
+                          : `${memberComparisons.find((item) => item.uid === member.uid)?.score ?? '-'}%`
                       }}
                     </td>
                   </tr>
