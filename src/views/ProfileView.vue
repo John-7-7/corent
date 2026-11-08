@@ -158,6 +158,10 @@ onBeforeUnmount(() => unsubscribeAuth?.())
 </script>
 
 <template>
+  <header class="page-head">
+    <h1>Profile</h1>
+    <p>Manage your account and rental preferences.</p>
+  </header>
   <main class="profile-page">
     <section class="profile-card" aria-label="Profile">
       <div class="avatar" aria-hidden="true">
