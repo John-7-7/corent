@@ -35,14 +35,46 @@ service cloud.firestore {
       function isMember() {
         return request.auth != null && request.auth.uid in memberIds();
       }
+      // The caller is the group's only member, so removing the group's data
+      // cannot affect anybody else (leaveGroup's clean-up when the last member
+      // leaves, and account deletion).
+      function isLastMember() {
+        return isMember() && memberIds().size() == 1;
+      }
+
+      // Membership updates may touch nothing but the membership fields. (Sizes
+      // are not cross-checked: an older group whose lists were ever out of step
+      // would otherwise be locked against every join and leave.)
+      function onlyMembershipChanged() {
+        return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['memberIds', 'members', 'memberCount', 'updatedAt']);
+      }
+      // joinGroupByInviteCode: a non-member appends exactly themselves.
+      function isJoiningSelf() {
+        return !(request.auth.uid in resource.data.memberIds)
+          && request.resource.data.memberIds == resource.data.memberIds.concat([request.auth.uid])
+          && request.resource.data.members[request.resource.data.members.size() - 1].id
+            == request.auth.uid
+          && onlyMembershipChanged();
+      }
+      // leaveGroup: a member removes exactly themselves.
+      function isLeavingSelf() {
+        return request.auth.uid in resource.data.memberIds
+          && request.resource.data.memberIds == resource.data.memberIds.removeAll([request.auth.uid])
+          && onlyMembershipChanged();
+      }
 
       // Any signed-in user may read a group so joining by invite code works.
       allow read: if request.auth != null;
       allow create: if request.auth != null
         && request.resource.data.memberIds == [request.auth.uid];
-      // Membership changes go through joinGroupByInviteCode / leaveGroup.
-      allow update: if request.auth != null;
-      allow delete: if isMember();
+      // Membership changes go through joinGroupByInviteCode / leaveGroup. This
+      // used to be `request.auth != null`, which let any signed-in user add
+      // themselves to any group (and so read its shortlist, votes and
+      // enquiries), remove other members, or rename it.
+      allow update: if request.auth != null && (isJoiningSelf() || isLeavingSelf());
+      // Only the last member, as they leave.
+      allow delete: if isLastMember();
 
       // groups/{groupId}/shortlist/{listingId} — one doc per saved listing, so
       // two members saving the same property converge instead of duplicating.
@@ -77,7 +109,9 @@ service cloud.firestore {
           && request.auth.uid == uid
           && request.resource.data.UserID == uid;
 
-        allow delete: if isMember() && request.auth.uid == uid;
+        // Your own ballot (removed when you leave), or anyone's when the last
+        // member deletes the group.
+        allow delete: if (isMember() && request.auth.uid == uid) || isLastMember();
       }
 
       // groups/{groupId}/listingVotes/{uid}_{listingId} — one vote per member
@@ -87,8 +121,10 @@ service cloud.firestore {
         allow create: if isMember()
           && request.resource.data.userId == request.auth.uid
           && voteId == request.auth.uid + '_' + request.resource.data.listingId;
-        // Members can only withdraw their own vote.
-        allow delete: if isMember() && resource.data.userId == request.auth.uid;
+        // Members can only withdraw their own vote, except that the last member
+        // removes everything when the group is deleted.
+        allow delete: if (isMember() && resource.data.userId == request.auth.uid)
+          || isLastMember();
         allow update: if false;
       }
 
@@ -105,8 +141,9 @@ service cloud.firestore {
         allow create: if isMember()
           && request.resource.data.userId == request.auth.uid
           && request.resource.data.listingId == listingId;
-        // Submitted enquiries are final.
-        allow update, delete: if false;
+        // Submitted enquiries are final, until the group itself is deleted.
+        allow update: if false;
+        allow delete: if isLastMember();
       }
     }
 
@@ -127,8 +164,11 @@ service cloud.firestore {
         && request.resource.data.GroupID == groupId
         && request.resource.data.UpdatedBy == request.auth.uid;
 
-      // The agreed preferences live as long as the group does.
-      allow delete: if false;
+      // The agreed preferences live as long as the group does, and go with it
+      // when its last member leaves.
+      allow delete: if request.auth != null
+        && get(/databases/$(database)/documents/groups/$(groupId)).data.memberIds
+          == [request.auth.uid];
     }
 
     match /User_Preferences/{uid} {

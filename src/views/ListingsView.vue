@@ -11,6 +11,7 @@ import { activeGroup, activeGroupId } from '@/services/activeGroup'
 import { useGroupScoring } from '@/services/useGroupScoring'
 import { nearbyAmenities } from '@/services/nearbyAmenitiesService'
 import { formatDistance } from '@/services/geo'
+import { confirmAction } from '@/composables/useConfirm'
 
 const listings = ref([])
 const loading = ref(true)
@@ -113,6 +114,16 @@ const actionError = ref('')
 const isSaved = (l) => isShortlisted(l.ListingID)
 async function toggleSave(l) {
   actionError.value = ''
+  if (isSaved(l)) {
+    const confirmed = await confirmAction({
+      title: 'Remove from shortlist?',
+      message: activeGroupId.value
+        ? `"${l.Title}" will be removed from ${activeGroup.value?.name || 'your group'}'s shortlist for everyone in the group.`
+        : `"${l.Title}" will be removed from your shortlist. You can save it again at any time.`,
+      confirmLabel: 'Remove',
+    })
+    if (!confirmed) return
+  }
   try {
     if (!l.IsAvailable && !isSaved(l)) return
     await toggleShortlist(l.ListingID)
@@ -160,7 +171,8 @@ const selectedScore = computed(() =>
         <p v-if="!canScore" class="no-score-notice">
           Match percentages are off because
           <RouterLink class="link" to="/group-summary">your group hasn't agreed its preferences</RouterLink>
-          yet. Open a group on the Dashboard to switch which one these listings are scored against.
+          yet. To score against a different group, open it from
+          <RouterLink class="link" to="/home">Home</RouterLink>.
         </p>
         <!--
           Named, not implied: members who are scoring against different groups

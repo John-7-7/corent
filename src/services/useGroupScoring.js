@@ -24,21 +24,38 @@ export function useGroupScoring(listings) {
 
   watch(
     activeGroupId,
-    async (id) => {
+    (id) => {
       unsubscribePreference?.()
       unsubscribePreference = null
       groupPreference.value = null
-      memberProfiles.value = []
       if (!id) return
       unsubscribePreference = watchGroupPreference(
         id,
         (preference) => (groupPreference.value = preference),
         () => (groupPreference.value = null),
       )
-      try {
-        memberProfiles.value = await getMemberProfiles(activeGroup.value?.memberIds ?? [])
-      } catch {
+    },
+    { immediate: true },
+  )
+
+  // Reload profiles when members join or leave, not only when the group
+  // changes, or a new member's preferences are left out of every score until a
+  // reload (and Home/Browse disagree with Shortlist, which already did this).
+  let profileRequest = 0
+  watch(
+    () => (activeGroup.value?.memberIds ?? []).join(),
+    async () => {
+      const request = ++profileRequest
+      const memberIds = activeGroup.value?.memberIds ?? []
+      if (!memberIds.length) {
         memberProfiles.value = []
+        return
+      }
+      try {
+        const profiles = await getMemberProfiles(memberIds)
+        if (request === profileRequest) memberProfiles.value = profiles
+      } catch {
+        if (request === profileRequest) memberProfiles.value = []
       }
     },
     { immediate: true },

@@ -39,6 +39,7 @@ import {
 } from '../services/groupSummaryService.js'
 import { getCurrentUser } from '../services/authService.js'
 import { getUserGroups } from '../services/groupService.js'
+import { confirmAction } from '../composables/useConfirm.js'
 
 // /group-summary?groupId=<id> loads that group. Without an ID it opens your
 // only group, or lets you pick one.
@@ -137,13 +138,28 @@ function raiseIssue(key, message) {
   issues.value[key] = issue
   saveNow({ Issues: { [key]: issue } })
 }
-function resolveIssue(key) {
+const factorLabel = (key) =>
+  groupPreferenceRows.value.find((row) => row.key === key)?.label || 'this preference'
+async function resolveIssue(key) {
   if (!viewerIsMember.value || !issues.value[key] || !canDecide(issues.value[key])) return
+  const confirmed = await confirmAction({
+    title: 'Mark this issue as resolved?',
+    message: `The issue raised on ${factorLabel(key)} will be removed for everyone in the group, and the agreed result stays as it is.`,
+    confirmLabel: 'Mark resolved',
+  })
+  if (!confirmed || !issues.value[key]) return
   delete issues.value[key]
   saveNow({ Issues: { [key]: null } })
 }
-function startVote(key) {
+async function startVote(key) {
   if (!viewerIsMember.value || !issues.value[key] || !canDecide(issues.value[key])) return
+  const confirmed = await confirmAction({
+    title: `Start a new vote on ${factorLabel(key)}?`,
+    message:
+      "The group's agreed result will be cleared and every member will need to vote and confirm again.",
+    confirmLabel: 'Clear result and start vote',
+  })
+  if (!confirmed || !issues.value[key]) return
   delete finalised.value[group.value?.GroupID]?.[key]
   issues.value[key] = { ...issues.value[key], open: false }
   rounds.value[key] = (rounds.value[key] || 0) + 1
@@ -673,13 +689,10 @@ async function loadGroup(id) {
         loadState.value = 'ready'
         // Agreeing preferences here is what makes a group the one you are
         // working in, so Browse and Shortlist follow this choice rather than
-        // keeping a separate one of their own.
-        setActiveGroup({
-          id: data.GroupID,
-          name: data.GroupName,
-          memberIds,
-          members: (data.users || []).map((user) => ({ id: user.UserID, name: user.Username })),
-        })
+        // keeping a separate one of their own. Select it by ID only: the shared
+        // store keeps the full group record, and writing this page's reshaped
+        // copy over it used to drop members' photos and the invite code.
+        setActiveGroup(data.GroupID)
       },
       fail,
     ),

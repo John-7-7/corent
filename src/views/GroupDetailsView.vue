@@ -3,6 +3,8 @@ import { computed, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthChange } from '@/services/authService'
 import {getGroupById, leaveGroup, } from '@/services/groupService'
+import { forgetGroup } from '@/services/activeGroup'
+import { confirmAction } from '@/composables/useConfirm'
 
 const route = useRoute()
 const router = useRouter()
@@ -103,8 +105,22 @@ function viewGroupSummary() {
 async function handleLeaveGroup() {
   if (!group.value || !currentUserId.value) return
 
-  const confirmed = window.confirm(
-    'Are you sure you want to leave this group? You will lose access to its shared shortlist and group details.',
+  const name = group.value.name || 'this group'
+  const isLastMember = (group.value.memberIds || []).length <= 1
+  const confirmed = await confirmAction(
+    isLastMember
+      ? {
+          title: `Delete ${name}?`,
+          message:
+            "You're the last member, so leaving permanently deletes the group along with its shortlist, votes, enquiries and agreed preferences. This can't be undone.",
+          confirmLabel: 'Leave and delete group',
+        }
+      : {
+          title: `Leave ${name}?`,
+          message:
+            "You'll lose access to the group's shortlist, votes and agreed preferences, and your votes will be removed from its results. You can rejoin later with an invite code.",
+          confirmLabel: 'Leave group',
+        },
   )
 
   if (!confirmed) return
@@ -114,6 +130,9 @@ async function handleLeaveGroup() {
 
   try {
     await leaveGroup(group.value.id, currentUserId.value)
+    // Stop Browse and Shortlist using this group straight away; without this
+    // they kept listening to it and showed a permissions error.
+    forgetGroup(group.value.id)
 
     // Return the user to Home after successfully leaving.
     router.push('/home')

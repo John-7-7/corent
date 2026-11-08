@@ -9,6 +9,7 @@ import {
   runTransaction,
   serverTimestamp,
   where,
+  writeBatch,
 } from 'firebase/firestore'
 
 import { db } from '@/firebase'
@@ -176,12 +177,76 @@ export async function joinGroupByInviteCode(inviteCode, user) {
   return groupDocument.id
 }
 
+// Everything stored under a group. Firestore does not delete subcollections
+// with their parent, so deleting a group has to remove these itself.
+const GROUP_SUBCOLLECTIONS = ['shortlist', 'votes', 'listingVotes', 'enquiries']
+const BATCH_LIMIT = 450
+
+async function deleteInBatches(references) {
+  for (let start = 0; start < references.length; start += BATCH_LIMIT) {
+    const batch = writeBatch(db)
+    references.slice(start, start + BATCH_LIMIT).forEach((reference) => batch.delete(reference))
+    await batch.commit()
+  }
+}
+
+// A member who leaves takes their ballots with them, so their preference votes
+// and listing votes stop counting towards the group's results.
+async function removeMemberVotes(groupId, userId) {
+  const ownListingVotes = await getDocs(
+    query(collection(db, 'groups', groupId, 'listingVotes'), where('userId', '==', userId)),
+  )
+  await deleteInBatches([
+    doc(db, 'groups', groupId, 'votes', userId),
+    ...ownListingVotes.docs.map((voteDoc) => voteDoc.ref),
+  ])
+}
+
+// The last member leaving deletes the group, so remove everything stored under
+// it and its agreed preferences too, rather than leaving them orphaned.
+async function deleteGroupData(groupId) {
+  const snapshots = await Promise.all(
+    GROUP_SUBCOLLECTIONS.map((name) => getDocs(collection(db, 'groups', groupId, name))),
+  )
+  await deleteInBatches([
+    ...snapshots.flatMap((snapshot) => snapshot.docs.map((item) => item.ref)),
+    doc(db, 'Group_Preferences', groupId),
+  ])
+}
+
+/**
+ * Removes the user from a group. If they were its last member the group is
+ * deleted along with all of its data.
+ * @returns {Promise<{ deleted: boolean }>}
+ */
 export async function leaveGroup(groupId, userId) {
   if (!groupId || !userId) {
     throw new Error('Group and user information is required.')
   }
 
   const groupReference = doc(db, 'groups', groupId)
+  const before = await getDoc(groupReference)
+
+  if (!before.exists()) {
+    throw new Error('This group is no longer available.')
+  }
+
+  const memberIdsBefore = before.data().memberIds || []
+
+  if (!memberIdsBefore.includes(userId)) {
+    throw new Error('You are not a member of this group.')
+  }
+
+  // Tidy up while still a member, because the rules only let members do it.
+  // This is best effort: leaving must still work if it fails.
+  try {
+    if (memberIdsBefore.length === 1) await deleteGroupData(groupId)
+    else await removeMemberVotes(groupId, userId)
+  } catch (error) {
+    console.warn('Could not tidy up group data before leaving:', error)
+  }
+
+  let deleted = false
 
   await runTransaction(db, async (transaction) => {
     const groupDocument = await transaction.get(groupReference)
@@ -208,6 +273,7 @@ export async function leaveGroup(groupId, userId) {
 
     if (updatedMemberIds.length === 0) {
       transaction.delete(groupReference)
+      deleted = true
       return
     }
 
@@ -218,4 +284,6 @@ export async function leaveGroup(groupId, userId) {
       updatedAt: serverTimestamp(),
     })
   })
+
+  return { deleted }
 }

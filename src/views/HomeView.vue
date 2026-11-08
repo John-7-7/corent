@@ -1,25 +1,34 @@
 <script setup>
-import { computed, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import AppIcon from '@/components/AppIcon.vue'
 import GroupCard from '@/components/groups/GroupCard.vue'
 import { onAuthChange } from '@/services/authService'
 import { getListings } from '@/services/listings'
 import { useGroupScoring } from '@/services/useGroupScoring'
-import {createGroup as createGroupInFirestore, getUserGroups, joinGroupByInviteCode,} from '@/services/groupService.js'
-import { activeGroupId, refreshGroups, setActiveGroup } from '@/services/activeGroup'
+import {createGroup as createGroupInFirestore, joinGroupByInviteCode,} from '@/services/groupService.js'
+import {
+  activeGroupId,
+  availableGroups,
+  groupsError,
+  refreshGroups,
+  setActiveGroup,
+} from '@/services/activeGroup'
 
 const router = useRouter()
+const route = useRoute()
 
 const currentUser = ref(null)
-const groups = ref([])
+// The shared, live list from activeGroup.js rather than a copy fetched here, so
+// member counts and newly joined groups stay current and match every other page.
+const groups = availableGroups
 const selectedGroup = ref(null)
 const activeDialog = ref('')
 const groupName = ref('')
 const inviteCode = ref('')
 const groupError = ref('')
-const dashboardError = ref('')
+const dashboardError = groupsError
 const groupActionLoading = ref(false)
 
 const firstName = computed(
@@ -74,25 +83,6 @@ function getErrorMessage(error, fallbackMessage) {
     : fallbackMessage
 }
 
-async function loadGroups(user = currentUser.value) {
-  dashboardError.value = ''
-
-  if (!user?.uid) {
-    groups.value = []
-    return
-  }
-
-  try {
-    groups.value = await getUserGroups(user.uid)
-  } catch (error) {
-    groups.value = []
-    dashboardError.value = getErrorMessage(
-      error,
-      'Unable to load your groups.',
-    )
-  }
-}
-
 function openDialog(dialog) {
   activeDialog.value = dialog
   groupError.value = ''
@@ -121,8 +111,6 @@ async function createGroup() {
       currentUser.value,
     )
 
-    await loadGroups()
-    await refreshGroups(currentUser.value)
     setActiveGroup(created)
     closeDialog()
   } catch (error) {
@@ -146,13 +134,14 @@ async function joinGroup() {
   groupActionLoading.value = true
 
   try {
-    await joinGroupByInviteCode(
+    const joinedGroupId = await joinGroupByInviteCode(
       inviteCode.value,
       currentUser.value,
     )
 
-    await loadGroups()
     await refreshGroups(currentUser.value)
+    // Joining a group is choosing to work in it, the same as creating one.
+    setActiveGroup(joinedGroupId)
     closeDialog()
   } catch (error) {
     groupError.value = getErrorMessage(
@@ -193,10 +182,25 @@ function viewGroupDetails() {
   })
 }
 
-const unsubscribeAuth = onAuthChange(async (user) => {
+const unsubscribeAuth = onAuthChange((user) => {
   currentUser.value = user
-  await loadGroups(user)
 })
+
+// Invite links from Group Details are /home?invite=<code>: open the join dialog
+// with the code filled in, then drop it from the URL so a refresh does not
+// reopen it.
+watch(
+  () => route.query.invite,
+  (code) => {
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code)) return
+    openDialog('join')
+    inviteCode.value = code
+    const query = { ...route.query }
+    delete query.invite
+    router.replace({ query })
+  },
+  { immediate: true },
+)
 
 onUnmounted(unsubscribeAuth)
 </script>

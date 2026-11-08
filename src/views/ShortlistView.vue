@@ -7,6 +7,7 @@ import { getListings } from '@/services/listings'
 import { useShortlist } from '@/services/shortlistService'
 import { activeGroupId } from '@/services/activeGroup'
 import { onAuthChange } from '@/services/authService'
+import { confirmAction } from '@/composables/useConfirm'
 import { submitEnquiry, subscribeToGroupEnquiries, } from '@/services/enquiryService'
 import { getMemberProfiles } from '@/services/groupSummaryService'
 import { watchGroupPreference } from '@/services/groupPreferencesService'
@@ -281,8 +282,15 @@ const savedListings = computed(() =>
     .map(toShortlistItem),
 )
 
+// Only current members' votes count. Ballots left by someone who has since left
+// the group (before leaveGroup started removing them) must not move the ranking.
+const memberVotes = computed(() => {
+  const memberIds = new Set(activeGroup.value?.memberIds ?? [])
+  return groupVotes.value.filter((vote) => memberIds.has(vote.userId))
+})
+
 function getVoteCount(listingId) {
-  return groupVotes.value.filter(
+  return memberVotes.value.filter(
     (vote) => vote.listingId === listingId,
   ).length
 }
@@ -465,7 +473,7 @@ function photoFor(uid) {
 
 const votersByListing = computed(() => {
   const byListing = new Map()
-  groupVotes.value.forEach((vote) => {
+  memberVotes.value.forEach((vote) => {
     if (!vote.listingId || !vote.userId) return
     const voters = byListing.get(vote.listingId) ?? []
     if (voters.some((voter) => voter.uid === vote.userId)) return
@@ -488,7 +496,7 @@ const votersByListing = computed(() => {
 const votersFor = (listingId) => votersByListing.value.get(listingId) ?? []
 
 function hasUserVoted(listingId) {
-  return groupVotes.value.some(
+  return memberVotes.value.some(
     (vote) =>
       vote.listingId === listingId &&
       vote.userId === currentUserId.value,
@@ -537,7 +545,19 @@ function hasEnquiryBeenSent(listingId) {
   )
 }
 
+const listingTitle = (id) =>
+  savedListings.value.find((listing) => listing.id === id)?.title || 'this listing'
+
 async function removeListing(id) {
+  const confirmed = await confirmAction({
+    title: 'Remove from shortlist?',
+    message: isGroupMode.value
+      ? `"${listingTitle(id)}" will be removed from ${activeGroup.value?.name || "your group"}'s shortlist for everyone in the group.`
+      : `"${listingTitle(id)}" will be removed from your shortlist. You can add it back from Browse at any time.`,
+    confirmLabel: 'Remove',
+  })
+  if (!confirmed) return
+
   try {
     await removeFromShortlist(id)
     if (selectedListingId.value === id) selectedListingId.value = ''
@@ -569,6 +589,13 @@ async function voteForProperty(listingId) {
 }
 
 async function unvoteForProperty(listingId) {
+  const confirmed = await confirmAction({
+    title: 'Withdraw your vote?',
+    message: `Your vote for "${listingTitle(listingId)}" will be removed from the group's ranking. You can vote again at any time.`,
+    confirmLabel: 'Withdraw vote',
+  })
+  if (!confirmed) return
+
   try {
     await removeListingVote(
       groupId.value,
