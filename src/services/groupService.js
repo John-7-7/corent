@@ -9,6 +9,7 @@ import {
   runTransaction,
   serverTimestamp,
   where,
+  writeBatch,
 } from 'firebase/firestore'
 
 import { db } from '@/firebase'
@@ -176,12 +177,109 @@ export async function joinGroupByInviteCode(inviteCode, user) {
   return groupDocument.id
 }
 
-export async function leaveGroup(groupId, userId) {
+// Everything stored under a group. Firestore does not delete subcollections
+// with their parent, so deleting a group has to remove these itself.
+const GROUP_SUBCOLLECTIONS = ['shortlist', 'votes', 'listingVotes', 'enquiries', 'listingComments']
+const BATCH_LIMIT = 450
+
+async function deleteInBatches(references) {
+  for (let start = 0; start < references.length; start += BATCH_LIMIT) {
+    const batch = writeBatch(db)
+    references.slice(start, start + BATCH_LIMIT).forEach((reference) => batch.delete(reference))
+    await batch.commit()
+  }
+}
+
+// Runs every clean-up step even if one fails, and names the ones that did, so a
+// single refused collection does not stop the rest from being removed.
+async function runCleanup(steps) {
+  const results = await Promise.allSettled(Object.values(steps).map((step) => step()))
+  return Object.keys(steps).filter((_, index) => results[index].status === 'rejected')
+}
+
+const ownDocs = (groupId, name, userId) =>
+  getDocs(query(collection(db, 'groups', groupId, name), where('userId', '==', userId))).then(
+    (snapshot) => snapshot.docs.map((item) => item.ref),
+  )
+
+// A member who leaves takes their ballots with them, so their preference votes
+// and listing votes stop counting towards the group's results. Their listing
+// comments go too.
+function removeMemberVotes(groupId, userId) {
+  return runCleanup({
+    'preference votes': () => deleteInBatches([doc(db, 'groups', groupId, 'votes', userId)]),
+    'listing votes': async () => deleteInBatches(await ownDocs(groupId, 'listingVotes', userId)),
+    comments: async () => deleteInBatches(await ownDocs(groupId, 'listingComments', userId)),
+  })
+}
+
+// The last member leaving deletes the group, so remove everything stored under
+// it and its agreed preferences too, rather than leaving them orphaned.
+function deleteGroupData(groupId) {
+  return runCleanup({
+    ...Object.fromEntries(
+      GROUP_SUBCOLLECTIONS.map((name) => [
+        name,
+        async () =>
+          deleteInBatches(
+            (await getDocs(collection(db, 'groups', groupId, name))).docs.map((item) => item.ref),
+          ),
+      ]),
+    ),
+    'agreed preferences': () => deleteInBatches([doc(db, 'Group_Preferences', groupId)]),
+  })
+}
+
+/** Thrown by leaveGroup when the user's data could not all be removed first. */
+export const CLEANUP_FAILED = 'group/cleanup-failed'
+
+/**
+ * Removes the user from a group. If they were its last member the group is
+ * deleted along with all of its data.
+ *
+ * The user's data is removed first, while they are still a member, because
+ * the rules only let members do it. If any of it cannot be removed, nothing
+ * changes and an error with code CLEANUP_FAILED is thrown (error.failed lists
+ * what was left), so the caller can tell the user and offer to retry. Pass
+ * { force: true } to leave anyway once the user has agreed.
+ * @returns {Promise<{ deleted: boolean, leftBehind: string[] }>}
+ */
+export async function leaveGroup(groupId, userId, { force = false } = {}) {
   if (!groupId || !userId) {
     throw new Error('Group and user information is required.')
   }
 
   const groupReference = doc(db, 'groups', groupId)
+  const before = await getDoc(groupReference)
+
+  if (!before.exists()) {
+    throw new Error('This group is no longer available.')
+  }
+
+  const memberIdsBefore = before.data().memberIds || []
+
+  if (!memberIdsBefore.includes(userId)) {
+    throw new Error('You are not a member of this group.')
+  }
+
+  const isLast = memberIdsBefore.length === 1
+  const leftBehind = isLast
+    ? await deleteGroupData(groupId)
+    : await removeMemberVotes(groupId, userId)
+
+  if (leftBehind.length && !force) {
+    const what = leftBehind.join(', ')
+    const error = new Error(
+      isLast
+        ? `Some of the group's data (${what}) could not be deleted, so the group has not been deleted yet.`
+        : `Your ${what} could not be removed from the group, so you have not left it yet.`,
+    )
+    error.code = CLEANUP_FAILED
+    error.failed = leftBehind
+    throw error
+  }
+
+  let deleted = false
 
   await runTransaction(db, async (transaction) => {
     const groupDocument = await transaction.get(groupReference)
@@ -208,6 +306,7 @@ export async function leaveGroup(groupId, userId) {
 
     if (updatedMemberIds.length === 0) {
       transaction.delete(groupReference)
+      deleted = true
       return
     }
 
@@ -218,4 +317,6 @@ export async function leaveGroup(groupId, userId) {
       updatedAt: serverTimestamp(),
     })
   })
+
+  return { deleted, leftBehind }
 }

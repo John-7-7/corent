@@ -1,0 +1,33 @@
+# Keeps Firestore config/onemap holding a live OneMap token.
+#
+# OneMap tokens last about three days, so this runs every two, one spare day
+# if a run fails. Without it, commute times silently degrade to straight-line
+# estimates a few days after anyone last rotated the token by hand.
+#
+# Repository secrets this needs (Settings -> Secrets and variables -> Actions):
+#   ONEMAP_EMAIL              the OneMap account email
+#   ONEMAP_PASSWORD           its password
+#   FIREBASE_SERVICE_ACCOUNT  the whole service-account JSON, pasted in
+#                             (Firebase console -> Project settings ->
+#                              Service accounts -> Generate new private key)
+name: Refresh OneMap token
+
+on:
+  schedule:
+    - cron: '17 18 */2 * *' # every 2 days, 02:17 Singapore time
+  workflow_dispatch: # lets you run it by hand from the Actions tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install firebase-admin@13 --no-save
+      - run: node scripts/refresh-onemap-token.mjs
+        env:
+          ONEMAP_EMAIL: ${{ secrets.ONEMAP_EMAIL }}
+          ONEMAP_PASSWORD: ${{ secrets.ONEMAP_PASSWORD }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

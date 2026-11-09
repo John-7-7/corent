@@ -103,7 +103,7 @@ const label = (bar) =>
                 <span v-if="bar.limit" class="cc-dim">/ {{ bar.limit }}</span>
                 <span v-if="bar.estimated" class="cc-dim">est.</span>
               </template>
-              <template v-else>—</template>
+              <template v-else>-</template>
             </span>
           </div>
         </div>
@@ -123,7 +123,7 @@ const label = (bar) =>
           <tr v-for="group in groups" :key="group.id">
             <th scope="row">{{ group.title }}</th>
             <td v-for="bar in group.bars" :key="bar.uid" :class="{ over: bar.over }">
-              {{ bar.minutes != null ? `${bar.minutes} min` : '—' }}
+              {{ bar.minutes != null ? `${bar.minutes} min` : '-' }}
               <span v-if="bar.limit" class="cc-dim">/ {{ bar.limit }}</span>
             </td>
           </tr>

@@ -2,7 +2,10 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthChange } from '@/services/authService'
-import {getGroupById, leaveGroup, } from '@/services/groupService'
+import { CLEANUP_FAILED, getGroupById, leaveGroup } from '@/services/groupService'
+import { forgetGroup } from '@/services/activeGroup'
+import { confirmAction } from '@/composables/useConfirm'
+import MemberAvatar from '@/components/MemberAvatar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +17,8 @@ const copying = ref(false)
 const copyFeedback = ref('')
 const currentUserId = ref('')
 const leavingGroup = ref(false)
+// Shown beside the button, so a failed leave keeps the group on screen to retry.
+const leaveError = ref('')
 
 const memberCount = computed(() => {
   return group.value?.memberCount ?? members.value.length
@@ -103,42 +108,63 @@ function viewGroupSummary() {
 async function handleLeaveGroup() {
   if (!group.value || !currentUserId.value) return
 
-  const confirmed = window.confirm(
-    'Are you sure you want to leave this group? You will lose access to its shared shortlist and group details.',
+  const name = group.value.name || 'this group'
+  const isLastMember = (group.value.memberIds || []).length <= 1
+  const confirmed = await confirmAction(
+    isLastMember
+      ? {
+          title: `Delete ${name}?`,
+          message:
+            "You're the last member, so leaving permanently deletes the group along with its shortlist, votes, enquiries and agreed preferences. This can't be undone.",
+          confirmLabel: 'Leave and delete group',
+        }
+      : {
+          title: `Leave ${name}?`,
+          message:
+            "You'll lose access to the group's shortlist, votes and agreed preferences, and your votes will be removed from its results. You can rejoin later with an invite code.",
+          confirmLabel: 'Leave group',
+        },
   )
 
   if (!confirmed) return
 
   leavingGroup.value = true
-  error.value = ''
+  leaveError.value = ''
 
   try {
-    await leaveGroup(group.value.id, currentUserId.value)
+    try {
+      await leaveGroup(group.value.id, currentUserId.value)
+    } catch (cleanupError) {
+      if (cleanupError?.code !== CLEANUP_FAILED) throw cleanupError
+      // Some of the user's data could not be removed. Say so, and let them
+      // choose between trying again later and leaving it behind.
+      const leaveAnyway = await confirmAction({
+        title: 'Some data could not be removed',
+        message: `${cleanupError.message} You can try again later, or leave now and leave that data behind.`,
+        confirmLabel: isLastMember ? 'Delete group anyway' : 'Leave anyway',
+      })
+      if (!leaveAnyway) {
+        leaveError.value = cleanupError.message
+        return
+      }
+      await leaveGroup(group.value.id, currentUserId.value, { force: true })
+    }
+    // Stop Browse and Shortlist using this group straight away; without this
+    // they kept listening to it and showed a permissions error.
+    forgetGroup(group.value.id)
 
     // Return the user to Home after successfully leaving.
     router.push('/home')
-  } catch (leaveError) {
-    console.error('Error leaving group:', leaveError)
+  } catch (leaveFailure) {
+    console.error('Error leaving group:', leaveFailure)
 
-    error.value =
-      leaveError instanceof Error
-        ? leaveError.message
+    leaveError.value =
+      leaveFailure instanceof Error
+        ? leaveFailure.message
         : 'Unable to leave the group.'
   } finally {
     leavingGroup.value = false
   }
-}
-
-function getInitials(name) {
-  if (!name?.trim()) return '?'
-
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
 }
 
 function getPreferenceStatus(member) {
@@ -226,7 +252,7 @@ onUnmounted(unsubscribeAuth)
             class="member"
           >
             <span class="avatar" aria-hidden="true">
-              {{ getInitials(member.name) }}
+              <MemberAvatar :uid="member.id" :photo="member.photo || ''" />
             </span>
 
             <div class="member-info">
@@ -262,6 +288,7 @@ onUnmounted(unsubscribeAuth)
       >
         View Group Summary
       </button>
+      <p v-if="leaveError" class="leave-error" role="alert">{{ leaveError }}</p>
       <button
         class="leave-button"
         type="button"
@@ -476,6 +503,16 @@ onUnmounted(unsubscribeAuth)
 
 .text-link {
   color: var(--red, #ed003b);
+}
+
+.leave-error {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fdecec;
+  color: #b42318;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .leave-button {

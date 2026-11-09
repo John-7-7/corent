@@ -14,8 +14,8 @@ import { activeGroup, activeGroupId, startActiveGroupTracking } from './activeGr
  * The shortlist of listings a group is considering (F-REQ-016).
  *
  * Two modes, one API:
- *   - group mode    — groups/{groupId}/shortlist, live for every member
- *   - personal mode — localStorage, used when the user has no group yet
+ *   - group mode:    groups/{groupId}/shortlist, live for every member
+ *   - personal mode: localStorage, used when the user has no group yet
  *
  * Entries are keyed by ListingID, so two members saving the same property
  * converge on one entry instead of creating duplicates.
@@ -167,7 +167,7 @@ export function useShortlist() {
     })
   }
 
-  /** Any member may remove any entry — addedByName is shown for accountability. */
+  /** Any member may remove any entry, addedByName is shown for accountability. */
   async function removeFromShortlist(listingId) {
     if (!isGroupMode.value) {
       saveLocal(listingIds.value.filter((savedId) => savedId !== listingId))

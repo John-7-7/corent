@@ -65,13 +65,16 @@ export async function savePreferences(uid, data) {
   const mainRef = preferencesRef(uid)
   const existing = await getDoc(mainRef)
   const isBudgetPrivate = Boolean(data.IsBudgetPrivate)
+  // Firestore rejects undefined, so a missing budget is stored as "not set".
+  const budgetMin = data.BudgetMin ?? null
+  const budgetMax = data.BudgetMax ?? null
 
   const mainDoc = {
     ...pickPreferenceFields(data),
     UserID: uid,
     IsBudgetPrivate: isBudgetPrivate,
-    BudgetMin: isBudgetPrivate ? null : data.BudgetMin,
-    BudgetMax: isBudgetPrivate ? null : data.BudgetMax,
+    BudgetMin: isBudgetPrivate ? null : budgetMin,
+    BudgetMax: isBudgetPrivate ? null : budgetMax,
     UpdatedAt: serverTimestamp(),
   }
   if (!existing.exists()) mainDoc.CreatedAt = serverTimestamp()
@@ -79,17 +82,21 @@ export async function savePreferences(uid, data) {
   const batch = writeBatch(db)
   batch.set(
     privateBudgetRef(uid),
-    { BudgetMin: data.BudgetMin, BudgetMax: data.BudgetMax, UpdatedAt: serverTimestamp() },
+    { BudgetMin: budgetMin, BudgetMax: budgetMax, UpdatedAt: serverTimestamp() },
     { merge: true },
   )
   batch.set(mainRef, mainDoc, { merge: true })
   await batch.commit()
 }
 
-/** Deletes the main doc and the private budget doc (Firestore does not cascade). */
+/**
+ * Deletes the main doc and everything under Private: the budget and the
+ * notification read state (Firestore does not cascade).
+ */
 export async function deletePreferences(uid) {
   const batch = writeBatch(db)
   batch.delete(privateBudgetRef(uid))
+  batch.delete(doc(db, COLLECTION, uid, 'Private', 'Notifications'))
   batch.delete(preferencesRef(uid))
   await batch.commit()
 }

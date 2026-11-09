@@ -5,14 +5,14 @@ import { db } from '../firebase'
  * The OneMap access token, shared by every OneMap-backed service.
  *
  * OneMap issues a short-lived token (about three days) from an account email
- * and password. The password must never reach the client — it would ship in
- * the bundle — so the app only ever sees a token someone else minted. Two
+ * and password. The password must never reach the client, it would ship in
+ * the bundle, so the app only ever sees a token someone else minted. Two
  * sources, in order:
  *
- *   1. Firestore config/onemap { token } — readable by signed-in users,
+ *   1. Firestore config/onemap { token }, readable by signed-in users,
  *      writable by nobody (see firestore.rules). Rotating it needs no deploy,
  *      which is what lets scripts/refresh-onemap-token.mjs run on a schedule.
- *   2. VITE_ONEMAP_TOKEN in .env — simpler for local work, but bundled.
+ *   2. VITE_ONEMAP_TOKEN in .env, simpler for local work, but bundled.
  *
  * Resolved once per page load and memoised; call resetToken() after a rotation.
  */

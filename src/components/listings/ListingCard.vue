@@ -5,7 +5,7 @@ import AppIcon from '@/components/AppIcon.vue'
 const props = defineProps({
   listing:  { type: Object, required: true },
   saved:    { type: Boolean, default: false },
-  // null until F-REQ-015 can compute a real score — we never invent one.
+  // null until F-REQ-015 can compute a real score, we never invent one.
   matchScore: { type: Number, default: null },
 })
 defineEmits(['toggle-save', 'view-details'])

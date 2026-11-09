@@ -15,7 +15,7 @@
   --line: rgb(93 103 151 / 16%);
   --chip-line: rgb(93 103 151 / 24%);
   --text: #2a2d3e;
-  /* Was #9a9db5, which is 2.7:1 on white — below the 4.5:1 minimum for body
+  /* Was #9a9db5, which is 2.7:1 on white, below the 4.5:1 minimum for body
      text, and worse on the glass surfaces. This is 5.0:1 and still clearly
      secondary next to --text. */
   --muted: #6b6e85;
