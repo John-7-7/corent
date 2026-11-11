@@ -27,6 +27,9 @@ const name = ref('')
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
 const nameError = ref('')
 const passwordError = ref('')
 const deleteError = ref('')
@@ -90,8 +93,8 @@ async function saveName() {
 
 async function savePassword() {
   passwordError.value = ''
-  if (newPassword.value.length < 8 || !/[A-Z]/.test(newPassword.value) || !/\d/.test(newPassword.value)) {
-    passwordError.value = 'Use at least 8 characters, including an uppercase letter and a number.'
+  if (newPassword.value.length < 6) {
+    passwordError.value = 'Password must be at least 6 characters.'
     return
   }
   if (newPassword.value !== confirmPassword.value) {
@@ -308,29 +311,63 @@ onBeforeUnmount(() => unsubscribeAuth?.())
         <form class="modal-card" aria-labelledby="password-title" @submit.prevent="savePassword">
           <h2 id="password-title">Change password</h2>
           <label for="current-password">Current password</label>
-          <input
-            id="current-password"
-            v-model="currentPassword"
-            type="password"
-            autocomplete="current-password"
-            required
-          />
+          <div class="password-input-wrap">
+            <input
+              id="current-password"
+              v-model="currentPassword"
+              :type="showCurrentPassword ? 'text' : 'password'"
+              autocomplete="current-password"
+              required
+            />
+            <button
+              class="password-visibility"
+              type="button"
+              :aria-label="showCurrentPassword ? 'Hide password' : 'Show password'"
+              :aria-pressed="showCurrentPassword"
+              @click="showCurrentPassword = !showCurrentPassword"
+            >
+              <BaseIcon :name="showCurrentPassword ? 'eye-off' : 'eye'" :size="18" />
+            </button>
+          </div>
           <label for="new-password">New password</label>
-          <input
-            id="new-password"
-            v-model="newPassword"
-            type="password"
-            autocomplete="new-password"
-            required
-          />
+          <div class="password-input-wrap">
+            <input
+              id="new-password"
+              v-model="newPassword"
+              :type="showNewPassword ? 'text' : 'password'"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            />
+            <button
+              class="password-visibility"
+              type="button"
+              :aria-label="showNewPassword ? 'Hide password' : 'Show password'"
+              :aria-pressed="showNewPassword"
+              @click="showNewPassword = !showNewPassword"
+            >
+              <BaseIcon :name="showNewPassword ? 'eye-off' : 'eye'" :size="18" />
+            </button>
+          </div>
           <label for="confirm-password">Confirm new password</label>
-          <input
-            id="confirm-password"
-            v-model="confirmPassword"
-            type="password"
-            autocomplete="new-password"
-            required
-          />
+          <div class="password-input-wrap">
+            <input
+              id="confirm-password"
+              v-model="confirmPassword"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              autocomplete="new-password"
+              required
+            />
+            <button
+              class="password-visibility"
+              type="button"
+              :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'"
+              :aria-pressed="showConfirmPassword"
+              @click="showConfirmPassword = !showConfirmPassword"
+            >
+              <BaseIcon :name="showConfirmPassword ? 'eye-off' : 'eye'" :size="18" />
+            </button>
+          </div>
           <FieldMessage v-if="passwordError">{{ passwordError }}</FieldMessage>
           <div class="modal-actions">
             <button
@@ -587,6 +624,40 @@ onBeforeUnmount(() => unsubscribeAuth?.())
   border: 1px solid var(--cr-border-strong);
   border-radius: 8px;
   font: 13px var(--cr-font);
+}
+
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  padding-right: 48px;
+}
+
+.password-visibility {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cr-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-visibility:hover {
+  color: var(--cr-accent);
+}
+
+.password-visibility:focus-visible {
+  outline: none;
+  box-shadow: var(--cr-focus-ring);
 }
 
 .modal-card input:focus-visible,

@@ -10,6 +10,8 @@ const name = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 const emailRegistration = ref(false)
 const submitAttempted = ref(false)
 const submitting = ref(false)
@@ -22,24 +24,7 @@ const isEmailValid = computed(() => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailValue)
 })
 
-const passwordCriteria = computed(() => [
-  {
-    label: 'At least 8 characters',
-    met: password.value.length >= 8,
-  },
-  {
-    label: 'At least 1 uppercase letter',
-    met: /[A-Z]/.test(password.value),
-  },
-  {
-    label: 'At least 1 number',
-    met: /\d/.test(password.value),
-  },
-])
-
-const isPasswordValid = computed(() =>
-  passwordCriteria.value.every(({ met }) => met)
-)
+const isPasswordValid = computed(() => password.value.length >= 6)
 
 const passwordsMatch = computed(() =>
   password.value === confirmPassword.value
@@ -252,28 +237,30 @@ async function onGoogleSignIn() {
           <div class="field">
             <label for="password">Password</label>
 
-            <input
-              id="password"
-              v-model="password"
-              class="input"
-              :class="{ invalid: submitAttempted && !isPasswordValid }"
-              type="password"
-              placeholder="Create a strong password"
-              autocomplete="new-password"
-              :aria-describedby="submitAttempted && !isPasswordValid ? 'password-criteria password-error' : 'password-criteria'"
-              :aria-invalid="submitAttempted && !isPasswordValid"
-            />
-
-            <ul id="password-criteria" class="password-criteria" aria-label="Password requirements">
-              <li
-                v-for="criterion in passwordCriteria"
-                :key="criterion.label"
-                :class="{ 'criterion-met': criterion.met }"
+            <div class="password-input-wrap">
+              <input
+                id="password"
+                v-model="password"
+                class="input"
+                :class="{ invalid: submitAttempted && !isPasswordValid }"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Create a password"
+                autocomplete="new-password"
+                minlength="6"
+                aria-describedby="password-criteria"
+                :aria-invalid="submitAttempted && !isPasswordValid"
+              />
+              <button
+                class="password-visibility"
+                type="button"
+                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                :aria-pressed="showPassword"
+                @click="showPassword = !showPassword"
               >
-                {{ criterion.met ? 'Met' : 'Required' }}:
-                {{ criterion.label }}
-              </li>
-            </ul>
+                <AppIcon :name="showPassword ? 'eye-off' : 'eye'" :size="18" />
+              </button>
+            </div>
+            <p id="password-criteria" class="password-hint">At least 6 characters.</p>
 
             <p
               v-if="submitAttempted && !isPasswordValid"
@@ -281,24 +268,35 @@ async function onGoogleSignIn() {
               class="field-error"
               role="alert"
             >
-              Meet all password requirements before continuing.
+              Password must be at least 6 characters.
             </p>
           </div>
 
           <div class="field">
             <label for="confirm">Confirm password</label>
 
-            <input
-              id="confirm"
-              v-model="confirmPassword"
-              class="input"
-              :class="{ invalid: submitAttempted && isPasswordValid && !passwordsMatch }"
-              type="password"
-              placeholder="Re-enter your password"
-              autocomplete="new-password"
-              :aria-describedby="submitAttempted && isPasswordValid && !passwordsMatch ? 'confirm-error' : undefined"
-              :aria-invalid="submitAttempted && isPasswordValid && !passwordsMatch"
-            />
+            <div class="password-input-wrap">
+              <input
+                id="confirm"
+                v-model="confirmPassword"
+                class="input"
+                :class="{ invalid: submitAttempted && isPasswordValid && !passwordsMatch }"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                placeholder="Re-enter your password"
+                autocomplete="new-password"
+                :aria-describedby="submitAttempted && isPasswordValid && !passwordsMatch ? 'confirm-error' : undefined"
+                :aria-invalid="submitAttempted && isPasswordValid && !passwordsMatch"
+              />
+              <button
+                class="password-visibility"
+                type="button"
+                :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'"
+                :aria-pressed="showConfirmPassword"
+                @click="showConfirmPassword = !showConfirmPassword"
+              >
+                <AppIcon :name="showConfirmPassword ? 'eye-off' : 'eye'" :size="18" />
+              </button>
+            </div>
 
             <p
               v-if="submitAttempted && isPasswordValid && !passwordsMatch"
@@ -593,6 +591,41 @@ button:disabled {
   background: rgb(255 255 255 / 78%);
 }
 
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap .input {
+  width: 100%;
+  padding-right: 48px;
+}
+
+.password-visibility {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #777b91;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-visibility:hover {
+  color: var(--red);
+}
+
+.password-visibility:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 1px;
+}
+
 .narrow .input:focus {
   border-color: var(--red);
   outline: none;
@@ -603,13 +636,9 @@ button:disabled {
   border-color: var(--error);
 }
 
-.password-criteria {
+.password-hint {
   margin: 8px 0 0;
   color: #777b91;
-}
-
-.password-criteria .criterion-met {
-  color: var(--ok);
 }
 
 .field-error {
@@ -686,16 +715,11 @@ button:disabled {
   margin-bottom: 8px;
 }
 
-.password-criteria {
+.password-hint {
   margin: 0.45rem 0 0;
-  padding-left: 1rem;
   color: var(--muted);
   font-size: 11px;
   line-height: 1.6;
-}
-
-.password-criteria .criterion-met {
-  color: #36734b;
 }
 
 @media (max-width: 800px) {
