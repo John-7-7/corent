@@ -15,6 +15,7 @@ const props = defineProps({
 const emit = defineEmits(['confirm', 'close'])
 
 const password = ref('')
+const showPassword = ref(false)
 const acknowledged = ref(false)
 const dialogEl = useTemplateRef('dialogEl')
 
@@ -65,13 +66,25 @@ function confirm() {
           <form class="dialog__form" @submit.prevent="confirm">
             <label v-if="requiresPassword" class="pw-field">
               <span class="pw-field__label">Confirm your password</span>
-              <input
-                v-model="password"
-                type="password"
-                class="pw-field__input"
-                autocomplete="current-password"
-                :disabled="busy"
-              />
+              <div class="pw-field__input-wrap">
+                <input
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="pw-field__input"
+                  autocomplete="current-password"
+                  :disabled="busy"
+                />
+                <button
+                  class="password-visibility"
+                  type="button"
+                  :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                  :aria-pressed="showPassword"
+                  :disabled="busy"
+                  @click="showPassword = !showPassword"
+                >
+                  <BaseIcon :name="showPassword ? 'eye-off' : 'eye'" :size="17" />
+                </button>
+              </div>
             </label>
             <label class="check">
               <input v-model="acknowledged" type="checkbox" :disabled="busy" />
@@ -156,6 +169,38 @@ function confirm() {
   border: 1px solid var(--cr-border-strong);
   border-radius: var(--cr-radius-control);
   font: 400 13px var(--cr-font);
+}
+.pw-field__input-wrap {
+  position: relative;
+}
+.pw-field__input-wrap .pw-field__input {
+  padding-right: 46px;
+}
+.password-visibility {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cr-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+.password-visibility:hover {
+  color: var(--cr-accent);
+}
+.password-visibility:focus-visible {
+  outline: none;
+  box-shadow: var(--cr-focus-ring);
+}
+.password-visibility:disabled {
+  cursor: not-allowed;
 }
 .pw-field__input:focus {
   outline: none;

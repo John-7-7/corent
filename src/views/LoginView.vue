@@ -8,6 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const email = ref('')
 const password = ref('')
+const showPassword = ref(false)
 const error = ref('')
 const submitting = ref(false)
 
@@ -95,15 +96,26 @@ async function onSubmit() {
                 <label for="password">Password</label>
                 <router-link class="link" to="/forgot-password">Forgot password?</router-link>
               </div>
-              <input
-                id="password"
-                v-model="password"
-                class="input"
-                type="password"
-                placeholder="Enter your password"
-                autocomplete="current-password"
-                required
-              />
+              <div class="password-input-wrap">
+                <input
+                  id="password"
+                  v-model="password"
+                  class="input"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Enter your password"
+                  autocomplete="current-password"
+                  required
+                />
+                <button
+                  class="password-visibility"
+                  type="button"
+                  :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                  :aria-pressed="showPassword"
+                  @click="showPassword = !showPassword"
+                >
+                  <AppIcon :name="showPassword ? 'eye-off' : 'eye'" :size="18" />
+                </button>
+              </div>
             </div>
 
             <p v-if="error" class="field-error" role="alert">{{ error }}</p>
@@ -318,6 +330,40 @@ async function onSubmit() {
 .password-label .link {
   margin: 0;
   font-size: 12px;
+}
+
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap .input {
+  padding-right: 48px;
+}
+
+.password-visibility {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #777b91;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-visibility:hover {
+  color: var(--red);
+}
+
+.password-visibility:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 1px;
 }
 
 .field-error {
